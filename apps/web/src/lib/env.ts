@@ -1,0 +1,13 @@
+import { z } from "zod";
+
+const schema = z.object({
+  DATABASE_URL: z.string().default("postgres://estrada:estrada@localhost:5432/estrada"),
+  BETTER_AUTH_SECRET: z.string().min(16).default("dev-only-secret-change-me-please"),
+  APP_URL: z.string().url().default("http://localhost:3000"),
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().default("ERP Estrada <no-reply@estrada.local>"),
+  /** Who locks the final RKA version — open question 3 for the client. */
+  RKA_LOCK_ROLE: z.enum(["director", "finance"]).default("director"),
+});
+
+export const env = schema.parse(process.env);

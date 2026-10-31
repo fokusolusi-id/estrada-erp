@@ -1,0 +1,58 @@
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { asc } from "drizzle-orm";
+import { db, schema } from "@estrada/db";
+import { ROLES, ROLE_LABEL } from "@estrada/domain";
+import { requireUser } from "@/lib/session";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { InviteForm } from "./invite-form";
+
+export const metadata: Metadata = { title: "Pengguna" };
+
+export default async function UsersPage() {
+  const user = await requireUser();
+  if (user.actor.role !== "admin") redirect("/");
+
+  const [users, units] = await Promise.all([
+    db.select().from(schema.user).orderBy(asc(schema.user.name)),
+    db.select({ code: schema.orgUnit.code, name: schema.orgUnit.name }).from(schema.orgUnit).orderBy(asc(schema.orgUnit.code)),
+  ]);
+
+  return (
+    <div className="grid max-w-5xl gap-6">
+      <h1 className="text-2xl font-semibold">Pengguna</h1>
+      <Card>
+        <CardHeader>
+          <CardTitle>Undang pengguna</CardTitle>
+          <CardDescription>Pengguna menerima email untuk membuat kata sandi. Tidak ada pendaftaran mandiri.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <InviteForm units={units} roles={ROLES.map((r) => ({ value: r, label: ROLE_LABEL[r] }))} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nama</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((u) => (
+                <TableRow key={u.id}>
+                  <TableCell>{u.name}</TableCell>
+                  <TableCell>{u.email}</TableCell>
+                  <TableCell>{u.active ? "Aktif" : "Nonaktif"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
