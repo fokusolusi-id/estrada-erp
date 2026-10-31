@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ApprovalTimeline, type Remark, type TimelineEvent } from "./approval-timeline";
 import { MoneyCell } from "./money-cell";
 import { StatusBadge } from "./status-badge";
+import { VarianceCell } from "./variance-cell";
 
 /** A line in an approval queue: months as plain decimal strings, plus what this position may do to it. */
 export interface QueueLine {
@@ -22,6 +23,10 @@ export interface QueueLine {
   item?: string;
   basis?: string;
   actions: ApprovalAction[];
+  rka2026?: string;
+  actual2026?: string;
+  /** Notes for reviewers, e.g. the workbook's cleaning flags. */
+  flags?: string[];
   history?: TimelineEvent[];
   /** Open return or clarification this line is waiting on. */
   remark?: Remark;
@@ -116,6 +121,8 @@ export function ApprovalQueue({
             <TableHead>Status</TableHead>
             <TableHead>Dasar perhitungan</TableHead>
             <TableHead className="text-right">Total RKA</TableHead>
+            <TableHead className="text-right">Actual 2026</TableHead>
+            <TableHead className="text-right">Perubahan</TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
@@ -141,7 +148,7 @@ export function ApprovalQueue({
                   <TableCell className="text-right" data-testid={`subtotal-${owner}`}>
                     <MoneyCell value={sum(group.map((l) => totals.get(l.id)!))} unit={unit} />
                   </TableCell>
-                  <TableCell />
+                  <TableCell colSpan={3} />
                 </TableRow>
                 {group.map((l) => (
                   <Fragment key={l.id}>
@@ -171,6 +178,11 @@ export function ApprovalQueue({
                       <div className="text-muted-foreground truncate" title={l.basis}>
                         {l.basis ?? "—"}
                       </div>
+                      {l.flags?.map((f) => (
+                        <div key={f} className="bg-warning/15 mt-1 rounded px-1.5 py-0.5 whitespace-normal">
+                          {f}
+                        </div>
+                      ))}
                       {l.remark ? (
                         <div className="bg-warning/15 mt-1 rounded px-1.5 py-1 whitespace-normal">
                           {l.remark.by}: “{l.remark.comment}”
@@ -179,6 +191,10 @@ export function ApprovalQueue({
                     </TableCell>
                     <TableCell className="text-right">
                       <MoneyCell value={totals.get(l.id)!} unit={unit} />
+                    </TableCell>
+                    <TableCell className="text-right">{l.actual2026 ? <MoneyCell value={money(l.actual2026)} unit={unit} /> : "—"}</TableCell>
+                    <TableCell className="text-right">
+                      <VarianceCell plan={totals.get(l.id)!} base={l.actual2026 ? money(l.actual2026) : null} unit={unit} />
                     </TableCell>
                     <TableCell>
                       <Button type="button" size="sm" variant="ghost" aria-expanded={open === l.id} onClick={() => setOpen(open === l.id ? null : l.id)}>
@@ -189,7 +205,7 @@ export function ApprovalQueue({
                   {open === l.id ? (
                     <TableRow>
                       <TableCell />
-                      <TableCell colSpan={7} className="whitespace-normal">
+                      <TableCell colSpan={9} className="whitespace-normal">
                         <ApprovalTimeline events={l.history ?? []} />
                       </TableCell>
                     </TableRow>

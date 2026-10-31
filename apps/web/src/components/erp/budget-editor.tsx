@@ -22,6 +22,10 @@ export interface EditorLine {
   months: string[];
   /** Why the line came back, while it waits on the requestor. */
   remark?: Remark;
+  /** 2026 figures as plain decimal strings, shown for context. */
+  rka2026?: string;
+  actual2026?: string;
+  flags?: string[];
 }
 
 export interface EditorMasters {
@@ -65,6 +69,9 @@ const toRow = (l: EditorLine): Row => ({
   item: l.item,
   basis: l.basis,
   ...(l.remark ? { remark: l.remark } : {}),
+  ...(l.rka2026 ? { rka2026: l.rka2026 } : {}),
+  ...(l.actual2026 ? { actual2026: l.actual2026 } : {}),
+  ...(l.flags ? { flags: l.flags } : {}),
   cells: l.months.map((m) => plain(money(m))),
   dirty: !l.id,
   focusMonth: 1,
@@ -271,6 +278,16 @@ export function BudgetEditor({
                     onChange={(e) => update(r.key, { item: e.target.value })}
                   />
                   {r.errors.coaCode ? <span className="text-destructive text-xs">{r.errors.coaCode}</span> : null}
+                  {r.rka2026 || r.actual2026 ? (
+                    <span className="text-muted-foreground text-xs">
+                      2026: RKA {r.rka2026 ? formatIdr(money(r.rka2026)) : "—"} · Actual {r.actual2026 ? formatIdr(money(r.actual2026)) : "—"}
+                    </span>
+                  ) : null}
+                  {r.flags?.map((f) => (
+                    <span key={f} className="bg-warning/15 max-w-56 rounded px-1.5 py-0.5 text-xs whitespace-normal">
+                      {f}
+                    </span>
+                  ))}
                   {r.remark ? (
                     <span className="bg-warning/15 max-w-56 rounded px-1.5 py-1 text-xs whitespace-normal">
                       Dikembalikan oleh {r.remark.by}: “{r.remark.comment}”

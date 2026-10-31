@@ -26,6 +26,9 @@ export default async function RkaPage() {
     basis: l.basis ?? "",
     months: l.months.map((m) => m.toFixed()),
     ...(l.remark ? { remark: l.remark } : {}),
+    ...(l.rka2026 ? { rka2026: l.rka2026.toFixed() } : {}),
+    ...(l.actual2026 ? { actual2026: l.actual2026.toFixed() } : {}),
+    ...(l.flags?.length ? { flags: l.flags } : {}),
   }));
 
   return (

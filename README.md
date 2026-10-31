@@ -66,10 +66,12 @@ packages/config     shared tsconfig
 
 | Done | Next (phase 1) |
 | --- | --- |
-| Auth, invitations, password reset, role home, nav by role | Show RKA 2026 / Actual 2026 and review flags beside each line |
-| Domain rules, importer and golden test; web tests for every composite and nav (114 in all) | COA Master screen; Finance confirms provisional codes |
+| Auth, invitations, password reset, role home, nav by role | Comment thread on lines for Finance clarification |
+| Domain rules, importer and golden test; web tests for every composite and nav (128 in all) | Excel export in Finance's layout |
 | Workbook importer: 192 lines, 85 COA codes, Rekap reproduced to the rupiah | RKA cycle: open with deadline, revise a locked version |
 | Email outbox with Bahasa templates; console in dev, Resend in prod | Integration tests on Testcontainers Postgres; CI workflow running unit, typecheck, lint and e2e |
 | BudgetEditor: paste from Excel, fill-right, per-row save, submit | CommentThread for discussion on a line |
 | Queues on `applyTransition`: Antrean Konsolidasi, RKA Divisi, Status Board Finance, Kunci RKA | Daily digest and pending-item reminders |
-| Management Summary (P&L by month, Kontribusi Divisi, per entity, URL filters); line history and return notes | Excel export in Finance's layout |
+| Management Summary (P&L by month, Kontribusi Divisi, per entity, URL filters); line history and return notes | Allocation of shared cost to MATRIK, DJALU, PAS (needs Finance's keys) |
+| RKA 2026 / Actual 2026 and the change beside each line; workbook review flags on every screen | |
+| COA Master screen: add, edit, deactivate; confirm or remap provisional codes | |

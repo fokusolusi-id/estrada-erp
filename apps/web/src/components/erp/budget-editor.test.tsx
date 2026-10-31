@@ -16,7 +16,7 @@ const masters = {
 
 const zero = Array.from({ length: 12 }, () => "0");
 const lines: EditorLine[] = [
-  { id: "11111111-1111-4111-8111-111111111111", coaCode: "6241", entityCode: "ESTRADA", ownerUnit: "SCM", item: "Internet kantor", basis: "Kontrak 2027", months: zero },
+  { id: "11111111-1111-4111-8111-111111111111", coaCode: "6241", entityCode: "ESTRADA", ownerUnit: "SCM", item: "Internet kantor", basis: "Kontrak 2027", months: zero, rka2026: "200000000", actual2026: "180000000", flags: ["Cek potensi double counting dengan RKA HCM"] },
   { id: "22222222-2222-4222-8222-222222222222", coaCode: "6241", entityCode: "ESTRADA", ownerUnit: "SCM", item: "Internet gudang", basis: "", months: zero, remark: { by: "Bayu (Head SCM)", comment: "Basis kontrak belum dilampirkan" } },
 ];
 
@@ -97,5 +97,11 @@ describe("BudgetEditor", () => {
   it("shows why a line came back", () => {
     setup();
     expect(screen.getByText("Dikembalikan oleh Bayu (Head SCM): “Basis kontrak belum dilampirkan”")).toBeTruthy();
+  });
+
+  it("shows the 2026 figures and review flags while the requestor edits", () => {
+    setup();
+    expect(screen.getByText("2026: RKA Rp 200.000.000 · Actual Rp 180.000.000")).toBeTruthy();
+    expect(screen.getByText("Cek potensi double counting dengan RKA HCM")).toBeTruthy();
   });
 });

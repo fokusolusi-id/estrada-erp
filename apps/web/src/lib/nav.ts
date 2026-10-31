@@ -20,7 +20,7 @@ export const NAV: readonly NavItem[] = [
   { href: "/cash", label: "Arus Kas", roles: ["finance", "director"], phase: 3 },
   { href: "/admin/users", label: "Pengguna", roles: ["admin"] },
   { href: "/admin/positions", label: "Posisi & pjs", roles: ["admin"] },
-  { href: "/admin/coa", label: "COA Master", roles: ["admin"], phase: 0 },
+  { href: "/admin/coa", label: "COA Master", roles: ["admin"] },
 ];
 
 export function navFor(role: Role): NavItem[] {

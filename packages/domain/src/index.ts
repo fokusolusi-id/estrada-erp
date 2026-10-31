@@ -8,3 +8,4 @@ export * from "./notifications";
 export * from "./entry";
 export * from "./queue";
 export * from "./summary";
+export * from "./coa";

@@ -6,7 +6,7 @@ const flat = (a: string) => Array.from({ length: 12 }, () => a);
 const lines: QueueLine[] = [
   { id: "a", coaCode: "6241", coaName: "Beban internet", entity: "ESTRADA", requestorUnit: "SCM", ownerUnit: "SCM", state: "consolidation", months: flat("19821320"), basis: "Kontrak", actions: ["return", "consolidate"],
     history: [{ action: "submit", fromState: "draft", toState: "consolidation", actorName: "Rina (SCM)", actorRole: "Requestor", comment: null, at: "2026-10-31T02:01:00.000Z" }] },
-  { id: "b", coaCode: "5300", coaName: "Biaya jaringan Internet", entity: "ESTRADA", requestorUnit: "SCM", ownerUnit: "SCM", state: "consolidation", months: flat("1000000"), actions: ["return", "consolidate"] },
+  { id: "b", coaCode: "5300", coaName: "Biaya jaringan Internet", entity: "ESTRADA", requestorUnit: "SCM", ownerUnit: "SCM", state: "consolidation", months: flat("1000000"), actions: ["return", "consolidate"], actual2026: "10000000", flags: ["Nilai bulanan mengandung desimal"] },
   { id: "c", coaCode: "6211", coaName: "Beban Gaji", entity: "ESTRADA", requestorUnit: "FRM", ownerUnit: "HCM", state: "consolidation", months: flat("0"), actions: [] },
 ];
 
@@ -67,5 +67,11 @@ describe("ApprovalQueue", () => {
     expect(screen.queryByText(/Rina \(SCM\)/)).toBeNull();
     fireEvent.click(screen.getAllByRole("button", { name: "Riwayat" })[0]!);
     expect(screen.getByText(/Rina \(SCM\)/)).toBeTruthy();
+  });
+
+  it("shows Actual 2026, the change and the workbook's review flags", () => {
+    setup();
+    expect(screen.getByText("+Rp 2.000.000 (+20,0%)")).toBeTruthy();
+    expect(screen.getByText("Nilai bulanan mengandung desimal")).toBeTruthy();
   });
 });
