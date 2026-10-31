@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { contribution, pnl, type ApprovalState, type Role } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
-import { loadScopedLines, openVersion } from "@/lib/rka";
+import { loadScopedLines, reportVersions } from "@/lib/rka";
 import { loadOrg } from "@/lib/workflow";
 import { ContributionTable } from "@/components/erp/contribution-table";
 import { KpiCard } from "@/components/erp/kpi-card";
@@ -22,14 +22,17 @@ const STATUS: Record<string, { label: string; states: readonly ApprovalState[] |
 export default async function SummaryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ entity?: string; division?: string; status?: string }>;
+  searchParams: Promise<{ version?: string; entity?: string; division?: string; status?: string }>;
 }) {
   const user = await requireUser();
   if (!ROLES.includes(user.actor.role)) notFound();
   const params = await searchParams;
   const status = STATUS[params.status ?? "all"] ?? STATUS.all!;
 
-  const [version, scoped, org] = await Promise.all([openVersion(), loadScopedLines(user), loadOrg()]);
+  // The open version, else the latest locked one: the final RKA must stay readable after the lock.
+  const versions = await reportVersions();
+  const version = versions.find((v) => v.id === params.version) ?? versions[0] ?? null;
+  const [scoped, org] = await Promise.all([version ? loadScopedLines(user, undefined, version.id) : [], loadOrg()]);
   const entities = [...new Set(scoped.map((l) => l.entity))].sort();
   const divisions = [...new Set(scoped.map((l) => org.divisionOf(l.ownerUnit)))].sort();
 
@@ -54,6 +57,9 @@ export default async function SummaryPage({
         </div>
         <ScopeBar
           filters={[
+            ...(versions.length > 1
+              ? [{ name: "version", label: "Versi", options: versions.map((v) => ({ value: v.id, label: `${v.name}${v.status === "locked" ? " (terkunci)" : ""}` })) }]
+              : []),
             { name: "entity", label: "Entitas", options: [{ value: "", label: "Semua entitas" }, ...entities.map((e) => ({ value: e, label: e }))] },
             { name: "division", label: "Divisi", options: [{ value: "", label: "Semua divisi" }, ...divisions.map((d) => ({ value: d, label: d }))] },
             { name: "status", label: "Status", options: Object.entries(STATUS).map(([value, s]) => ({ value, label: s.label })) },

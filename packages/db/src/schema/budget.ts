@@ -159,3 +159,9 @@ export const notification = pgTable("notification", {
   readAt: timestamp("read_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/** Reminders already sent, keyed by what they were about, so a daily run never sends the same one twice. */
+export const reminderLog = pgTable("reminder_log", {
+  key: text("key").primaryKey(),
+  sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+});

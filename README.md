@@ -27,6 +27,7 @@ Log in as the admin, open **Pengguna**, and invite users. With no `RESEND_API_KE
 | `pnpm test` | All Vitest projects (domain + web) |
 | `pnpm e2e` | Playwright journeys: requestor to Director lock, on a throwaway `estrada_e2e` database and a dev server on :3100 (needs `docker compose up -d db`; first run: `pnpm --filter web exec playwright install chromium`) |
 | `pnpm db:import -- "<file.xlsx>"` | Load an RKA workbook as the open version. `--dry-run` prints totals only; `--replace` reloads a version that is not locked; `--state` sets the lines' approval state (default `draft`) |
+| `GET /api/cron/reminders` | Daily reminders (deadline 7/3/1 days, items waiting `REMINDER_PENDING_DAYS`); call once a day with `Authorization: Bearer $CRON_SECRET`. Each reminder is sent once |
 | `pnpm typecheck` | `tsc` in every package |
 | `pnpm lint` | ESLint on the web app |
 | `pnpm build` | Production build |
@@ -60,7 +61,7 @@ packages/config     shared tsconfig
 
 ## Approval flow
 
-`draft → consolidation → division_approval → finance_review → awaiting_lock → locked`, with comment-required returns from Default Owner and clarifications from Finance. `RKA_LOCK_ROLE` decides whether the Director or Finance locks (open question for the client).
+`draft → consolidation → division_approval → finance_review → awaiting_lock → locked`, with comment-required returns from Default Owner and clarifications from Finance. When the last line locks, the version locks; a revision copies it into a new open version, starting at Draft (every division again) or Review Finance (Finance adjusts alone). `RKA_LOCK_ROLE` decides whether the Director or Finance locks (open question for the client).
 
 ## Done in this base vs next
 
@@ -68,7 +69,8 @@ packages/config     shared tsconfig
 | --- | --- |
 | Auth, invitations, password reset, role home, nav by role | Comment thread on lines for Finance clarification |
 | Domain rules, importer and golden test; web tests for every composite and nav (128 in all) | Excel export in Finance's layout |
-| Workbook importer: 192 lines, 85 COA codes, Rekap reproduced to the rupiah | RKA cycle: open with deadline, revise a locked version |
+| Workbook importer: 192 lines, 85 COA codes, Rekap reproduced to the rupiah | Schedule the reminder endpoint in production |
+| Siklus RKA: open a cycle with deadline, revise a locked version; lock marks the version locked; summary keeps the final version | |
 | Email outbox with Bahasa templates; console in dev, Resend in prod | Integration tests on Testcontainers Postgres; CI workflow running unit, typecheck, lint and e2e |
 | BudgetEditor: paste from Excel, fill-right, per-row save, submit | CommentThread for discussion on a line |
 | Queues on `applyTransition`: Antrean Konsolidasi, RKA Divisi, Status Board Finance, Kunci RKA | Daily digest and pending-item reminders |

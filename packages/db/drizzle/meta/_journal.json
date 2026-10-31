@@ -15,6 +15,13 @@
       "when": 1793419742769,
       "tag": "0001_jazzy_miracleman",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793420972655,
+      "tag": "0002_organic_turbo",
+      "breakpoints": true
     }
   ]
 }

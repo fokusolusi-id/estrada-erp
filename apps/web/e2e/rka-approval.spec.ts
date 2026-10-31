@@ -130,3 +130,24 @@ test("5. Director locks the version and reads the Management Summary", async ({ 
   await expect(page).toHaveURL(/division=PDMS/);
   await expect(page.getByTestId("contribution-PDMS").first()).toBeVisible();
 });
+
+test("Locking the last line locks the version; the Director sees it but cannot revise", async ({ page }) => {
+  await as("director", page, "/rka/cycle");
+  const row = page.getByRole("row").filter({ hasText: "RKA 2027 (demo)" });
+  await expect(row.getByText("Terkunci", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Buat revisi" })).toHaveCount(0);
+});
+
+test("Finance opens a revision of the locked version and adjusts it alone", async ({ page }) => {
+  await as("finance", page, "/rka/cycle");
+  const row = page.getByRole("row").filter({ hasText: "RKA 2027 (demo)" });
+  await row.getByLabel("Mulai revisi di").selectOption("finance_review");
+  await row.getByRole("button", { name: "Buat revisi" }).click();
+  await expect(page.getByText("RKA 2027 (demo) v2 dibuka dari RKA 2027 (demo).")).toBeVisible();
+  await expect(page.getByRole("row").filter({ hasText: "RKA 2027 (demo) v2" }).getByText("Review Finance 3")).toBeVisible();
+
+  // The locked version is untouched; the copy waits in Finance's queue.
+  await page.goto("/rka/review");
+  await expect(page.getByText("RKA 2027 (demo) v2 · Rp juta")).toBeVisible();
+  await expect(page.getByText("SCM · 3 baris")).toBeVisible();
+});

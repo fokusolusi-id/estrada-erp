@@ -1,0 +1,89 @@
+"use client";
+
+import { useActionState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { openCycle, reviseVersion, setDeadline, type CycleState } from "./actions";
+
+const INITIAL: CycleState = { ok: false, message: "" };
+const SELECT =
+  "border-input h-9 rounded-md border bg-transparent px-3 text-sm shadow-xs focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none";
+
+function Result({ state }: { state: CycleState }) {
+  return state.message ? <p className={state.ok ? "text-success text-sm" : "text-destructive text-sm"}>{state.message}</p> : null;
+}
+
+export function OpenCycleForm({ fiscalYear }: { fiscalYear: number }) {
+  const [state, action, pending] = useActionState(openCycle, INITIAL);
+  return (
+    <form action={action} className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-2">
+        <Label htmlFor="cycle-year">Tahun anggaran</Label>
+        <Input id="cycle-year" name="fiscalYear" type="number" defaultValue={fiscalYear} required />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="cycle-name">Nama versi</Label>
+        <Input id="cycle-name" name="name" defaultValue={`RKA ${fiscalYear}`} required />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="cycle-deadline">Batas pengajuan (17.00 WIB)</Label>
+        <Input id="cycle-deadline" name="deadline" type="date" required />
+        {state.errors?.deadline ? <p className="text-destructive text-xs">{state.errors.deadline[0]}</p> : null}
+      </div>
+      <div className="flex flex-wrap items-center gap-3 sm:col-span-3">
+        <Button type="submit" disabled={pending}>
+          {pending ? "Membuka…" : "Buka siklus dan kirim email ke requestor"}
+        </Button>
+        <Result state={state} />
+      </div>
+    </form>
+  );
+}
+
+export function DeadlineForm({ versionId, current }: { versionId: string; current: string | null }) {
+  const [state, action, pending] = useActionState(setDeadline, INITIAL);
+  return (
+    <form action={action} className="flex flex-wrap items-end gap-2">
+      <input type="hidden" name="versionId" value={versionId} />
+      <div className="grid gap-1">
+        <Label htmlFor={`deadline-${versionId}`} className="text-xs">
+          Ubah batas waktu
+        </Label>
+        <Input id={`deadline-${versionId}`} name="deadline" type="date" defaultValue={current ?? ""} className="h-8 w-40" required />
+      </div>
+      <Button type="submit" size="sm" variant="outline" disabled={pending}>
+        Simpan
+      </Button>
+      <Result state={state} />
+    </form>
+  );
+}
+
+export function ReviseForm({ versionId }: { versionId: string }) {
+  const [state, action, pending] = useActionState(reviseVersion, INITIAL);
+  return (
+    <form action={action} className="flex flex-wrap items-end gap-2">
+      <input type="hidden" name="versionId" value={versionId} />
+      <div className="grid gap-1">
+        <Label htmlFor={`start-${versionId}`} className="text-xs">
+          Mulai revisi di
+        </Label>
+        <select id={`start-${versionId}`} name="start" className={`${SELECT} h-8`} defaultValue="finance_review">
+          <option value="finance_review">Review Finance (Finance menyesuaikan)</option>
+          <option value="draft">Draft (semua divisi mengisi ulang)</option>
+        </select>
+      </div>
+      <div className="grid gap-1">
+        <Label htmlFor={`revdeadline-${versionId}`} className="text-xs">
+          Batas waktu (opsional)
+        </Label>
+        <Input id={`revdeadline-${versionId}`} name="deadline" type="date" className="h-8 w-40" />
+      </div>
+      <Button type="submit" size="sm" disabled={pending}>
+        Buat revisi
+      </Button>
+      <Result state={state} />
+    </form>
+  );
+}

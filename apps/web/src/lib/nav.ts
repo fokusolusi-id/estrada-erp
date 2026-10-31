@@ -15,6 +15,7 @@ export const NAV: readonly NavItem[] = [
   { href: "/rka/division", label: "RKA Divisi", roles: ["division_owner"] },
   { href: "/rka/review", label: "Status Board Finance", roles: ["finance"] },
   { href: "/rka/lock", label: "Kunci RKA", roles: ["finance", "director"] },
+  { href: "/rka/cycle", label: "Siklus RKA", roles: ["finance", "director"] },
   { href: "/summary", label: "Management Summary", roles: ["division_owner", "finance", "director", "auditor"] },
   { href: "/pipeline", label: "Pipeline", roles: ["finance", "director", "division_owner"], phase: 2 },
   { href: "/cash", label: "Arus Kas", roles: ["finance", "director"], phase: 3 },

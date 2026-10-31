@@ -25,5 +25,8 @@ describe("navFor", () => {
     expect(live("finance")).toEqual(expect.arrayContaining(["/rka/review", "/rka/lock"]));
     expect(live("director")).toEqual(expect.arrayContaining(["/rka/lock", "/summary"]));
     expect(live("auditor")).toContain("/summary");
+    expect(live("finance")).toContain("/rka/cycle");
+    expect(live("director")).toContain("/rka/cycle");
+    expect(live("requestor")).not.toContain("/rka/cycle");
   });
 });

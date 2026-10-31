@@ -5,6 +5,7 @@ import {
   OrgTree,
   actionsFor,
   handoffs,
+  isFullyLocked,
   isParticipant,
   notificationsFor,
   seatFor,
@@ -83,6 +84,17 @@ export async function applyTransition(actor: Actor, lineIds: string[], action: A
         comment: comment ?? null,
       })),
     );
+    // The version locks when its last line does; a locked version is never edited again.
+    if (t.to === "locked") {
+      const versionId = lines[0]!.versionId;
+      const states = await tx.select({ state: schema.budgetLine.state }).from(schema.budgetLine).where(eq(schema.budgetLine.versionId, versionId));
+      if (isFullyLocked(states.map((r) => r.state))) {
+        await tx
+          .update(schema.budgetVersion)
+          .set({ status: "locked", lockedAt: new Date(), lockedBy: actor.userId })
+          .where(eq(schema.budgetVersion.id, versionId));
+      }
+    }
     return { t, lines };
   });
 

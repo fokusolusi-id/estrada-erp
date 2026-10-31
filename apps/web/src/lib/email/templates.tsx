@@ -80,7 +80,7 @@ export const COPY: Record<EmailTemplate, Copy> = {
   reminder_pending: {
     subject: "Pengingat: item RKA menunggu Anda",
     heading: "Ada item yang menunggu",
-    body: (p) => `Item ini sudah menunggu ${p.days ?? "beberapa"} hari.`,
+    body: (p) => `${p.count ?? "Beberapa"} baris RKA ${p.unit ?? ""} sudah menunggu tindakan Anda ${p.days ?? "beberapa"} hari atau lebih.`,
     cta: "Buka item",
   },
   deadline_near: {

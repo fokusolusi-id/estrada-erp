@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
-const PUBLIC = ["/login", "/forgot-password", "/set-password", "/api/auth"];
+// /api/cron authenticates with CRON_SECRET, not a session.
+const PUBLIC = ["/login", "/forgot-password", "/set-password", "/api/auth", "/api/cron"];
 
 /** Optimistic check only: real authorisation happens in every server action and page. */
 export function proxy(request: NextRequest) {

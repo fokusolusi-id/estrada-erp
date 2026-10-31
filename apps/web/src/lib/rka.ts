@@ -1,5 +1,5 @@
 import "server-only";
-import { asc, eq, inArray } from "drizzle-orm";
+import { asc, desc, eq, inArray } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import {
   ROLE_LABEL,
@@ -27,6 +27,12 @@ export async function openVersion() {
   return version ?? null;
 }
 
+/** Versions a report may show: the open one first, then locked ones, newest first. Archived versions are history only. */
+export async function reportVersions() {
+  const rows = await db.select().from(schema.budgetVersion).where(inArray(schema.budgetVersion.status, ["open", "locked"])).orderBy(desc(schema.budgetVersion.createdAt));
+  return [...rows.filter((v) => v.status === "open"), ...rows.filter((v) => v.status === "locked")];
+}
+
 export interface ScopedLine extends GridLine {
   category: Category;
   item: string | null;
@@ -37,8 +43,12 @@ export interface ScopedLine extends GridLine {
 }
 
 /** Lines of the open version this position may see, with what it may do to each. Authorised in the domain. */
-export async function loadScopedLines(user: CurrentUser, states?: readonly ApprovalState[]): Promise<ScopedLine[]> {
-  const version = await openVersion();
+export async function loadScopedLines(
+  user: CurrentUser,
+  states?: readonly ApprovalState[],
+  versionId?: string,
+): Promise<ScopedLine[]> {
+  const version = versionId ? { id: versionId } : await openVersion();
   if (!version) return [];
   const org = await loadOrg();
   const cfg = approvalConfig();

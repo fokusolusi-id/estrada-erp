@@ -25,7 +25,8 @@ export type Permission =
   | "org.manage"
   | "user.manage"
   | "report.view"
-  | "audit.view";
+  | "audit.view"
+  | "cycle.manage";
 
 const COMPANY_WIDE: readonly Role[] = ["finance", "director", "auditor", "admin"];
 
@@ -46,6 +47,8 @@ export function can(actor: Actor, permission: Permission, resource: LineResource
       return actor.role === "admin";
     case "audit.view":
       return actor.role === "auditor" || actor.role === "director" || actor.role === "admin";
+    case "cycle.manage":
+      return actor.role === "finance";
     case "report.view":
       return actor.role !== "requestor";
     case "line.view":

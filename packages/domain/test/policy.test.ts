@@ -59,6 +59,15 @@ describe("policy", () => {
   });
 });
 
+describe("cycle.manage: opening a cycle, its deadline and revisions", () => {
+  it("belongs to Finance only", () => {
+    expect(can(actor({ role: "finance", orgUnit: "FRM", entities: ["*"] }), "cycle.manage", null, org)).toBe(true);
+    for (const role of ["requestor", "default_owner", "division_owner", "director", "auditor", "admin"] as const) {
+      expect(can(actor({ role, orgUnit: "DIR", entities: ["*"] }), "cycle.manage", null, org)).toBe(false);
+    }
+  });
+});
+
 describe("vacant and acting positions: Admin assigns a pjs, nobody is escalated", () => {
   const positions = [
     { orgUnit: "SCM", role: "default_owner" as const, holder: null, acting: null },
