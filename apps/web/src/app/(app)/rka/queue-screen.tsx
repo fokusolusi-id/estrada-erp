@@ -33,6 +33,7 @@ export async function QueueScreen({
     months: l.months.map((m) => m.toFixed()),
     actions: l.actions,
     history: l.history,
+    commentCount: l.commentCount,
     ...(l.rka2026 ? { rka2026: l.rka2026.toFixed() } : {}),
     ...(l.actual2026 ? { actual2026: l.actual2026.toFixed() } : {}),
     ...(l.flags?.length ? { flags: l.flags } : {}),

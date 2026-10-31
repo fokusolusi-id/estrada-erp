@@ -65,6 +65,13 @@ export const COPY: Record<EmailTemplate, Copy> = {
       `${p.count ?? "Beberapa"} baris RKA milik ${p.unit ?? "unit"} menunggu ${p.role ?? "pemegang posisi"}, tetapi posisi itu kosong. Tetapkan pejabat sementara (pjs) agar alur persetujuan berlanjut.`,
     cta: "Tetapkan pjs",
   },
+  line_comment: {
+    subject: "Komentar baru di RKA",
+    heading: "Ada pertanyaan di baris RKA",
+    // The comment itself stays in the app: it may quote figures, and emails never carry rupiah.
+    body: (p) => `${p.author ?? "Seseorang"} (${p.role ?? ""}) menulis komentar pada ${p.line ?? "baris RKA"}. Buka diskusi untuk membaca dan membalas.`,
+    cta: "Buka diskusi",
+  },
   returned: {
     subject: "Usulan RKA dikembalikan",
     heading: "Usulan Anda dikembalikan",

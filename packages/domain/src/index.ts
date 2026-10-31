@@ -10,3 +10,4 @@ export * from "./queue";
 export * from "./summary";
 export * from "./coa";
 export * from "./cycle";
+export * from "./comments";

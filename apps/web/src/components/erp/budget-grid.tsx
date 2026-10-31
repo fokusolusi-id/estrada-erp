@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { lineTotal, summarize, type ApprovalState, type BudgetLine, type Money, type Unit } from "@estrada/domain";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MoneyCell } from "./money-cell";
@@ -13,13 +14,24 @@ export interface GridLine extends BudgetLine {
   actual2026?: Money | null;
   /** Notes for reviewers, e.g. the workbook's cleaning flags. */
   flags?: string[];
+  /** Comments on the line; the link to its discussion shows the count. */
+  commentCount?: number;
 }
 
 /**
  * 12-month budget grid. Totals always come from the domain (never typed by hand).
  * Read-only; drafts are edited in BudgetEditor. Actual 2026 and the change sit beside each line, as in the division sheets.
  */
-export function BudgetGrid({ lines, unit = "juta" }: { lines: GridLine[]; unit?: Unit }) {
+/** Link to a line's page with its discussion and history. */
+export function DiscussionLink({ id, count = 0 }: { id: string; count?: number | undefined }) {
+  return (
+    <Link href={`/rka/line/${id}`} className="text-primary mr-1 text-xs underline-offset-2 hover:underline">
+      Diskusi{count ? ` (${count})` : ""}
+    </Link>
+  );
+}
+
+export function BudgetGrid({ lines, unit = "juta", discussion = true }: { lines: GridLine[]; unit?: Unit; discussion?: boolean }) {
   const total = summarize(lines, () => "all").get("all");
   return (
     <Table>
@@ -44,6 +56,7 @@ export function BudgetGrid({ lines, unit = "juta" }: { lines: GridLine[]; unit?:
             <TableCell className="sticky left-0 bg-background">
               <div className="font-medium">{l.coaCode}</div>
               <div className="text-muted-foreground text-xs">{l.coaName}</div>
+              {discussion ? <DiscussionLink id={l.id} count={l.commentCount} /> : null}
               {l.flags?.length ? (
                 <span title={l.flags.join("; ")} className="bg-warning/15 rounded px-1 text-[10px] font-medium">
                   Perlu review

@@ -22,6 +22,13 @@
       "when": 1793420972655,
       "tag": "0002_organic_turbo",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793433683852,
+      "tag": "0003_far_wolfpack",
+      "breakpoints": true
     }
   ]
 }

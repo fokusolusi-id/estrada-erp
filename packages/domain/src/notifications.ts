@@ -13,6 +13,7 @@ export type EmailTemplate =
   | "reminder_pending"
   | "deadline_near"
   | "seat_vacant"
+  | "line_comment"
   | "invitation"
   | "password_reset";
 

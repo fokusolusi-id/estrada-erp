@@ -37,4 +37,18 @@ describe("BudgetGrid", () => {
     render(<BudgetGrid lines={lines} unit="rp" />);
     expect(screen.getByTitle("Cek potensi double counting dengan RKA HCM").textContent).toBe("Perlu review");
   });
+
+  it("links each line to its discussion, with the comment count", () => {
+    render(<BudgetGrid lines={[{ ...lines[0]!, commentCount: 2 }, lines[1]!]} unit="rp" />);
+    const links = screen.getAllByRole("link");
+    expect(links.map((a) => [a.textContent, a.getAttribute("href")])).toEqual([
+      ["Diskusi (2)", `/rka/line/${lines[0]!.id}`],
+      ["Diskusi", `/rka/line/${lines[1]!.id}`],
+    ]);
+  });
+
+  it("leaves the link out on the line's own page", () => {
+    render(<BudgetGrid lines={lines} unit="rp" discussion={false} />);
+    expect(screen.queryAllByRole("link")).toEqual([]);
+  });
 });

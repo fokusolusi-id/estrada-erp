@@ -108,17 +108,24 @@ export const approvalEvent = pgTable("approval_event", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const lineComment = pgTable("line_comment", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  lineId: uuid("line_id")
-    .notNull()
-    .references(() => budgetLine.id, { onDelete: "cascade" }),
-  authorUserId: text("author_user_id")
-    .notNull()
-    .references(() => user.id),
-  body: text("body").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+/** Discussion on a line, beside its approval flow: asking never moves the line. */
+export const lineComment = pgTable(
+  "line_comment",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    lineId: uuid("line_id")
+      .notNull()
+      .references(() => budgetLine.id, { onDelete: "cascade" }),
+    authorUserId: text("author_user_id")
+      .notNull()
+      .references(() => user.id),
+    /** The seat the author spoke from, e.g. a pjs acting as Division Owner. */
+    authorRole: roleEnum("author_role").notNull(),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("line_comment_line_idx").on(t.lineId, t.createdAt)],
+);
 
 /** Every mutation, login and lockout. */
 export const auditLog = pgTable("audit_log", {

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ApprovalTimeline, type Remark, type TimelineEvent } from "./approval-timeline";
+import { DiscussionLink } from "./budget-grid";
 import { MoneyCell } from "./money-cell";
 import { StatusBadge } from "./status-badge";
 import { VarianceCell } from "./variance-cell";
@@ -28,6 +29,7 @@ export interface QueueLine {
   /** Notes for reviewers, e.g. the workbook's cleaning flags. */
   flags?: string[];
   history?: TimelineEvent[];
+  commentCount?: number;
   /** Open return or clarification this line is waiting on. */
   remark?: Remark;
 }
@@ -165,6 +167,7 @@ export function ApprovalQueue({
                     <TableCell>
                       <div className="font-medium">{l.coaCode}</div>
                       <div className="text-muted-foreground text-xs">{l.item || l.coaName}</div>
+                      <DiscussionLink id={l.id} count={l.commentCount} />
                     </TableCell>
                     <TableCell>{l.entity}</TableCell>
                     <TableCell>

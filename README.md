@@ -68,14 +68,15 @@ packages/config     shared tsconfig
 
 | Done | Next (phase 1) |
 | --- | --- |
-| Auth, invitations, password reset, role home, nav by role | Comment thread on lines for Finance clarification |
+| Auth, invitations, password reset, role home, nav by role | Headcount plan feeding the salary lines |
 | Domain rules, importer and golden test; web tests for every composite and nav (128 in all) | Row-level security in Postgres as a second scope guard |
 | Workbook importer: 192 lines, 85 COA codes, Rekap reproduced to the rupiah | Schedule the reminder endpoint in production |
 | Siklus RKA: open a cycle with deadline, revise a locked version; lock marks the version locked; summary keeps the final version | |
 | Email outbox with Bahasa templates; console in dev, Resend in prod | Integration tests on Testcontainers Postgres; CI workflow running unit, typecheck, lint and e2e |
-| BudgetEditor: paste from Excel, fill-right, per-row save, submit | CommentThread for discussion on a line |
+| BudgetEditor: paste from Excel, fill-right, per-row save, submit | e2e for opening a new cycle and the Draft revision path |
 | Queues on `applyTransition`: Antrean Konsolidasi, RKA Divisi, Status Board Finance, Kunci RKA | Copy the holder's head on pending-item reminders |
 | Management Summary (P&L by month, Kontribusi Divisi, per entity, URL filters); line history and return notes | Allocation of shared cost to MATRIK, DJALU, PAS (needs Finance's keys) |
 | RKA 2026 / Actual 2026 and the change beside each line; workbook review flags on every screen | |
 | COA Master screen: add, edit, deactivate; confirm or remap provisional codes | |
+| Discussion on each line (`/rka/line/[id]`): everyone in the cycle who sees the line can ask or answer without moving it; Auditor reads; closed once locked. The requestor, the current holder and the thread hear about it: in-app every time, email at most hourly and without the comment text | |
 | Excel export from Management Summary ("Unduh Excel"): RKA Data in the importer's layout, Rekap, Kontribusi Divisi, Per Entitas; same version, filters and scope as the screen | |

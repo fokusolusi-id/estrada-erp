@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Cookie, type Page } from "@playwright/test";
 import ExcelJS from "exceljs";
+import postgres from "postgres";
+import { E2E_DATABASE_URL } from "../playwright.config";
 import { authFile, type E2eRole } from "./users";
 
 /**
@@ -19,6 +21,7 @@ async function as(role: E2eRole, page: Page, path: string) {
 }
 
 const lineRow = (page: Page, text: string) => page.getByRole("row").filter({ hasText: text });
+const comments = (page: Page) => page.getByRole("list", { name: "Daftar komentar" }).getByRole("listitem");
 
 test("1. Requestor drafts a line like in Excel and submits to the Default Owner", async ({ page }) => {
   await as("requestor", page, "/rka");
@@ -103,6 +106,44 @@ test("Division Owner sees the clarification and approves again", async ({ page }
   await page.getByLabel("Pilih semua SCM").check();
   await page.getByRole("button", { name: "Setujui & kirim ke Finance" }).click();
   await expect(page.getByText("3 baris diproses.")).toBeVisible();
+});
+
+test("Finance asks about one line in its discussion; the line stays where it is", async ({ page }) => {
+  await as("finance", page, "/rka/review");
+  await lineRow(page, "5300").getByRole("link", { name: "Diskusi" }).click();
+  await expect(page).toHaveURL(/\/rka\/line\//);
+  await page.getByLabel("Komentar", { exact: true }).fill("Kenaikan bandwidth 5300 mengikuti kontrak mana?");
+  await page.getByRole("button", { name: "Kirim komentar" }).click();
+  await expect(page.getByText("Komentar terkirim.")).toBeVisible();
+  await expect(comments(page).filter({ hasText: "Dewi (Finance)" })).toContainText("Kenaikan bandwidth 5300");
+  await expect(page.getByText("Review Finance").first()).toBeVisible();
+});
+
+test("Requestor answers in the thread from RKA Saya; Finance gets one email without the text", async ({ page }) => {
+  await as("requestor", page, "/rka");
+  await lineRow(page, "5300").getByRole("link", { name: "Diskusi (1)" }).click();
+  await expect(page.getByText("Kenaikan bandwidth 5300 mengikuti kontrak mana?")).toBeVisible();
+  await page.getByLabel("Komentar", { exact: true }).fill("Kontrak Telkom 2027, tarif naik 5%.");
+  await page.getByRole("button", { name: "Kirim komentar" }).click();
+  await expect(page.getByText("Komentar terkirim.")).toBeVisible();
+  await expect(comments(page)).toHaveCount(2);
+
+  const sql = postgres(E2E_DATABASE_URL, { max: 1, onnotice: () => {} });
+  try {
+    const mails = await sql<{ to_email: string; payload: Record<string, string> }[]>`
+      select to_email, payload from email_outbox where template = 'line_comment' order by created_at`;
+    expect(mails.map((m) => m.to_email)).toEqual(["e2e.requestor@estrada.test", "e2e.finance@estrada.test"]);
+    expect(JSON.stringify(mails)).not.toMatch(/Telkom|kontrak mana/);
+  } finally {
+    await sql.end();
+  }
+});
+
+test("The Default Owner, not emailed, still finds the whole thread on the line", async ({ page }) => {
+  await as("default_owner", page, "/rka");
+  await lineRow(page, "5300").getByRole("link", { name: "Diskusi (2)" }).click();
+  await expect(comments(page).filter({ hasText: "Rina (SCM)" })).toContainText("Kontrak Telkom 2027");
+  await expect(page.getByLabel("Komentar", { exact: true })).toBeVisible();
 });
 
 test("4. Finance finalises", async ({ page }) => {

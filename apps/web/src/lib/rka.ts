@@ -1,5 +1,5 @@
 import "server-only";
-import { asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import {
   ROLE_LABEL,
@@ -37,6 +37,9 @@ export interface ScopedLine extends GridLine {
   category: Category;
   item: string | null;
   sourceRef: string | null;
+  createdBy: string | null;
+  versionId: string;
+  commentCount: number;
   history: TimelineEvent[];
   remark?: Remark;
   actions: ApprovalAction[];
@@ -48,6 +51,7 @@ export async function loadScopedLines(
   user: CurrentUser,
   states?: readonly ApprovalState[],
   versionId?: string,
+  lineId?: string,
 ): Promise<ScopedLine[]> {
   const version = versionId ? { id: versionId } : await openVersion();
   if (!version) return [];
@@ -58,7 +62,7 @@ export async function loadScopedLines(
     .select({ line: schema.budgetLine, coaName: schema.coaAccount.name, category: schema.coaAccount.category })
     .from(schema.budgetLine)
     .innerJoin(schema.coaAccount, eq(schema.coaAccount.code, schema.budgetLine.coaCode))
-    .where(eq(schema.budgetLine.versionId, version.id))
+    .where(and(eq(schema.budgetLine.versionId, version.id), lineId ? eq(schema.budgetLine.id, lineId) : undefined))
     .orderBy(asc(schema.budgetLine.ownerUnit), asc(schema.budgetLine.coaCode), asc(schema.budgetLine.createdAt));
 
   const visible = rows.filter(({ line }) => {
@@ -92,6 +96,15 @@ export async function loadScopedLines(
     historyOf.set(e.lineId, list);
   }
 
+  const comments = visible.length
+    ? await db
+        .select({ lineId: schema.lineComment.lineId, n: count() })
+        .from(schema.lineComment)
+        .where(inArray(schema.lineComment.lineId, visible.map((v) => v.line.id)))
+        .groupBy(schema.lineComment.lineId)
+    : [];
+  const commentsOf = new Map(comments.map((c) => [c.lineId, c.n]));
+
   const monthsOf = new Map<string, ReturnType<typeof money>[]>();
   for (const a of amounts) {
     const months = monthsOf.get(a.lineId) ?? Array.from({ length: 12 }, () => ZERO);
@@ -115,6 +128,9 @@ export async function loadScopedLines(
       state: line.state,
       item: line.item,
       sourceRef: line.sourceRef,
+      createdBy: line.createdBy,
+      versionId: line.versionId,
+      commentCount: commentsOf.get(line.id) ?? 0,
       history,
       rka2026: line.rka2026 ? money(line.rka2026) : null,
       actual2026: line.actual2026 ? money(line.actual2026) : null,

@@ -1,5 +1,6 @@
 import type { ApprovalState } from "./approval";
 import type { OrgTree } from "./org";
+import { isParticipant } from "./notifications";
 import type { Role } from "./roles";
 
 export interface Actor {
@@ -21,6 +22,7 @@ export interface LineResource {
 export type Permission =
   | "line.view"
   | "line.edit"
+  | "line.comment"
   | "coa.manage"
   | "org.manage"
   | "user.manage"
@@ -55,6 +57,9 @@ export function can(actor: Actor, permission: Permission, resource: LineResource
       // Admin manages master data only; budget content is out of its scope.
       if (!resource || actor.role === "admin") return false;
       return entityAllowed(actor, resource.entity) && unitAllowed(actor, resource, org);
+    case "line.comment":
+      // Everyone in the cycle who can see the line; Auditor reads the thread, and a locked line's thread is closed.
+      return !!resource && resource.state !== "locked" && isParticipant(actor.role) && can(actor, "line.view", resource, org);
     case "line.edit": {
       if (!resource) return false;
       if (!entityAllowed(actor, resource.entity)) return false;
