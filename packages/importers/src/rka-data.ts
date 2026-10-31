@@ -28,8 +28,11 @@ export interface ImportProblem {
   message: string;
 }
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
-const COLS = ["No", "Sumber Sheet", "Baris Sumber", "COA Code", "COA Name", "Category", "Requestor (Unit)", "Budget Owner (Unit)", "Lintas Divisi", "Entitas", "Keterangan / Item", "Qty (Org)", "RKA 2026", "Actual 2026", ...MONTHS, "Total RKA 2027", "Basis / Assumption", "Notes", "Flag Cleaning"] as const;
+export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
+/** The full header of "RKA 2027 Data", in the workbook's order; the export writes exactly these. */
+export const RKA_DATA_COLUMNS = ["No", "Sumber Sheet", "Baris Sumber", "COA Code", "COA Name", "Category", "Requestor (Unit)", "Divisi Requestor", "Budget Owner (Unit)", "Divisi Budget Owner", "Lintas Divisi", "Entitas", "Dasar Entitas", "Keterangan / Item", "Qty (Org)", "RKA 2026", "Actual 2026", ...MONTHS, "Total RKA 2027", "Basis / Assumption", "Notes", "Flag Cleaning"] as const;
+/** Columns the importer needs; the derived Divisi and Dasar Entitas columns are optional. */
+const COLS = RKA_DATA_COLUMNS.filter((c) => !["Divisi Requestor", "Divisi Budget Owner", "Dasar Entitas"].includes(c));
 
 /** Sheet "RKA 2027 Data": the workbook's own clean list of every budget line. Rows it cannot place are reported, never guessed. */
 export function parseRkaData(rows: Cell[][], units: readonly UnitAlias[]): { lines: ImportedLine[]; problems: ImportProblem[] } {

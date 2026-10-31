@@ -15,7 +15,7 @@ function cellOf(v: ExcelJS.CellValue): Cell {
   return null;
 }
 
-function sheetRows(wb: ExcelJS.Workbook, name: string): Cell[][] {
+export function sheetRows(wb: ExcelJS.Workbook, name: string): Cell[][] {
   const ws = wb.getWorksheet(name);
   if (!ws) throw new Error(`Sheet "${name}" not found`);
   const rows: Cell[][] = [];

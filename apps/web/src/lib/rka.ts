@@ -36,6 +36,7 @@ export async function reportVersions() {
 export interface ScopedLine extends GridLine {
   category: Category;
   item: string | null;
+  sourceRef: string | null;
   history: TimelineEvent[];
   remark?: Remark;
   actions: ApprovalAction[];
@@ -113,12 +114,14 @@ export async function loadScopedLines(
       months: monthsOf.get(line.id) ?? Array.from({ length: 12 }, () => ZERO),
       state: line.state,
       item: line.item,
+      sourceRef: line.sourceRef,
       history,
       rka2026: line.rka2026 ? money(line.rka2026) : null,
       actual2026: line.actual2026 ? money(line.actual2026) : null,
       flags: line.reviewFlags,
       ...(open?.comment ? { remark: { by: open.actorName, comment: open.comment } } : {}),
       ...(line.basis ? { basis: line.basis } : {}),
+      ...(line.notes ? { notes: line.notes } : {}),
       actions: actionsFor(user.actor, res, org, cfg),
       canEdit: can(user.actor, "line.edit", res, org),
     };

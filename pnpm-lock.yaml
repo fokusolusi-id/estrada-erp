@@ -23,6 +23,9 @@ importers:
       '@estrada/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@estrada/importers':
+        specifier: workspace:*
+        version: link:../../packages/importers
       '@react-email/components':
         specifier: ^1.0.12
         version: 1.0.12(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -99,6 +102,9 @@ importers:
       eslint-config-next:
         specifier: 16.4.3
         version: 16.4.3(@typescript-eslint/parser@8.72.1(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+      exceljs:
+        specifier: ^4.4.0
+        version: 4.4.0
       jsdom:
         specifier: ^27.0.0
         version: 27.4.0(@noble/hashes@2.4.0)

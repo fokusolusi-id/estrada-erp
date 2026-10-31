@@ -3,7 +3,8 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { OrgTree, contribution, pnl, sum, type SummaryLine } from "@estrada/domain";
 import { ORG_UNITS } from "@estrada/db/seed-data";
-import { readRkaWorkbook, type ImportedLine } from "../src/index";
+import ExcelJS from "exceljs";
+import { parseRkaData, readRkaWorkbook, sheetRows, writeRkaWorkbook, type ImportedLine } from "../src/index";
 
 /**
  * Golden test: the app must reproduce Finance's numbers from RKA_2027_Upd_Fin v2.xlsx to the rupiah.
@@ -83,5 +84,22 @@ describe.skipIf(!existsSync(WORKBOOK))("golden: RKA_2027_Upd_Fin v2.xlsx", async
   it("keeps 57 workbook flags and 46 cross-division lines", () => {
     expect(lines.filter((l) => l.flags.length)).toHaveLength(57);
     expect(lines.filter((l) => l.crossDivision)).toHaveLength(46);
+  });
+
+  it("exports all 192 lines and reads them back to the same totals", async () => {
+    const buf = await writeRkaWorkbook({
+      year: 2027,
+      title: "RKA 2027 v2 Upd Fin",
+      lines: lines.map((l) => ({ ...l, status: "Draft", sourceRef: null })),
+      divisionOf: (u) => org.divisionOf(u),
+      pnlLabel: { Revenue: "Revenue", COGS: "COGS", GrossProfit: "GP", OPEX: "OPEX", OperatingProfit: "OP", OTHERS: "OTHERS", ProfitBeforeTax: "PBT", CAPEX: "CAPEX", TotalCost: "Total" },
+    });
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(buf);
+    const back = parseRkaData(sheetRows(wb, "RKA 2027 Data"), ORG_UNITS);
+    expect(back.problems).toEqual([]);
+    const totals = pnl(asSummary(back.lines));
+    expect(["Revenue", "TotalCost"].map((k) => totals.find((r) => r.key === k)!.total.toFixed(2))).toEqual(["457830698346.00", "294400936589.71"]);
+    expect(back.lines.filter((l) => l.crossDivision)).toHaveLength(46);
   });
 });

@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Cookie, type Page } from "@playwright/test";
+import ExcelJS from "exceljs";
 import { authFile, type E2eRole } from "./users";
 
 /**
@@ -129,6 +130,22 @@ test("5. Director locks the version and reads the Management Summary", async ({ 
   await page.getByLabel("Divisi").selectOption("PDMS");
   await expect(page).toHaveURL(/division=PDMS/);
   await expect(page.getByTestId("contribution-PDMS").first()).toBeVisible();
+});
+
+test("Director downloads the filtered summary as Excel, in the workbook's layout", async ({ page }) => {
+  await as("director", page, "/summary?division=PDMS");
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: "Unduh Excel" }).click()]);
+  expect(download.suggestedFilename()).toBe("RKA 2027 (demo).xlsx");
+
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.readFile(await download.path());
+  expect(wb.worksheets.map((w) => w.name)).toEqual(["RKA 2027 Data", "Rekap", "Kontribusi Divisi", "Per Entitas"]);
+  const data = wb.getWorksheet("RKA 2027 Data")!;
+  const statuses = data.getColumn((data.getRow(4).values as string[]).indexOf("Status")).values.slice(5);
+  expect(statuses).toEqual(["Terkunci", "Terkunci", "Terkunci"]);
+  const total = wb.getWorksheet("Rekap")!.getRow(13).values as unknown[];
+  expect(total[1]).toBe("Total Biaya");
+  expect(Math.round(Number(total[14]) / 1e5) / 10).toBe(4944.1);
 });
 
 test("Locking the last line locks the version; the Director sees it but cannot revise", async ({ page }) => {
