@@ -9,7 +9,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "create-admin": "tsx scripts/create-admin.ts",
-    "create-demo-users": "tsx scripts/create-demo-users.ts"
+    "create-demo-users": "tsx scripts/create-demo-users.ts",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@estrada/db": "workspace:*",
@@ -31,6 +32,7 @@
     "zod": "^4.4.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.56.1",
     "@tailwindcss/turbopack": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
@@ -41,9 +43,10 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
     "jsdom": "^27.0.0",
+    "postgres": "^3.4.9",
     "tailwindcss": "^4",
+    "tsx": "^4.20.6",
     "typescript": "^5",
-    "vitest": "^3.2.4",
-    "tsx": "^4.20.6"
+    "vitest": "^3.2.4"
   }
 }

@@ -24,6 +24,7 @@ Log in as the admin, open **Pengguna**, and invite users. With no `RESEND_API_KE
 | Command | What it does |
 | --- | --- |
 | `pnpm test` | All Vitest projects (domain + web) |
+| `pnpm e2e` | Playwright journeys: requestor to Director lock, on a throwaway `estrada_e2e` database and a dev server on :3100 (needs `docker compose up -d db`; first run: `pnpm --filter web exec playwright install chromium`) |
 | `pnpm typecheck` | `tsc` in every package |
 | `pnpm lint` | ESLint on the web app |
 | `pnpm build` | Production build |
@@ -57,7 +58,7 @@ packages/config     shared tsconfig
 | Auth, invitations, password reset, role home, nav by role | Workbook importer for the full COA Master and division sheets |
 | Domain rules with 64 tests; web tests for every composite and nav (95 in all) | Golden test against `RKA_2027_Upd_Fin v2.xlsx` |
 | Schema + migration for masters, budget, approvals, audit, email outbox | RKA 2026 / Actual 2026 beside each line (needs the importer) |
-| Email outbox with Bahasa templates; console in dev, Resend in prod | Playwright journeys; integration tests on Testcontainers Postgres |
+| Email outbox with Bahasa templates; console in dev, Resend in prod | Integration tests on Testcontainers Postgres; CI workflow running unit, typecheck, lint and e2e |
 | BudgetEditor: paste from Excel, fill-right, per-row save, submit | CommentThread for discussion on a line |
 | Queues on `applyTransition`: Antrean Konsolidasi, RKA Divisi, Status Board Finance, Kunci RKA | Daily digest and pending-item reminders |
 | Management Summary (P&L by month, Kontribusi Divisi, per entity, URL filters); line history and return notes | Excel export in Finance's layout |
