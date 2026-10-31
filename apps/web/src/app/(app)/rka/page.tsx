@@ -29,6 +29,7 @@ export default async function RkaPage() {
     ...(l.rka2026 ? { rka2026: l.rka2026.toFixed() } : {}),
     ...(l.actual2026 ? { actual2026: l.actual2026.toFixed() } : {}),
     ...(l.flags?.length ? { flags: l.flags } : {}),
+    commentCount: l.commentCount,
   }));
 
   return (

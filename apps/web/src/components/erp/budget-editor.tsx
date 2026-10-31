@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { MONTHS } from "./budget-grid";
+import { DiscussionLink, MONTHS } from "./budget-grid";
 import type { Remark } from "./approval-timeline";
 import { MoneyCell } from "./money-cell";
 
@@ -26,6 +26,8 @@ export interface EditorLine {
   rka2026?: string;
   actual2026?: string;
   flags?: string[];
+  /** Comments on a saved line; drafts link to their discussion like every other line. */
+  commentCount?: number;
 }
 
 export interface EditorMasters {
@@ -72,6 +74,7 @@ const toRow = (l: EditorLine): Row => ({
   ...(l.rka2026 ? { rka2026: l.rka2026 } : {}),
   ...(l.actual2026 ? { actual2026: l.actual2026 } : {}),
   ...(l.flags ? { flags: l.flags } : {}),
+  ...(l.commentCount ? { commentCount: l.commentCount } : {}),
   cells: l.months.map((m) => plain(money(m))),
   dirty: !l.id,
   focusMonth: 1,
@@ -293,6 +296,7 @@ export function BudgetEditor({
                       Dikembalikan oleh {r.remark.by}: “{r.remark.comment}”
                     </span>
                   ) : null}
+                  {r.id ? <DiscussionLink id={r.id} count={r.commentCount} /> : null}
                 </TableCell>
                 <TableCell>
                   <select

@@ -104,4 +104,18 @@ describe("BudgetEditor", () => {
     expect(screen.getByText("2026: RKA Rp 200.000.000 · Actual Rp 180.000.000")).toBeTruthy();
     expect(screen.getByText("Cek potensi double counting dengan RKA HCM")).toBeTruthy();
   });
+
+  it("links each saved draft to its discussion, so questions reach the requestor while they edit", () => {
+    render(<BudgetEditor lines={[{ ...lines[0]!, commentCount: 1 }, lines[1]!]} masters={masters} defaultEntity="ESTRADA" onSave={ok()} onDelete={ok()} onSubmit={ok()} />);
+    expect(screen.getAllByRole("link").map((a) => [a.textContent, a.getAttribute("href")])).toEqual([
+      ["Diskusi (1)", `/rka/line/${lines[0]!.id}`],
+      ["Diskusi", `/rka/line/${lines[1]!.id}`],
+    ]);
+  });
+
+  it("has no discussion for a line that is not saved yet", () => {
+    setup();
+    fireEvent.click(screen.getByRole("button", { name: /Tambah baris/ }));
+    expect(screen.getAllByRole("link")).toHaveLength(2);
+  });
 });
