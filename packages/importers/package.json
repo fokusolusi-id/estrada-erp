@@ -1,0 +1,25 @@
+{
+  "name": "@estrada/importers",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "load": "tsx src/load.ts"
+  },
+  "dependencies": {
+    "@estrada/db": "workspace:*",
+    "@estrada/domain": "workspace:*",
+    "drizzle-orm": "^0.45.4",
+    "exceljs": "^4.4.0",
+    "postgres": "^3.4.9"
+  },
+  "devDependencies": {
+    "@estrada/config": "workspace:*",
+    "@types/node": "^22",
+    "tsx": "^4.20.6"
+  }
+}

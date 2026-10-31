@@ -82,9 +82,10 @@ export default async function SummaryPage({
         <Card>
           <CardHeader>
             <CardTitle>Kontribusi Divisi</CardTitle>
+            <CardDescription>Per divisi pengusul, seperti sheet Kontribusi Divisi dan Rekap.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ContributionTable rows={contribution(lines, (l) => org.divisionOf(l.ownerUnit))} unit="juta" label="Divisi" />
+            <ContributionTable rows={contribution(lines, (l) => org.divisionOf(l.requestorUnit))} unit="juta" label="Divisi pengusul" />
           </CardContent>
         </Card>
         <Card>

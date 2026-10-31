@@ -1,4 +1,4 @@
-import { boolean, date, pgEnum, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, date, numeric, pgEnum, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
 export const categoryEnum = pgEnum("coa_category", ["Revenue", "COGS", "OPEX", "OTHERS", "CAPEX"]);
@@ -68,7 +68,24 @@ export const coaAccount = pgTable("coa_account", {
   center: centerEnum("center").notNull(),
   defaultOwnerUnit: text("default_owner_unit").references(() => orgUnit.code),
   active: boolean("active").notNull().default(true),
+  /** Used in the workbook but missing from COA Master: Finance confirms or remaps it. */
+  provisional: boolean("provisional").notNull().default(false),
   guidance: text("guidance"),
   examples: text("examples"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/** COA Master's 2026 figures per entity group: the sheet lists most codes once per group. Reference only. */
+export const coaReference = pgTable(
+  "coa_reference",
+  {
+    code: text("code")
+      .notNull()
+      .references(() => coaAccount.code, { onDelete: "cascade" }),
+    entityGroup: text("entity_group").notNull(),
+    rka2026: numeric("rka_2026", { precision: 20, scale: 2 }),
+    actualYtd: numeric("actual_ytd", { precision: 20, scale: 2 }),
+    forecastQ4: numeric("forecast_q4", { precision: 20, scale: 2 }),
+  },
+  (t) => [primaryKey({ columns: [t.code, t.entityGroup] })],
+);

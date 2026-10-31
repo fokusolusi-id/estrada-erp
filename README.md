@@ -13,6 +13,7 @@ pnpm install
 pnpm db:migrate
 pnpm db:seed                     # entities, org units, starter COA, demo RKA version
 pnpm --filter web create-admin -- admin@estrada.co.id "Admin" 'password-min-10'
+pnpm db:import -- "fixtures/RKA_2027_Upd_Fin v2.xlsx"   # optional: load the real RKA 2027 lines (see below)
 pnpm --filter web create-demo-users   # optional: one user per role, passwords in .dev-users.txt
 pnpm dev                         # http://localhost:3000
 ```
@@ -25,6 +26,7 @@ Log in as the admin, open **Pengguna**, and invite users. With no `RESEND_API_KE
 | --- | --- |
 | `pnpm test` | All Vitest projects (domain + web) |
 | `pnpm e2e` | Playwright journeys: requestor to Director lock, on a throwaway `estrada_e2e` database and a dev server on :3100 (needs `docker compose up -d db`; first run: `pnpm --filter web exec playwright install chromium`) |
+| `pnpm db:import -- "<file.xlsx>"` | Load an RKA workbook as the open version. `--dry-run` prints totals only; `--replace` reloads a version that is not locked; `--state` sets the lines' approval state (default `draft`) |
 | `pnpm typecheck` | `tsc` in every package |
 | `pnpm lint` | ESLint on the web app |
 | `pnpm build` | Production build |
@@ -39,6 +41,15 @@ packages/domain     money, budget lines, approval state machine, RBAC policy, no
 packages/db         Drizzle schema, migrations, seed
 packages/config     shared tsconfig
 ```
+
+## Importing the RKA workbook
+
+`packages/importers` reads `COA MASTER` and `RKA 2027 Data` from `RKA_2027_Upd_Fin v2.xlsx`. The workbook is client data and is **not committed**: put it in `fixtures/` (git-ignored) or point `RKA_WORKBOOK` at it.
+
+- Rows the importer cannot place stop the load; nothing is guessed.
+- COA codes the lines use but COA Master lacks (4300, 1615, …) are added as **provisional** accounts for Finance to confirm or remap.
+- COA Master's per-entity-group 2026 figures are kept in `coa_reference`; each line keeps its RKA 2026, Actual 2026, source row and the workbook's cleaning flags.
+- The golden test (`packages/importers/test/golden.test.ts`) checks the import against Rekap to the rupiah: revenue Rp 457,830,698,346, total cost Rp 294,400,936,589.71, every category, requestor division and unit, and month. It skips when the workbook is absent, as in CI.
 
 ## Login and roles
 
@@ -55,9 +66,9 @@ packages/config     shared tsconfig
 
 | Done | Next (phase 1) |
 | --- | --- |
-| Auth, invitations, password reset, role home, nav by role | Workbook importer for the full COA Master and division sheets |
-| Domain rules with 64 tests; web tests for every composite and nav (95 in all) | Golden test against `RKA_2027_Upd_Fin v2.xlsx` |
-| Schema + migration for masters, budget, approvals, audit, email outbox | RKA 2026 / Actual 2026 beside each line (needs the importer) |
+| Auth, invitations, password reset, role home, nav by role | Show RKA 2026 / Actual 2026 and review flags beside each line |
+| Domain rules, importer and golden test; web tests for every composite and nav (114 in all) | COA Master screen; Finance confirms provisional codes |
+| Workbook importer: 192 lines, 85 COA codes, Rekap reproduced to the rupiah | RKA cycle: open with deadline, revise a locked version |
 | Email outbox with Bahasa templates; console in dev, Resend in prod | Integration tests on Testcontainers Postgres; CI workflow running unit, typecheck, lint and e2e |
 | BudgetEditor: paste from Excel, fill-right, per-row save, submit | CommentThread for discussion on a line |
 | Queues on `applyTransition`: Antrean Konsolidasi, RKA Divisi, Status Board Finance, Kunci RKA | Daily digest and pending-item reminders |

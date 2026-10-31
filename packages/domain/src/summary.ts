@@ -68,7 +68,7 @@ export interface Contribution {
 }
 
 /** Revenue, total cost and net per group (division, entity), in order of first appearance. */
-export function contribution(lines: readonly SummaryLine[], keyOf: (l: SummaryLine) => string): Contribution[] {
+export function contribution<L extends SummaryLine>(lines: readonly L[], keyOf: (l: L) => string): Contribution[] {
   const out = new Map<string, Contribution>();
   for (const l of lines) {
     const key = keyOf(l);

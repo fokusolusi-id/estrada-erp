@@ -1,36 +1,18 @@
 /**
  * Master data from RKA_2027_Upd_Fin v2.xlsx (Mapping Entitas, COA Master).
- * Full COA import comes from @estrada/importers; this seeds the skeleton so the app runs.
+ * The full COA Master and every RKA line come from @estrada/importers (pnpm db:import); this seeds the skeleton so the app runs.
  */
 import { db } from "./index";
+import { sql } from "drizzle-orm";
 import { budgetLine, budgetLineAmount, budgetVersion, coaAccount, companyEntity, orgUnit } from "./schema/index";
+import { ENTITIES, ORG_UNITS } from "./seed-data";
 
 async function main() {
-  await db
-    .insert(companyEntity)
-    .values([
-      { code: "ESTRADA", name: "PT Elang Strategi Adidaya", costType: "indirect" },
-      { code: "MATRIK", name: "MATRIK", costType: "direct" },
-      { code: "DJALU", name: "DJALU", costType: "direct" },
-      { code: "PAS", name: "PAS", costType: "direct" },
-    ])
-    .onConflictDoNothing();
-
+  await db.insert(companyEntity).values([...ENTITIES]).onConflictDoNothing();
   await db
     .insert(orgUnit)
-    .values([
-      { code: "DIR", name: "Direktur", type: "company", parentCode: null },
-      { code: "FRM", name: "Finance & Risk Management", type: "division", parentCode: "DIR" },
-      { code: "HCM", name: "Human Capital Management", type: "division", parentCode: "DIR" },
-      { code: "PDMS", name: "Project Delivery & Managed Service", type: "division", parentCode: "DIR" },
-      { code: "PMO", name: "Project Management Office", type: "department", parentCode: "PDMS" },
-      { code: "SCM", name: "Supply Chain Management", type: "department", parentCode: "PDMS" },
-      { code: "ISO", name: "Integrated Service Operations", type: "department", parentCode: "PDMS" },
-      { code: "MSO", name: "Managed Service Operation", type: "department", parentCode: "PDMS" },
-      { code: "BCD", name: "Business Commercial Division", type: "division", parentCode: "DIR", aliases: ["CBD", "SPA"] },
-      { code: "PST", name: "Product Solution & Technology", type: "division", parentCode: "DIR", aliases: ["BSD"] },
-    ])
-    .onConflictDoNothing();
+    .values(ORG_UNITS.map((u) => ({ ...u, aliases: [...u.aliases] })))
+    .onConflictDoUpdate({ target: orgUnit.code, set: { aliases: sql`excluded.aliases` } });
 
   await db
     .insert(coaAccount)

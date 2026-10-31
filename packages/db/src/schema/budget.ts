@@ -32,6 +32,8 @@ export const budgetVersion = pgTable("budget_version", {
   name: text("name").notNull(),
   status: versionStatusEnum("status").notNull().default("open"),
   copiedFromId: uuid("copied_from_id"),
+  /** File it was imported from, when it came from a workbook. */
+  source: text("source"),
   submissionDeadline: timestamp("submission_deadline", { withTimezone: true }),
   lockedAt: timestamp("locked_at", { withTimezone: true }),
   lockedBy: text("locked_by").references(() => user.id),
@@ -62,6 +64,13 @@ export const budgetLine = pgTable(
     basis: text("basis"),
     notes: text("notes"),
     crossDivision: boolean("cross_division").notNull().default(false),
+    /** Context shown beside the 2027 amounts. */
+    rka2026: numeric("rka_2026", { precision: 20, scale: 2 }),
+    actual2026: numeric("actual_2026", { precision: 20, scale: 2 }),
+    /** Notes for reviewers, e.g. the workbook's cleaning flags. */
+    reviewFlags: text("review_flags").array().notNull().default([]),
+    /** Where an imported line came from, e.g. "RKA 2027 Data #21 (Finance & Risk Management row 26)". */
+    sourceRef: text("source_ref"),
     state: approvalStateEnum("state").notNull().default("draft"),
     createdBy: text("created_by").references(() => user.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
