@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "create-admin": "tsx scripts/create-admin.ts",
     "create-demo-users": "tsx scripts/create-demo-users.ts",
     "e2e": "playwright test"
