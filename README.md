@@ -86,6 +86,7 @@ packages/config     shared tsconfig
 | Satuan switch (angka penuh, juta, miliar) on Summary, queues, RKA Saya and line pages, remembered per viewer | |
 | New cycle proposes 31 Desember of the running year as its deadline | |
 | Realisasi 2026 (Finance): type or paste each line's 2026 actual from an Excel column; audited, never changes the plan | |
+| Responsive: a header menu on phones; every live screen checked at 375 px for each role (e2e `phone` project) | |
 | COA filter on every approval queue, listing only the codes in that position's lines and their parents | |
 | Discussion on each line (`/rka/line/[id]`): everyone in the cycle who sees the line can ask or answer without moving it; Auditor reads; closed once locked. The requestor, the current holder and the thread hear about it: in-app every time, email at most hourly and without the comment text | |
 | Excel export from Management Summary ("Unduh Excel"): RKA Data in the importer's layout, Rekap, Kontribusi Divisi, Per Entitas; same version, filters and scope as the screen | |

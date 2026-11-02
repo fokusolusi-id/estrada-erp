@@ -27,6 +27,8 @@ export default defineConfig({
   projects: [
     { name: "setup", testMatch: /auth\.setup\.ts/ },
     { name: "journeys", testMatch: /\.spec\.ts/, dependencies: ["setup"], use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
+    // A phone-sized Chromium (375 px, touch): only Chromium is installed in CI.
+    { name: "phone", testMatch: /\.phone\.ts/, dependencies: ["journeys"], use: { ...devices["Desktop Chrome"], viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true } },
   ],
   webServer: {
     command: `next dev --port ${PORT}`,

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ROLE_LABEL } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { navFor } from "@/lib/nav";
+import { MobileNav } from "./mobile-nav";
 import { PositionSwitcher } from "./position-switcher";
 import { SignOutButton } from "./sign-out-button";
 
@@ -16,7 +17,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="text-primary font-semibold">ERP Estrada</div>
           <div className="text-muted-foreground text-xs">RKA 2027</div>
         </div>
-        <nav className="flex flex-1 flex-col gap-0.5 px-2">
+        <nav aria-label="Menu utama" className="flex flex-1 flex-col gap-0.5 px-2">
           {nav.map((item) => (
             <Link
               key={item.href}
@@ -30,8 +31,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </nav>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between border-b px-4 md:px-6">
-          <div className="text-sm">
+        <header className="relative flex h-14 items-center justify-between gap-2 border-b px-2 md:px-6">
+          <div className="flex min-w-0 items-center gap-1 text-sm">
+            <MobileNav items={nav} />
+            <div className="min-w-0 truncate">
             {user.positions.length > 1 ? (
               <PositionSwitcher
                 activeId={user.activePositionId}
@@ -43,8 +46,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 <span className="text-muted-foreground"> · {ROLE_LABEL[user.actor.role]}</span>
               </>
             )}
+            </div>
           </div>
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex shrink-0 items-center gap-3 text-sm">
             <span className="text-muted-foreground hidden sm:inline">{user.name}</span>
             <SignOutButton />
           </div>
