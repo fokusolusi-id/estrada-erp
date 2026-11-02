@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatIdr, money, scaleTo, sum } from "../src/money";
+import { formatAmount, formatIdr, money, parseUnit, scaleTo, sum, UNITS } from "../src/money";
 
 describe("money", () => {
   it("adds without float noise (workbook showed -5.85e-09 variances)", () => {
@@ -31,5 +31,23 @@ describe("money", () => {
 
   it("rejects non-numeric input", () => {
     expect(() => money("12a")).toThrow();
+  });
+});
+
+describe("display unit (client: angka penuh, juta or miliar)", () => {
+  // Rekap RKA 2027 total cost.
+  const cost = money("294400936589.71");
+
+  it("shows the same figure in each unit the viewer picks", () => {
+    expect(formatAmount(cost, "rp")).toBe("Rp 294.400.936.590");
+    expect(formatAmount(cost, "juta")).toBe("Rp 294.400,9 jt");
+    expect(formatAmount(cost, "miliar")).toBe("Rp 294,40 M");
+  });
+
+  it("offers the three units in order and falls back to juta, the workbook's own unit", () => {
+    expect(UNITS.map((u) => u.value)).toEqual(["rp", "juta", "miliar"]);
+    expect(parseUnit("miliar")).toBe("miliar");
+    expect(parseUnit("ribu")).toBe("juta");
+    expect(parseUnit(undefined)).toBe("juta");
   });
 });

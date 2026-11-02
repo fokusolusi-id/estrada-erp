@@ -219,6 +219,15 @@ test("5. Head Finance locks the version; the Director reads the Management Summa
   // 6241: 19.821.320 x 12 + 5300: 390.686.823,67 x 12 + new line 1.500.000 x 12
   await expect(page.getByText("Rp 4.944,1 jt").first()).toBeVisible();
 
+  // The viewer picks the unit; the choice holds on the next screen too.
+  await page.getByLabel("Satuan").selectOption("miliar");
+  await expect(page.getByText("Rp 4,94 M").first()).toBeVisible();
+  await page.goto("/rka/lock");
+  await expect(page.getByLabel("Satuan")).toHaveValue("miliar");
+  await page.goto("/summary");
+  await page.getByLabel("Satuan").selectOption("juta");
+  await expect(page.getByText("Rp 4.944,1 jt").first()).toBeVisible();
+
   await page.getByLabel("Divisi").selectOption("PDMS");
   await expect(page).toHaveURL(/division=PDMS/);
   await expect(page.getByTestId("contribution-PDMS").first()).toBeVisible();
@@ -257,6 +266,6 @@ test("Finance opens a revision of the locked version and adjusts it alone", asyn
 
   // The locked version is untouched; the copy waits in Finance's queue.
   await page.goto("/rka/review");
-  await expect(page.getByText("RKA 2027 (demo) v2 · Rp juta")).toBeVisible();
+  await expect(page.getByText("RKA 2027 (demo) v2", { exact: true })).toBeVisible();
   await expect(page.getByText("SCM · 3 baris")).toBeVisible();
 });

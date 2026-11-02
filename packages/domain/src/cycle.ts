@@ -50,3 +50,8 @@ export function deadlineReminderDay(deadline: Date, now: Date): number | null {
 export function waitingTooLong(lastMoved: Date, now: Date, days: number): boolean {
   return now.getTime() - lastMoved.getTime() >= days * DAY;
 }
+
+/** The deadline a new cycle starts with: RKA must be final by 31 December of the running year (client answer 7). */
+export function defaultDeadline(fiscalYear: number): string {
+  return `${fiscalYear - 1}-12-31`;
+}

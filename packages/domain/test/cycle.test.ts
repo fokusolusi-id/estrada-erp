@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { daysLeft, deadlineReminderDay, isFullyLocked, nextVersionName, openCycleProblem, reviseProblem, waitingTooLong } from "../src/cycle";
+import { daysLeft, deadlineReminderDay, defaultDeadline, isFullyLocked, nextVersionName, openCycleProblem, reviseProblem, waitingTooLong } from "../src/cycle";
 
 describe("nextVersionName: a revision copies a locked version under the next name", () => {
   it("numbers revisions the way Finance names workbook files", () => {
@@ -59,5 +59,12 @@ describe("reminders, counted in Jakarta calendar days", () => {
     const moved = new Date("2026-11-01T03:00:00Z");
     expect(waitingTooLong(moved, new Date("2026-11-03T03:00:00Z"), 3)).toBe(false);
     expect(waitingTooLong(moved, new Date("2026-11-04T03:00:00Z"), 3)).toBe(true);
+  });
+});
+
+describe("defaultDeadline: RKA is final by the end of the running year (client answer 7)", () => {
+  it("proposes 31 December of the year before the fiscal year", () => {
+    expect(defaultDeadline(2027)).toBe("2026-12-31");
+    expect(defaultDeadline(2028)).toBe("2027-12-31");
   });
 });

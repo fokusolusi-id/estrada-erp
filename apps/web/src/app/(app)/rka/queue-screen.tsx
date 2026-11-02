@@ -6,6 +6,9 @@ import { loadScopedLines, openVersion } from "@/lib/rka";
 import { ApprovalQueue, type QueueLine } from "@/components/erp/approval-queue";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { actOnLines } from "./actions";
+import { displayUnit } from "@/lib/display-unit";
+import { UnitSwitch } from "@/components/erp/unit-switch";
+import { setDisplayUnit } from "@/app/(app)/unit-actions";
 
 /** Shared body of the approver screens: lines in the given states that this position may see. */
 export async function QueueScreen({
@@ -22,10 +25,11 @@ export async function QueueScreen({
   const user = await requireUser();
   if (!roles.includes(user.actor.role)) notFound();
 
-  const [version, scoped, coa] = await Promise.all([
+  const [version, scoped, coa, unit] = await Promise.all([
     openVersion(),
     loadScopedLines(user, states),
     db.select({ code: schema.coaAccount.code, name: schema.coaAccount.name, parentCode: schema.coaAccount.parentCode }).from(schema.coaAccount),
+    displayUnit(),
   ]);
   const lines: QueueLine[] = scoped.map((l) => ({
     id: l.id,
@@ -49,9 +53,12 @@ export async function QueueScreen({
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{title}</h1>
-        <p className="text-muted-foreground text-sm">{version ? version.name : "Belum ada siklus RKA yang dibuka"} · Rp juta</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">{title}</h1>
+          <p className="text-muted-foreground text-sm">{version ? version.name : "Belum ada siklus RKA yang dibuka"}</p>
+        </div>
+        <UnitSwitch value={unit} onChange={setDisplayUnit} />
       </div>
       <Card>
         <CardHeader>
@@ -59,7 +66,7 @@ export async function QueueScreen({
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <ApprovalQueue lines={lines} coa={coa} unit="juta" onAction={actOnLines} />
+          <ApprovalQueue lines={lines} coa={coa} unit={unit} onAction={actOnLines} />
         </CardContent>
       </Card>
     </div>

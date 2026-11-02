@@ -7,6 +7,9 @@ import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
 import { ApprovalTimeline } from "@/components/erp/approval-timeline";
 import { BudgetGrid } from "@/components/erp/budget-grid";
+import { displayUnit } from "@/lib/display-unit";
+import { UnitSwitch } from "@/components/erp/unit-switch";
+import { setDisplayUnit } from "@/app/(app)/unit-actions";
 import { CommentThread } from "@/components/erp/comment-thread";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { addComment } from "./actions";
@@ -21,7 +24,7 @@ export default async function LinePage({ params }: { params: Promise<{ id: strin
   if (!detail) notFound();
   const { line, version, comments } = detail;
 
-  const org = await loadOrg();
+  const [org, unit] = await Promise.all([loadOrg(), displayUnit()]);
   const res = { requestorUnit: line.requestorUnit, ownerUnit: line.ownerUnit, entity: line.entity, state: line.state };
   const canPost = version.status === "open" && can(user.actor, "line.comment", res, org);
   const closedReason =
@@ -35,6 +38,7 @@ export default async function LinePage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
         <Link href="/rka" className="text-muted-foreground text-sm hover:underline">
           ← RKA
@@ -44,13 +48,15 @@ export default async function LinePage({ params }: { params: Promise<{ id: strin
         </h1>
         <p className="text-muted-foreground text-sm">
           {version.name} · {line.requestorUnit}
-          {line.requestorUnit !== line.ownerUnit ? ` → ${line.ownerUnit}` : ""} · {line.entity} · Rp juta
+          {line.requestorUnit !== line.ownerUnit ? ` → ${line.ownerUnit}` : ""} · {line.entity}
         </p>
+      </div>
+        <UnitSwitch value={unit} onChange={setDisplayUnit} />
       </div>
 
       <Card>
         <CardContent>
-          <BudgetGrid lines={[line]} unit="juta" discussion={false} />
+          <BudgetGrid lines={[line]} unit={unit} discussion={false} />
           {line.basis || line.flags?.length ? (
             <div className="mt-3 grid gap-1 text-sm">
               {line.basis ? (

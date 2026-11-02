@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { requireUser } from "@/lib/session";
 import { editorMasters, loadScopedLines, openVersion } from "@/lib/rka";
 import { BudgetGrid } from "@/components/erp/budget-grid";
+import { displayUnit } from "@/lib/display-unit";
+import { UnitSwitch } from "@/components/erp/unit-switch";
+import { setDisplayUnit } from "@/app/(app)/unit-actions";
 import { BudgetEditor, type EditorLine } from "@/components/erp/budget-editor";
 import { HeadcountPlan, type PlanPosition } from "@/components/erp/headcount-plan";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +17,7 @@ export const metadata: Metadata = { title: "RKA Saya" };
 
 export default async function RkaPage() {
   const user = await requireUser();
-  const [version, lines] = await Promise.all([openVersion(), loadScopedLines(user)]);
+  const [version, lines, unit] = await Promise.all([openVersion(), loadScopedLines(user), displayUnit()]);
 
   const isRequestor = user.actor.role === "requestor";
   const drafts = isRequestor ? lines.filter((l) => l.state === "draft" && l.canEdit) : [];
@@ -95,12 +98,17 @@ export default async function RkaPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{isRequestor ? "Sudah dikirim" : "Baris anggaran"}</CardTitle>
-          <CardDescription>Rp juta. Total dihitung otomatis dari Jan–Des.</CardDescription>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="grid gap-1.5">
+              <CardTitle>{isRequestor ? "Sudah dikirim" : "Baris anggaran"}</CardTitle>
+              <CardDescription>Total dihitung otomatis dari Jan–Des.</CardDescription>
+            </div>
+            <UnitSwitch value={unit} onChange={setDisplayUnit} />
+          </div>
         </CardHeader>
         <CardContent>
           {others.length ? (
-            <BudgetGrid lines={others} unit="juta" />
+            <BudgetGrid lines={others} unit={unit} />
           ) : (
             <p className="text-muted-foreground py-8 text-center text-sm">Belum ada baris anggaran di tahap ini.</p>
           )}

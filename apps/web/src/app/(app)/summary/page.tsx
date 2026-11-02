@@ -8,6 +8,9 @@ import { ContributionTable } from "@/components/erp/contribution-table";
 import { KpiCard } from "@/components/erp/kpi-card";
 import { PnlTable } from "@/components/erp/pnl-table";
 import { ScopeBar } from "@/components/erp/scope-bar";
+import { displayUnit } from "@/lib/display-unit";
+import { UnitSwitch } from "@/components/erp/unit-switch";
+import { setDisplayUnit } from "@/app/(app)/unit-actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -21,7 +24,7 @@ export default async function SummaryPage({
   const user = await requireUser();
   if (!SUMMARY_ROLES.includes(user.actor.role)) notFound();
   const params = await searchParams;
-  const { versions, version, scoped, lines, org } = await loadSummary(user, params);
+  const [{ versions, version, scoped, lines, org }, unit] = await Promise.all([loadSummary(user, params), displayUnit()]);
   const entities = [...new Set(scoped.map((l) => l.entity))].sort();
   const divisions = [...new Set(scoped.map((l) => org.divisionOf(l.ownerUnit)))].sort();
   const rows = pnl(lines);
@@ -35,10 +38,11 @@ export default async function SummaryPage({
         <div>
           <h1 className="text-2xl font-semibold">Management Summary</h1>
           <p className="text-muted-foreground text-sm">
-            {version ? version.name : "Belum ada siklus RKA yang dibuka"} · Rp juta · {lines.length} baris, {locked} terkunci
+            {version ? version.name : "Belum ada siklus RKA yang dibuka"} · {lines.length} baris, {locked} terkunci
           </p>
         </div>
         <div className="flex flex-wrap items-end gap-3">
+          <UnitSwitch value={unit} onChange={setDisplayUnit} />
         <ScopeBar
           filters={[
             ...(versions.length > 1
@@ -61,10 +65,10 @@ export default async function SummaryPage({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="Pendapatan" value={total("Revenue")} note="Rencana invoice" />
-        <KpiCard label="Total Biaya" value={total("TotalCost")} note="COGS + OPEX + OTHERS + CAPEX" />
-        <KpiCard label="Laba Sebelum Pajak" value={total("ProfitBeforeTax")} />
-        <KpiCard label="CAPEX" value={total("CAPEX")} />
+        <KpiCard label="Pendapatan" value={total("Revenue")} unit={unit} note="Rencana invoice" />
+        <KpiCard label="Total Biaya" value={total("TotalCost")} unit={unit} note="COGS + OPEX + OTHERS + CAPEX" />
+        <KpiCard label="Laba Sebelum Pajak" value={total("ProfitBeforeTax")} unit={unit} />
+        <KpiCard label="CAPEX" value={total("CAPEX")} unit={unit} />
       </div>
 
       <Card>
@@ -73,7 +77,7 @@ export default async function SummaryPage({
           <CardDescription>Semua angka dihitung dari baris RKA yang sama, jadi Rekap dan Kontribusi Divisi selalu sama.</CardDescription>
         </CardHeader>
         <CardContent>
-          <PnlTable rows={rows} unit="juta" />
+          <PnlTable rows={rows} unit={unit} />
         </CardContent>
       </Card>
 
@@ -84,7 +88,7 @@ export default async function SummaryPage({
             <CardDescription>Per divisi pengusul, seperti sheet Kontribusi Divisi dan Rekap.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ContributionTable rows={contribution(lines, (l) => org.divisionOf(l.requestorUnit))} unit="juta" label="Divisi pengusul" />
+            <ContributionTable rows={contribution(lines, (l) => org.divisionOf(l.requestorUnit))} unit={unit} label="Divisi pengusul" />
           </CardContent>
         </Card>
         <Card>
@@ -93,7 +97,7 @@ export default async function SummaryPage({
             <CardDescription>Entitas dengan pendapatan tanpa biaya perlu aturan alokasi biaya bersama.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ContributionTable rows={contribution(lines, (l) => l.entity)} unit="juta" label="Entitas" />
+            <ContributionTable rows={contribution(lines, (l) => l.entity)} unit={unit} label="Entitas" />
           </CardContent>
         </Card>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { defaultDeadline } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,11 +17,14 @@ function Result({ state }: { state: CycleState }) {
 
 export function OpenCycleForm({ fiscalYear }: { fiscalYear: number }) {
   const [state, action, pending] = useActionState(openCycle, INITIAL);
+  const [year, setYear] = useState(String(fiscalYear));
+  // Follows the year until Finance picks another date.
+  const [picked, setPicked] = useState<string | null>(null);
   return (
     <form action={action} className="grid gap-4 sm:grid-cols-3">
       <div className="grid gap-2">
         <Label htmlFor="cycle-year">Tahun anggaran</Label>
-        <Input id="cycle-year" name="fiscalYear" type="number" defaultValue={fiscalYear} required />
+        <Input id="cycle-year" name="fiscalYear" type="number" value={year} onChange={(e) => setYear(e.target.value)} required />
       </div>
       <div className="grid gap-2">
         <Label htmlFor="cycle-name">Nama versi</Label>
@@ -28,7 +32,15 @@ export function OpenCycleForm({ fiscalYear }: { fiscalYear: number }) {
       </div>
       <div className="grid gap-2">
         <Label htmlFor="cycle-deadline">Batas pengajuan (17.00 WIB)</Label>
-        <Input id="cycle-deadline" name="deadline" type="date" required />
+        <Input
+          id="cycle-deadline"
+          name="deadline"
+          type="date"
+          value={picked ?? (Number(year) ? defaultDeadline(Number(year)) : "")}
+          onChange={(e) => setPicked(e.target.value)}
+          required
+        />
+        <p className="text-muted-foreground text-xs">RKA final paling lambat 31 Desember tahun berjalan.</p>
         {state.errors?.deadline ? <p className="text-destructive text-xs">{state.errors.deadline[0]}</p> : null}
       </div>
       <div className="flex flex-wrap items-center gap-3 sm:col-span-3">

@@ -39,3 +39,20 @@ export function formatIdr(value: Money, opts: { decimals?: number; unit?: Unit }
   const suffix = unit === "rp" ? "" : unit === "juta" ? " jt" : " M";
   return `${sign}Rp ${grouped}${frac ? `,${frac}` : ""}${suffix}`;
 }
+
+/** The units a viewer may pick for screens (client: angka penuh, juta or miliar). Juta is the workbook's own. */
+export const UNITS: readonly { value: Unit; label: string }[] = [
+  { value: "rp", label: "Angka penuh" },
+  { value: "juta", label: "Juta" },
+  { value: "miliar", label: "Miliar" },
+];
+const UNIT_DECIMALS: Record<Unit, number> = { rp: 0, juta: 1, miliar: 2 };
+
+export function parseUnit(value: string | undefined | null): Unit {
+  return UNITS.some((u) => u.value === value) ? (value as Unit) : "juta";
+}
+
+/** An amount on screen in the viewer's unit, rounded for reading; stored values keep their cents. */
+export function formatAmount(value: Money, unit: Unit): string {
+  return formatIdr(value, { unit, decimals: UNIT_DECIMALS[unit] });
+}

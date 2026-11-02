@@ -83,6 +83,8 @@ packages/config     shared tsconfig
 | Importer reads the workbook's 12 recruitment rows with a head count as plan positions; rows it cannot rebuild to the rupiah stay plain lines | |
 | RKA 2026 / Actual 2026 and the change beside each line; workbook review flags on every screen | |
 | COA Master (Finance only, at `/coa`): add, edit, deactivate; confirm or remap provisional codes; parent/child tree (5500 → 5510, 5520), started from the code numbers on import | |
+| Satuan switch (angka penuh, juta, miliar) on Summary, queues, RKA Saya and line pages, remembered per viewer | |
+| New cycle proposes 31 Desember of the running year as its deadline | |
 | COA filter on every approval queue, listing only the codes in that position's lines and their parents | |
 | Discussion on each line (`/rka/line/[id]`): everyone in the cycle who sees the line can ask or answer without moving it; Auditor reads; closed once locked. The requestor, the current holder and the thread hear about it: in-app every time, email at most hourly and without the comment text | |
 | Excel export from Management Summary ("Unduh Excel"): RKA Data in the importer's layout, Rekap, Kontribusi Divisi, Per Entitas; same version, filters and scope as the screen | |
