@@ -72,6 +72,23 @@ test("Finance arranges COA Master as a tree; no one else can change it", async (
   await expect(page).toHaveURL(/\/$/);
 });
 
+test("Finance types in a 2026 actual; the plan stays as it was", async ({ page }) => {
+  await as("finance", page, "/rka/actual");
+  await page.getByLabel("Cari COA atau uraian").fill("5300");
+  const cell = page.getByRole("textbox", { name: /Actual 2026 baris/ });
+  await expect(cell).toHaveCount(1);
+  await cell.fill("4.100.000.000");
+  await page.getByRole("button", { name: "Simpan (1)" }).click();
+  await expect(page.getByText("1 baris disimpan.")).toBeVisible();
+
+  await page.reload();
+  await page.getByLabel("Cari COA atau uraian").fill("5300");
+  await expect(page.getByRole("textbox", { name: /Actual 2026 baris/ })).toHaveValue("4.100.000.000");
+
+  await as("requestor", page, "/rka/actual");
+  await expect(page.getByText("This page could not be found.")).toBeVisible();
+});
+
 test("Requestor plans new hires; the plan writes the draft line, owned by HCM", async ({ page }) => {
   await as("requestor", page, "/rka");
   await page.getByRole("button", { name: "Tambah posisi" }).click();

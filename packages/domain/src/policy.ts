@@ -28,7 +28,8 @@ export type Permission =
   | "user.manage"
   | "report.view"
   | "audit.view"
-  | "cycle.manage";
+  | "cycle.manage"
+  | "actual.edit";
 
 const COMPANY_WIDE: readonly Role[] = ["finance", "director", "auditor", "admin"];
 
@@ -62,6 +63,10 @@ export function can(actor: Actor, permission: Permission, resource: LineResource
     case "line.comment":
       // Everyone in the cycle who can see the line; Auditor reads the thread, and a locked line's thread is closed.
       return !!resource && resource.state !== "locked" && isParticipant(actor.role) && can(actor, "line.view", resource, org);
+    case "actual.edit":
+      // Realisasi 2026 is typed in by Finance for now (client answer 1). It sits beside the plan and never changes it,
+      // so it may be filled in at any stage, after the lock included.
+      return !!resource && actor.role === "finance" && entityAllowed(actor, resource.entity);
     case "line.edit": {
       if (!resource) return false;
       if (!entityAllowed(actor, resource.entity)) return false;

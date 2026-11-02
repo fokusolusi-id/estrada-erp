@@ -103,3 +103,21 @@ describe("vacant and acting positions: Admin assigns a pjs, nobody is escalated"
     expect(seatFor("FRM", "default_owner", positions, org)).toEqual({ unit: "FRM", exists: false, holder: null, acting: false });
   });
 });
+
+describe("actual.edit: Realisasi 2026 typed in by hand for now (client answer 1)", () => {
+  const fin = actor({ role: "finance", orgUnit: "FRM", entities: ["*"] });
+
+  it("belongs to Finance, at any stage: an actual is a reference figure beside the plan, not the plan itself", () => {
+    for (const state of ["draft", "finance_review", "locked"] as const) {
+      expect(can(fin, "actual.edit", { ...line, state }, org)).toBe(true);
+    }
+  });
+
+  it("stays within Finance's entities, and no one else may enter it", () => {
+    expect(can(actor({ role: "finance", orgUnit: "FRM", entities: ["MATRIK"] }), "actual.edit", line, org)).toBe(false);
+    for (const role of ["requestor", "default_owner", "division_owner", "director", "auditor", "admin"] as const) {
+      expect(can(actor({ role, orgUnit: "SCM", entities: ["*"] }), "actual.edit", line, org)).toBe(false);
+    }
+    expect(can(fin, "actual.edit", null, org)).toBe(false);
+  });
+});
