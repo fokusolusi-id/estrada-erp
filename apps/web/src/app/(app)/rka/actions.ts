@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@estrada/db";
-import { can, money, validateLine, type ApprovalAction, type CoaAccount } from "@estrada/domain";
+import { can, headcountBasis, headcountMonths, headcountProblems, money, validateLine, type ApprovalAction, type CoaAccount, type HeadcountField } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { openVersion } from "@/lib/rka";
 import { applyTransition, loadOrg, WorkflowError } from "@/lib/workflow";
@@ -37,16 +37,24 @@ const VALIDATION_MESSAGE: Record<string, string> = {
 const RKA_PATHS = ["/rka", "/rka/queue", "/rka/division", "/rka/review", "/rka/lock"];
 const revalidateRka = () => RKA_PATHS.forEach((p) => revalidatePath(p));
 
+const issues = (error: z.ZodError) => Object.fromEntries(error.issues.map((i) => [String(i.path[0]), i.message]));
+
 /** Create or update a line. Requestors create draft lines for their own unit; edits follow `line.edit`. */
 export async function saveLine(input: LineInputValue): Promise<ActionResult> {
   const user = await requireUser();
   const parsed = LineInput.safeParse(input);
-  if (!parsed.success) {
-    const errors = Object.fromEntries(parsed.error.issues.map((i) => [String(i.path[0]), i.message]));
-    return { ok: false, message: "Periksa isian baris.", errors };
+  if (!parsed.success) return { ok: false, message: "Periksa isian baris.", errors: issues(parsed.error) };
+  if (parsed.data.id) {
+    const [planned] = await db.select({ lineId: schema.headcountPlan.lineId }).from(schema.headcountPlan).where(eq(schema.headcountPlan.lineId, parsed.data.id));
+    if (planned) return { ok: false, message: "Baris ini diatur dari Rencana headcount." };
   }
-  const v = parsed.data;
+  return writeLine(user, parsed.data);
+}
 
+type HeadcountValues = { position: string; headCount: number; startMonth: number; costPerHead: string };
+
+/** Shared by the editor and the headcount plan; a plan row is written with its line in one transaction. */
+async function writeLine(user: Awaited<ReturnType<typeof requireUser>>, v: z.output<typeof LineInput>, plan?: HeadcountValues): Promise<ActionResult> {
   const version = await openVersion();
   if (!version) return { ok: false, message: "Belum ada siklus RKA yang dibuka." };
 
@@ -106,19 +114,76 @@ export async function saveLine(input: LineInputValue): Promise<ActionResult> {
       lineId = row!.id;
     }
     await tx.insert(schema.budgetLineAmount).values(v.months.map((amount, i) => ({ lineId: lineId!, month: i + 1, amount })));
+    if (plan) {
+      await tx.insert(schema.headcountPlan).values({ lineId, ...plan }).onConflictDoUpdate({ target: schema.headcountPlan.lineId, set: plan });
+    }
     await tx.insert(schema.auditLog).values({
       actorUserId: user.id,
       action: existing ? "line.update" : "line.create",
       subjectType: "budget_line",
       subjectId: lineId,
       before: existing ?? null,
-      after: { ...values, months: v.months },
+      after: { ...values, months: v.months, ...(plan ? { headcount: plan } : {}) },
     });
     return lineId;
   });
 
   revalidateRka();
   return { ok: true, message: "Baris tersimpan.", id };
+}
+
+const HeadcountInput = z.object({
+  id: z.string().uuid().optional(),
+  position: z.string().trim().max(200),
+  coaCode: z.string().min(1, "Pilih COA"),
+  entityCode: z.string().min(1, "Pilih entitas"),
+  count: z.number(),
+  startMonth: z.number(),
+  costPerHead: AMOUNT,
+});
+export type HeadcountInputValue = z.input<typeof HeadcountInput>;
+
+const HEADCOUNT_MESSAGE: Record<HeadcountField, string> = {
+  position: "Jabatan wajib diisi",
+  count: "Jumlah 1–999 orang",
+  startMonth: "Pilih bulan mulai",
+  costPerHead: "Biaya per orang harus lebih dari 0",
+};
+
+/**
+ * Save a position in the requestor's headcount plan. The plan computes the line's months and basis;
+ * the line goes to the COA's default owner (Beban rekrutmen: HCM) like any other draft.
+ */
+export async function saveHeadcount(input: HeadcountInputValue): Promise<ActionResult> {
+  const user = await requireUser();
+  const parsed = HeadcountInput.safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Periksa isian posisi.", errors: issues(parsed.error) };
+  const h = parsed.data;
+  const row = { position: h.position, count: h.count, startMonth: h.startMonth, costPerHead: money(h.costPerHead) };
+  const problems = Object.entries(headcountProblems(row)) as [HeadcountField, string][];
+  if (problems.length) return { ok: false, message: "Periksa isian posisi.", errors: Object.fromEntries(problems.map(([f]) => [f, HEADCOUNT_MESSAGE[f]])) };
+
+  if (h.id) {
+    const [planned] = await db.select({ lineId: schema.headcountPlan.lineId }).from(schema.headcountPlan).where(eq(schema.headcountPlan.lineId, h.id));
+    if (!planned) return { ok: false, message: "Posisi tidak ditemukan." };
+  }
+  const [coa] = await db.select({ defaultOwnerUnit: schema.coaAccount.defaultOwnerUnit }).from(schema.coaAccount).where(eq(schema.coaAccount.code, h.coaCode));
+  if (!coa) return { ok: false, message: "Periksa isian posisi.", errors: { coaCode: "COA tidak ada di COA Master" } };
+
+  const res = await writeLine(
+    user,
+    {
+      ...(h.id ? { id: h.id } : {}),
+      coaCode: h.coaCode,
+      entityCode: h.entityCode,
+      ownerUnit: coa.defaultOwnerUnit ?? user.actor.orgUnit,
+      item: h.position,
+      basis: headcountBasis(row),
+      months: headcountMonths(row).map((m) => m.toFixed(2)),
+    },
+    { position: h.position, headCount: h.count, startMonth: h.startMonth, costPerHead: row.costPerHead.toFixed(2) },
+  );
+  return res.ok ? { ...res, message: "Posisi tersimpan." } : res;
 }
 
 /** Requestors delete their own draft lines; nothing else is ever deleted. */

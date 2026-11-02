@@ -28,6 +28,8 @@ export interface EditorLine {
   flags?: string[];
   /** Comments on a saved line; drafts link to their discussion like every other line. */
   commentCount?: number;
+  /** Written by the headcount plan: months and fields are edited there, the line is still sent from here. */
+  planned?: boolean;
 }
 
 export interface EditorMasters {
@@ -75,6 +77,7 @@ const toRow = (l: EditorLine): Row => ({
   ...(l.actual2026 ? { actual2026: l.actual2026 } : {}),
   ...(l.flags ? { flags: l.flags } : {}),
   ...(l.commentCount ? { commentCount: l.commentCount } : {}),
+  ...(l.planned ? { planned: true } : {}),
   cells: l.months.map((m) => plain(money(m))),
   dirty: !l.id,
   focusMonth: 1,
@@ -100,7 +103,9 @@ export function BudgetEditor({
   onDelete: (id: string) => Promise<Result>;
   onSubmit: (ids: string[]) => Promise<Result>;
 }) {
-  const [rows, setRows] = useState<Row[]>(() => lines.map(toRow));
+  const [editable, setRows] = useState<Row[]>(() => lines.filter((l) => !l.planned).map(toRow));
+  // Planned lines follow the page's props, so saving the plan shows here; they come last so row indexes match `editable`.
+  const rows = [...editable, ...lines.filter((l) => l.planned).map(toRow)];
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
@@ -238,6 +243,7 @@ export function BudgetEditor({
             const n = i + 1;
             const valid = parsed[i]!.every(Boolean);
             const canSubmit = !!r.id && !r.dirty;
+            const locked = !!r.planned;
             return (
               <TableRow key={r.key} className={cn(r.dirty && "bg-warning/5")}>
                 <TableCell>
@@ -260,6 +266,7 @@ export function BudgetEditor({
                   <select
                     aria-label={`COA baris ${n}`}
                     className={SELECT}
+                    disabled={locked}
                     value={r.coaCode}
                     aria-invalid={!!r.errors.coaCode}
                     onChange={(e) => {
@@ -275,6 +282,7 @@ export function BudgetEditor({
                   </select>
                   <Input
                     aria-label={`Uraian baris ${n}`}
+                    disabled={locked}
                     placeholder="Uraian"
                     className="h-8"
                     value={r.item}
@@ -296,12 +304,14 @@ export function BudgetEditor({
                       Dikembalikan oleh {r.remark.by}: “{r.remark.comment}”
                     </span>
                   ) : null}
+                  {locked ? <span className="text-muted-foreground text-xs">Dihitung dari Rencana headcount</span> : null}
                   {r.id ? <DiscussionLink id={r.id} count={r.commentCount} /> : null}
                 </TableCell>
                 <TableCell>
                   <select
                     aria-label={`Entitas baris ${n}`}
                     className={SELECT}
+                    disabled={locked}
                     value={r.entityCode}
                     aria-invalid={!!r.errors.entityCode}
                     onChange={(e) => update(r.key, { entityCode: e.target.value })}
@@ -317,6 +327,7 @@ export function BudgetEditor({
                   <select
                     aria-label={`Unit pemilik baris ${n}`}
                     className={SELECT}
+                    disabled={locked}
                     value={r.ownerUnit}
                     onChange={(e) => update(r.key, { ownerUnit: e.target.value })}
                   >
@@ -332,6 +343,7 @@ export function BudgetEditor({
                     <Input
                       aria-label={`Baris ${n} bulan ${j + 1}`}
                       data-cell={`${i}-${j + 1}`}
+                      disabled={locked}
                       inputMode="decimal"
                       className="tabular h-8 min-w-28 text-right"
                       value={c}
@@ -353,6 +365,7 @@ export function BudgetEditor({
                 <TableCell>
                   <Input
                     aria-label={`Dasar perhitungan baris ${n}`}
+                    disabled={locked}
                     className="h-8"
                     value={r.basis}
                     aria-invalid={!!r.errors.basis}
@@ -362,13 +375,13 @@ export function BudgetEditor({
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
-                    <Button type="button" size="sm" variant="ghost" aria-label="Isi ke kanan" title="Isi bulan terpilih sampai Des" onClick={() => onFillRight(i)}>
+                    <Button type="button" size="sm" variant="ghost" aria-label="Isi ke kanan" title="Isi bulan terpilih sampai Des" disabled={locked} onClick={() => onFillRight(i)}>
                       <ArrowRightToLine />
                     </Button>
-                    <Button type="button" size="sm" disabled={!valid || !r.dirty || pending} onClick={() => save(i)}>
+                    <Button type="button" size="sm" disabled={locked || !valid || !r.dirty || pending} onClick={() => save(i)}>
                       Simpan
                     </Button>
-                    <Button type="button" size="sm" variant="ghost" aria-label="Hapus baris" disabled={pending} onClick={() => remove(i)}>
+                    <Button type="button" size="sm" variant="ghost" aria-label="Hapus baris" disabled={locked || pending} onClick={() => remove(i)}>
                       <Trash2 />
                     </Button>
                   </div>

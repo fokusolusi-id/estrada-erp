@@ -49,6 +49,33 @@ test("Requestor cannot open an approver's queue", async ({ page }) => {
   await expect(page.getByText("This page could not be found.")).toBeVisible();
 });
 
+test("Requestor plans new hires; the plan writes the draft line, owned by HCM", async ({ page }) => {
+  await as("requestor", page, "/rka");
+  await page.getByRole("button", { name: "Tambah posisi" }).click();
+  await page.getByLabel("Jabatan posisi 1").fill("Account Manager");
+  await page.getByLabel("Jumlah orang posisi 1").fill("6");
+  await page.getByLabel("Biaya per orang posisi 1").fill("16.750.000");
+  await expect(page.getByTestId("headcount-total-1")).toHaveText("Rp 1.206.000.000");
+  await page.getByRole("button", { name: "Simpan posisi 1" }).click();
+  await expect(page.getByText("Posisi tersimpan.")).toBeVisible();
+
+  const jan = page.getByLabel("Baris 1 bulan 1", { exact: true });
+  await expect(jan).toHaveValue("100.500.000");
+  await expect(jan).toBeDisabled();
+  await expect(page.getByText("Dihitung dari Rencana headcount")).toBeVisible();
+  await expect(page.getByLabel("Unit pemilik baris 1")).toHaveValue("HCM");
+  await expect(page.getByLabel("Dasar perhitungan baris 1")).toHaveValue("Rencana headcount: 6 orang × Rp 16.750.000 per bulan, mulai Jan");
+
+  await page.getByLabel("Mulai posisi 1").selectOption("7");
+  await page.getByRole("button", { name: "Simpan posisi 1" }).click();
+  await expect(page.getByTestId("editor-total-1")).toHaveText("Rp 603.000.000");
+  await expect(jan).toHaveValue("0");
+
+  // Leave no draft behind: the journey later locks the whole version.
+  await page.getByRole("button", { name: "Hapus posisi 1" }).click();
+  await expect(page.getByText("Dihitung dari Rencana headcount")).toBeHidden();
+});
+
 test("2. Default Owner returns one line with a comment and consolidates the rest", async ({ page }) => {
   await as("default_owner", page, "/rka/queue");
   await expect(page.getByText("SCM · 3 baris")).toBeVisible();

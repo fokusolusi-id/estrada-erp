@@ -40,6 +40,8 @@ export interface ScopedLine extends GridLine {
   createdBy: string | null;
   versionId: string;
   commentCount: number;
+  /** Set when the headcount plan writes this line's months. */
+  headcount?: { position: string; count: number; startMonth: number; costPerHead: string };
   history: TimelineEvent[];
   remark?: Remark;
   actions: ApprovalAction[];
@@ -105,6 +107,11 @@ export async function loadScopedLines(
     : [];
   const commentsOf = new Map(comments.map((c) => [c.lineId, c.n]));
 
+  const plans = visible.length
+    ? await db.select().from(schema.headcountPlan).where(inArray(schema.headcountPlan.lineId, visible.map((v) => v.line.id)))
+    : [];
+  const planOf = new Map(plans.map((p) => [p.lineId, { position: p.position, count: p.headCount, startMonth: p.startMonth, costPerHead: p.costPerHead }]));
+
   const monthsOf = new Map<string, ReturnType<typeof money>[]>();
   for (const a of amounts) {
     const months = monthsOf.get(a.lineId) ?? Array.from({ length: 12 }, () => ZERO);
@@ -131,6 +138,7 @@ export async function loadScopedLines(
       createdBy: line.createdBy,
       versionId: line.versionId,
       commentCount: commentsOf.get(line.id) ?? 0,
+      ...(planOf.has(line.id) ? { headcount: planOf.get(line.id)! } : {}),
       history,
       rka2026: line.rka2026 ? money(line.rka2026) : null,
       actual2026: line.actual2026 ? money(line.actual2026) : null,

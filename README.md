@@ -8,7 +8,8 @@ Stack: Next.js 16 · TypeScript · shadcn/ui on Tailwind 4 · Postgres · Drizzl
 
 ```bash
 cp .env.example .env            # then set BETTER_AUTH_SECRET
-docker compose up -d db          # Postgres 16 on :5432
+brew install postgresql@16 && brew services start postgresql@16   # Postgres 16 on :5432 (first time only)
+createuser -s estrada && psql -d postgres -c "ALTER ROLE estrada PASSWORD 'estrada'" && createdb -O estrada estrada   # first time only
 pnpm install
 pnpm db:migrate
 pnpm db:seed                     # entities, org units, starter COA, demo RKA version
@@ -18,6 +19,8 @@ pnpm --filter web create-demo-users   # optional: one user per role, passwords i
 pnpm dev                         # http://localhost:3000
 ```
 
+Postgres must be on PATH (`brew link postgresql@16` or add `/opt/homebrew/opt/postgresql@16/bin`). `docker-compose.yml` is still there if you prefer a container: `docker compose up -d db`.
+
 Log in as the admin, open **Pengguna**, and invite users. With no `RESEND_API_KEY`, the invitation email is printed in the server console; open its link to set a password.
 
 ## Scripts
@@ -25,7 +28,7 @@ Log in as the admin, open **Pengguna**, and invite users. With no `RESEND_API_KE
 | Command | What it does |
 | --- | --- |
 | `pnpm test` | All Vitest projects (domain + web) |
-| `pnpm e2e` | Playwright journeys: requestor to Director lock, on a throwaway `estrada_e2e` database and a dev server on :3100 (needs `docker compose up -d db`; first run: `pnpm --filter web exec playwright install chromium`) |
+| `pnpm e2e` | Playwright journeys: requestor to Director lock, on a throwaway `estrada_e2e` database and a dev server on :3100 (needs Postgres running and the `estrada` role above; first run: `pnpm --filter web exec playwright install chromium`) |
 | `pnpm db:import -- "<file.xlsx>"` | Load an RKA workbook as the open version. `--dry-run` prints totals only; `--replace` reloads a version that is not locked; `--state` sets the lines' approval state (default `draft`) |
 | `GET /api/cron/reminders` | Daily reminders (deadline 7/3/1 days, items waiting `REMINDER_PENDING_DAYS`); call once a day with `Authorization: Bearer $CRON_SECRET`. Each reminder is sent once |
 | `GET /api/export/rka?version=&entity=&division=&status=` | The Management Summary as an `.xlsx` (signed in; Division Owner, Finance, Director, Auditor). Its RKA Data sheet uses the importer's columns |
@@ -68,7 +71,7 @@ packages/config     shared tsconfig
 
 | Done | Next (phase 1) |
 | --- | --- |
-| Auth, invitations, password reset, role home, nav by role | Headcount plan feeding the salary lines |
+| Auth, invitations, password reset, role home, nav by role | Turn the imported 6221 headcount rows into plan positions |
 | Domain rules, importer and golden test; web tests for every composite and nav (128 in all) | Row-level security in Postgres as a second scope guard |
 | Workbook importer: 192 lines, 85 COA codes, Rekap reproduced to the rupiah | Schedule the reminder endpoint in production |
 | Siklus RKA: open a cycle with deadline, revise a locked version; lock marks the version locked; summary keeps the final version | |
@@ -76,6 +79,7 @@ packages/config     shared tsconfig
 | BudgetEditor: paste from Excel, fill-right, per-row save, submit | e2e for opening a new cycle and the Draft revision path |
 | Queues on `applyTransition`: Antrean Konsolidasi, RKA Divisi, Status Board Finance, Kunci RKA | Copy the holder's head on pending-item reminders |
 | Management Summary (P&L by month, Kontribusi Divisi, per entity, URL filters); line history and return notes | Allocation of shared cost to MATRIK, DJALU, PAS (needs Finance's keys) |
+| Rencana headcount on RKA Saya: per position (heads × cost per head from the start month) it writes a read-only draft line on 6221, owned by HCM | |
 | RKA 2026 / Actual 2026 and the change beside each line; workbook review flags on every screen | |
 | COA Master screen: add, edit, deactivate; confirm or remap provisional codes | |
 | Discussion on each line (`/rka/line/[id]`): everyone in the cycle who sees the line can ask or answer without moving it; Auditor reads; closed once locked. The requestor, the current holder and the thread hear about it: in-app every time, email at most hourly and without the comment text | |

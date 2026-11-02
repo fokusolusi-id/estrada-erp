@@ -3,8 +3,12 @@ import { requireUser } from "@/lib/session";
 import { editorMasters, loadScopedLines, openVersion } from "@/lib/rka";
 import { BudgetGrid } from "@/components/erp/budget-grid";
 import { BudgetEditor, type EditorLine } from "@/components/erp/budget-editor";
+import { HeadcountPlan, type PlanPosition } from "@/components/erp/headcount-plan";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { deleteLine, saveLine, submitLines } from "./actions";
+import { deleteLine, saveHeadcount, saveLine, submitLines } from "./actions";
+
+/** The workbook budgets new hires on Beban rekrutmen, owned by HCM. */
+const HEADCOUNT_COA = "6221";
 
 export const metadata: Metadata = { title: "RKA Saya" };
 
@@ -30,7 +34,13 @@ export default async function RkaPage() {
     ...(l.actual2026 ? { actual2026: l.actual2026.toFixed() } : {}),
     ...(l.flags?.length ? { flags: l.flags } : {}),
     commentCount: l.commentCount,
+    ...(l.headcount ? { planned: true } : {}),
   }));
+  const positions: PlanPosition[] = drafts.flatMap((l) =>
+    l.headcount
+      ? [{ id: l.id, position: l.headcount.position, entityCode: l.entity, coaCode: l.coaCode, count: l.headcount.count, startMonth: l.headcount.startMonth, costPerHead: l.headcount.costPerHead }]
+      : [],
+  );
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
@@ -56,6 +66,28 @@ export default async function RkaPage() {
               onSave={saveLine}
               onDelete={deleteLine}
               onSubmit={submitLines}
+            />
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {masters ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Rencana headcount</CardTitle>
+            <CardDescription>
+              Satu baris per posisi baru. Nominal tiap bulan dihitung dari jumlah orang × biaya per orang mulai bulan masuk, lalu muncul di draft
+              di atas untuk dikirim bersama baris lain.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <HeadcountPlan
+              positions={positions}
+              masters={{ coa: masters.coa.filter((c) => c.category === "OPEX" || c.category === "COGS"), entities: masters.entities }}
+              defaultCoa={masters.coa.some((c) => c.code === HEADCOUNT_COA) ? HEADCOUNT_COA : (masters.coa[0]?.code ?? "")}
+              defaultEntity={masters.entities[0] ?? "ESTRADA"}
+              onSave={saveHeadcount}
+              onDelete={deleteLine}
             />
           </CardContent>
         </Card>

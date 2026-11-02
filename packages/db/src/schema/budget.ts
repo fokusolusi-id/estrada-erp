@@ -92,6 +92,20 @@ export const budgetLineAmount = pgTable(
   (t) => [primaryKey({ columns: [t.lineId, t.month] })],
 );
 
+/**
+ * A position in a unit's headcount plan. Each one owns a budget line whose months it computes,
+ * so the line's amounts stay the single source of rupiah.
+ */
+export const headcountPlan = pgTable("headcount_plan", {
+  lineId: uuid("line_id")
+    .primaryKey()
+    .references(() => budgetLine.id, { onDelete: "cascade" }),
+  position: text("position").notNull(),
+  headCount: smallint("head_count").notNull(),
+  startMonth: smallint("start_month").notNull(),
+  costPerHead: numeric("cost_per_head", { precision: 20, scale: 2 }).notNull(),
+});
+
 export const approvalEvent = pgTable("approval_event", {
   id: uuid("id").primaryKey().defaultRandom(),
   lineId: uuid("line_id")

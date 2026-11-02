@@ -113,6 +113,23 @@ describe("BudgetEditor", () => {
     ]);
   });
 
+  it("shows a line from the headcount plan read-only, but still lets it be sent", () => {
+    const planned: EditorLine = { id: "44444444-4444-4444-8444-444444444444", coaCode: "6221", entityCode: "ESTRADA", ownerUnit: "HCM", item: "Account Manager", basis: "Rencana headcount: 6 orang", months: Array.from({ length: 12 }, () => "100500000"), planned: true };
+    const props = { lines: [lines[0]!, planned], masters, defaultEntity: "ESTRADA", onSave: ok(), onDelete: ok(), onSubmit: ok() };
+    const { rerender } = render(<BudgetEditor {...props} />);
+    expect(cell(2, 1).disabled).toBe(true);
+    expect((screen.getByLabelText("Uraian baris 2") as HTMLInputElement).disabled).toBe(true);
+    expect(screen.getAllByRole("button", { name: "Hapus baris" })[1]!.hasAttribute("disabled")).toBe(true);
+    expect(screen.getByText("Dihitung dari Rencana headcount")).toBeTruthy();
+    expect((screen.getByLabelText("Pilih baris 2") as HTMLInputElement).disabled).toBe(false);
+
+    // Saving the plan re-renders the page; the editor shows the new months without losing unsaved edits elsewhere.
+    fireEvent.change(cell(1, 1), { target: { value: "5.000" } });
+    rerender(<BudgetEditor {...props} lines={[lines[0]!, { ...planned, months: Array.from({ length: 12 }, () => "117250000") }]} />);
+    expect(cell(1, 1).value).toBe("5.000");
+    expect(cell(2, 1).value).toBe("117.250.000");
+  });
+
   it("has no discussion for a line that is not saved yet", () => {
     setup();
     fireEvent.click(screen.getByRole("button", { name: /Tambah baris/ }));

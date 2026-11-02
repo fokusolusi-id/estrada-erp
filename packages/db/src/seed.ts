@@ -25,6 +25,7 @@ async function main() {
       { code: "5300", name: "Biaya jaringan Internet", category: "COGS", center: "cost", defaultOwnerUnit: "PMO" },
       { code: "5700", name: "Biaya EOS", category: "COGS", center: "cost", defaultOwnerUnit: "HCM" },
       { code: "6211", name: "Beban Gaji dan THR", category: "OPEX", center: "cost", defaultOwnerUnit: "HCM" },
+      { code: "6221", name: "Beban rekrutmen", category: "OPEX", center: "cost", defaultOwnerUnit: "HCM" },
       { code: "6241", name: "Beban internet", category: "OPEX", center: "cost", defaultOwnerUnit: "SCM" },
       { code: "6320", name: "Beban jasa profesional", category: "OPEX", center: "cost", defaultOwnerUnit: "FRM" },
       { code: "7221", name: "Beban bunga pinjaman bank", category: "OTHERS", center: "cost", defaultOwnerUnit: "FRM" },
