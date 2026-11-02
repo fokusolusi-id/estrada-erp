@@ -29,6 +29,15 @@ describe.skipIf(!existsSync(WORKBOOK))("golden: RKA_2027_Upd_Fin v2.xlsx", async
     expect(lines).toHaveLength(192);
   });
 
+  it("reads the twelve recruitment rows with a head count as headcount plan positions, and leaves HCM's own rows alone", () => {
+    const planned = lines.filter((l) => l.headcount);
+    expect(planned.map((l) => [l.ref.no, l.headcount!.count, l.headcount!.costPerHead.toFixed(0)])).toEqual([
+      [37, 2, "6500000"], [38, 1, "9500000"], [39, 1, "4100000"], [40, 1, "4100000"], [41, 1, "4100000"], [42, 1, "7650000"],
+      [43, 6, "16750000"], [44, 2, "17500000"], [45, 1, "7650000"], [46, 1, "7650000"], [47, 2, "7650000"], [48, 1, "4650000"],
+    ]);
+    expect(lines.filter((l) => l.coaCode === "6221" && !l.headcount).map((l) => l.ref.no)).toEqual([31, 111]);
+  });
+
   it("reproduces revenue (invoice plan) and total cost to the rupiah", () => {
     expect(row("Revenue").total.toFixed(2)).toBe("457830698346.00");
     expect(row("TotalCost").total.toFixed(2)).toBe("294400936589.71");

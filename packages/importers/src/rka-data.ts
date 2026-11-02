@@ -1,4 +1,4 @@
-import { formatIdr, sum, ZERO, type Category, type Money } from "@estrada/domain";
+import { formatIdr, headcountFromMonths, sum, ZERO, type Category, type HeadcountRow, type Money } from "@estrada/domain";
 import { amount, header, text, type Cell } from "./cells";
 import { centerOf, category, unitResolver, type UnitAlias } from "./units";
 import type { ImportedCoa } from "./coa-master";
@@ -19,6 +19,8 @@ export interface ImportedLine {
   months: Money[];
   basis: string | null;
   notes: string | null;
+  /** A recruitment row with a head count whose months the plan rebuilds to the rupiah; loaded as a plan position. */
+  headcount: HeadcountRow | null;
   /** The workbook's "Flag Cleaning" notes plus anything the importer found; shown to reviewers. */
   flags: string[];
 }
@@ -66,6 +68,9 @@ export function parseRkaData(rows: Cell[][], units: readonly UnitAlias[]): { lin
     }
     const qty = text(r[h.col("Qty (Org)")]);
     const notes = [text(r[h.col("Notes")]), qty ? `Qty ${qty} org` : ""].filter(Boolean).join(" · ");
+    const item = text(r[h.col("Keterangan / Item")]) || null;
+    const heads = Number(qty);
+    const headcount = item && qty && Number.isInteger(heads) ? headcountFromMonths(item, heads, months) : null;
     const sourceRow = Number(text(r[h.col("Baris Sumber")]));
 
     lines.push({
@@ -77,12 +82,13 @@ export function parseRkaData(rows: Cell[][], units: readonly UnitAlias[]): { lin
       ownerUnit,
       crossDivision: text(r[h.col("Lintas Divisi")]).toLowerCase() === "ya",
       entity,
-      item: text(r[h.col("Keterangan / Item")]) || null,
+      item,
       rka2026: amount(r[h.col("RKA 2026")]),
       actual2026: amount(r[h.col("Actual 2026")]),
       months,
       basis: text(r[h.col("Basis / Assumption")]) || null,
       notes: notes || null,
+      headcount,
       flags,
     });
   }

@@ -9,7 +9,7 @@ import { parseArgs } from "node:util";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import { ORG_UNITS } from "@estrada/db/seed-data";
-import { APPROVAL_STATES, formatIdr, pnl, type ApprovalState } from "@estrada/domain";
+import { APPROVAL_STATES, formatIdr, headcountBasis, pnl, type ApprovalState } from "@estrada/domain";
 import { readRkaWorkbook } from "./workbook";
 
 const { values, positionals } = parseArgs({
@@ -47,6 +47,7 @@ async function main() {
   console.log(`${name}: ${wb.lines.length} lines · revenue ${total("Revenue")} · total cost ${total("TotalCost")}`);
   console.log(`COA: ${wb.accounts.length - provisional.length} from COA Master, provisional ${provisional.join(", ") || "none"}`);
   console.log(`Lines flagged for review: ${wb.lines.filter((l) => l.flags.length).length}`);
+  console.log(`Recruitment rows read as headcount plan positions: ${wb.lines.filter((l) => l.headcount).length}`);
   if (values["dry-run"]) {
     console.log("Dry run: nothing written.");
     return;
@@ -111,8 +112,9 @@ async function main() {
           requestorUnit: l.requestorUnit,
           ownerUnit: l.ownerUnit,
           item: l.item,
-          basis: l.basis,
-          notes: l.notes,
+          // A planned line's basis is written from its plan, as the app does; the workbook's own basis moves to the notes.
+          basis: l.headcount ? headcountBasis(l.headcount) : l.basis,
+          notes: l.headcount && l.basis ? [l.notes, l.basis].filter(Boolean).join(" · ") : l.notes,
           crossDivision: l.crossDivision,
           rka2026: l.rka2026?.toFixed(2) ?? null,
           actual2026: l.actual2026?.toFixed(2) ?? null,
@@ -126,11 +128,18 @@ async function main() {
       wb.lines.flatMap((l, i) => l.months.map((m, k) => ({ lineId: inserted[i]!.id, month: k + 1, amount: m.toFixed(2) }))),
     );
 
+    const plans = wb.lines.flatMap((l, i) =>
+      l.headcount
+        ? [{ lineId: inserted[i]!.id, position: l.headcount.position, headCount: l.headcount.count, startMonth: l.headcount.startMonth, costPerHead: l.headcount.costPerHead.toFixed(2) }]
+        : [],
+    );
+    if (plans.length) await tx.insert(schema.headcountPlan).values(plans);
+
     await tx.insert(schema.auditLog).values({
       action: "import.workbook",
       subjectType: "budget_version",
       subjectId: version!.id,
-      after: { file: basename(path), lines: wb.lines.length, revenue: total("Revenue"), totalCost: total("TotalCost"), provisional, state },
+      after: { file: basename(path), lines: wb.lines.length, revenue: total("Revenue"), totalCost: total("TotalCost"), provisional, state, headcountPositions: plans.length },
     });
     return version!.id;
   });

@@ -37,3 +37,19 @@ export function headcountProblems(row: HeadcountRow): Partial<Record<HeadcountFi
 export function headcountBasis(row: HeadcountRow): string {
   return `Rencana headcount: ${row.count} orang × ${formatIdr(row.costPerHead)} per bulan, mulai ${MONTH_SHORT[row.startMonth - 1]}`;
 }
+
+/**
+ * Reads a recruitment row the workbook typed by hand back into a position: nothing until the start month, then the
+ * same amount to December, split evenly over the heads to the cent. Anything the plan could not rebuild exactly
+ * stays a plain line, so an import never changes a rupiah.
+ */
+export function headcountFromMonths(position: string, count: number, months: readonly Money[]): HeadcountRow | null {
+  const start = months.findIndex((m) => !m.isZero());
+  if (start < 0 || !Number.isInteger(count) || count < 1) return null;
+  const costPerHead = months[start]!.dividedBy(count);
+  if (costPerHead.decimalPlaces() > 2) return null;
+  const row = { position: position.trim(), count, startMonth: start + 1, costPerHead };
+  if (Object.keys(headcountProblems(row)).length) return null;
+  const rebuilt = headcountMonths(row);
+  return months.length === 12 && rebuilt.every((m, i) => m.equals(months[i]!)) ? row : null;
+}

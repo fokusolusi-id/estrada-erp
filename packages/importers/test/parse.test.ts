@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { money } from "@estrada/domain";
 import { parseCoaMaster, parseRkaData, provisionalAccounts, type Cell } from "../src/index";
 
 const UNITS = [
@@ -69,6 +70,16 @@ describe("parseRkaData", () => {
   it("keeps headcount in the notes instead of a cost column", () => {
     const { lines } = parseRkaData(DATA([dataRow({ "Qty (Org)": 3, Notes: "Rekrutmen" })]), UNITS);
     expect(lines[0]!.notes).toBe("Rekrutmen · Qty 3 org");
+  });
+
+  it("turns a recruitment row with a head count into a headcount plan position", () => {
+    const { lines } = parseRkaData(DATA([dataRow({ "Keterangan / Item": "Account Manager (AM)", "Qty (Org)": 6 }, months(100500000))]), UNITS);
+    expect(lines[0]!.headcount).toEqual({ position: "Account Manager (AM)", count: 6, startMonth: 1, costPerHead: money("16750000") });
+  });
+
+  it("keeps a row without a head count, or one the plan cannot rebuild, as a plain line", () => {
+    const { lines } = parseRkaData(DATA([dataRow({ "Keterangan / Item": "Rekrutmen" }), dataRow({ "Keterangan / Item": "Delivery Control", "Qty (Org)": 3 }, months(10000000))]), UNITS);
+    expect(lines.map((l) => l.headcount)).toEqual([null, null]);
   });
 
   it("rounds Excel float noise to the rupiah cent", () => {
