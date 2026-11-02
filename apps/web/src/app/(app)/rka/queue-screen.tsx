@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { ApprovalState, Role } from "@estrada/domain";
+import { db, schema } from "@estrada/db";
 import { requireUser } from "@/lib/session";
 import { loadScopedLines, openVersion } from "@/lib/rka";
 import { ApprovalQueue, type QueueLine } from "@/components/erp/approval-queue";
@@ -21,7 +22,11 @@ export async function QueueScreen({
   const user = await requireUser();
   if (!roles.includes(user.actor.role)) notFound();
 
-  const [version, scoped] = await Promise.all([openVersion(), loadScopedLines(user, states)]);
+  const [version, scoped, coa] = await Promise.all([
+    openVersion(),
+    loadScopedLines(user, states),
+    db.select({ code: schema.coaAccount.code, name: schema.coaAccount.name, parentCode: schema.coaAccount.parentCode }).from(schema.coaAccount),
+  ]);
   const lines: QueueLine[] = scoped.map((l) => ({
     id: l.id,
     coaCode: l.coaCode,
@@ -54,7 +59,7 @@ export async function QueueScreen({
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <ApprovalQueue lines={lines} unit="juta" onAction={actOnLines} />
+          <ApprovalQueue lines={lines} coa={coa} unit="juta" onAction={actOnLines} />
         </CardContent>
       </Card>
     </div>

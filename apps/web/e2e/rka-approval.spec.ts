@@ -49,6 +49,29 @@ test("Requestor cannot open an approver's queue", async ({ page }) => {
   await expect(page.getByText("This page could not be found.")).toBeVisible();
 });
 
+test("Finance arranges COA Master as a tree; no one else can change it", async ({ page }) => {
+  await as("finance", page, "/coa");
+  await page.getByLabel("Kode", { exact: true }).fill("6240");
+  await page.getByLabel("Nama").fill("Beban Utilitas");
+  await page.getByRole("button", { name: "Tambah COA" }).click();
+  await expect(page.getByText("COA 6240 ditambahkan.")).toBeVisible();
+
+  await page.getByLabel("Ubah kode yang ada").selectOption("6241");
+  await page.getByLabel("Induk").selectOption("6240");
+  await page.getByRole("button", { name: "Simpan perubahan" }).click();
+  await expect(page.getByText("COA 6241 diperbarui.")).toBeVisible();
+  await expect(page.locator('tr[data-depth="1"]').filter({ hasText: "6241" })).toBeVisible();
+
+  // A parent must share the category, so subtotals stay in their P&L row.
+  await page.getByLabel("Ubah kode yang ada").selectOption("5300");
+  await page.getByLabel("Induk").selectOption("6240");
+  await page.getByRole("button", { name: "Simpan perubahan" }).click();
+  await expect(page.getByText(/Induk harus berkategori sama/)).toBeVisible();
+
+  await as("director", page, "/coa");
+  await expect(page).toHaveURL(/\/$/);
+});
+
 test("Requestor plans new hires; the plan writes the draft line, owned by HCM", async ({ page }) => {
   await as("requestor", page, "/rka");
   await page.getByRole("button", { name: "Tambah posisi" }).click();
@@ -179,18 +202,19 @@ test("4. Finance finalises", async ({ page }) => {
   await page.getByRole("button", { name: "Finalisasi" }).click();
   await expect(page.getByText("3 baris diproses.")).toBeVisible();
 
-  // The lock belongs to the Director: Finance sees the lines but cannot lock them.
-  await page.goto("/rka/lock");
-  await expect(page.getByLabel("Pilih semua SCM")).toBeDisabled();
 });
 
-test("5. Director locks the version and reads the Management Summary", async ({ page }) => {
+test("5. Head Finance locks the version; the Director reads the Management Summary", async ({ page }) => {
+  // The lock belongs to Head Finance (client answer 3): the Director sees the lines but cannot lock them.
   await as("director", page, "/rka/lock");
+  await expect(page.getByLabel("Pilih semua SCM")).toBeDisabled();
+
+  await as("finance", page, "/rka/lock");
   await page.getByLabel("Pilih semua SCM").check();
   await page.getByRole("button", { name: "Kunci versi" }).click();
   await expect(page.getByText("3 baris diproses.")).toBeVisible();
 
-  await page.goto("/summary");
+  await as("director", page, "/summary");
   await expect(page.getByText("3 baris, 3 terkunci")).toBeVisible();
   // 6241: 19.821.320 x 12 + 5300: 390.686.823,67 x 12 + new line 1.500.000 x 12
   await expect(page.getByText("Rp 4.944,1 jt").first()).toBeVisible();

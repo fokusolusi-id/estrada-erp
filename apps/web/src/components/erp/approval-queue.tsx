@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useState, useTransition } from "react";
-import { money, sum, type ApprovalAction, type ApprovalState, type Unit } from "@estrada/domain";
+import { coaSubtree, coaTree, money, sum, type ApprovalAction, type ApprovalState, type Unit } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -35,6 +35,27 @@ export interface QueueLine {
 }
 
 type Result = { ok: boolean; message: string };
+export interface CoaBranch {
+  code: string;
+  name: string;
+  parentCode: string | null;
+}
+
+const SELECT =
+  "border-input h-8 rounded-md border bg-transparent px-2 text-sm outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]";
+
+/** The codes in this queue plus their parents, as a tree: what this position's own lines can be filtered by. */
+function filterOptions(lines: readonly QueueLine[], coa: readonly CoaBranch[]) {
+  const master = new Map(coa.map((c) => [c.code, c]));
+  const picked = new Map<string, CoaBranch>();
+  for (const l of lines) {
+    for (let c: CoaBranch | undefined = master.get(l.coaCode) ?? { code: l.coaCode, name: l.coaName, parentCode: null }; c && !picked.has(c.code); ) {
+      picked.set(c.code, c);
+      c = c.parentCode ? master.get(c.parentCode) : undefined;
+    }
+  }
+  return coaTree([...picked.values()]);
+}
 
 export const ACTION_LABEL: Record<ApprovalAction, string> = {
   submit: "Kirim ke Default Owner",
@@ -53,11 +74,14 @@ const ORDER: readonly ApprovalAction[] = ["submit", "consolidate", "approve", "f
  * as one handoff; returns and clarifications need a comment.
  */
 export function ApprovalQueue({
-  lines,
+  lines: all,
+  coa = [],
   unit = "juta",
   onAction,
 }: {
   lines: QueueLine[];
+  /** COA Master as a tree, for the filter. */
+  coa?: readonly CoaBranch[];
   unit?: Unit;
   onAction: (ids: string[], action: ApprovalAction, comment: string | undefined) => Promise<Result>;
 }) {
@@ -66,7 +90,11 @@ export function ApprovalQueue({
   const [comment, setComment] = useState("");
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
+  const [coaFilter, setCoaFilter] = useState("");
 
+  const options = filterOptions(all, coa);
+  const shown = coaFilter ? coaSubtree(coaFilter, options.map((o) => o.account)) : null;
+  const lines = shown ? all.filter((l) => shown.has(l.coaCode)) : all;
   const totals = new Map(lines.map((l) => [l.id, sum(l.months.map((m) => money(m)))]));
   const groups = new Map<string, QueueLine[]>();
   for (const l of lines) groups.set(l.ownerUnit, [...(groups.get(l.ownerUnit) ?? []), l]);
@@ -102,7 +130,30 @@ export function ApprovalQueue({
     });
   };
 
-  if (!lines.length) {
+  const filter = (
+    <div className="flex items-center gap-2">
+      <Label htmlFor="coa-filter">Filter COA</Label>
+      <select
+        id="coa-filter"
+        className={SELECT}
+        value={coaFilter}
+        onChange={(e) => {
+          setCoaFilter(e.target.value);
+          setSelected(new Set());
+        }}
+      >
+        <option value="">Semua COA</option>
+        {options.map(({ account: c, depth }) => (
+          <option key={c.code} value={c.code}>
+            {"\u00a0\u00a0".repeat(depth)}
+            {c.code} · {c.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
+  if (!all.length) {
     return (
       <div className="grid gap-2 py-8 text-center">
         {message ? <p className={message.ok ? "text-success text-sm" : "text-destructive text-sm"}>{message.text}</p> : null}
@@ -113,6 +164,7 @@ export function ApprovalQueue({
 
   return (
     <div className="grid gap-4">
+      {filter}
       <Table>
         <TableHeader>
           <TableRow>

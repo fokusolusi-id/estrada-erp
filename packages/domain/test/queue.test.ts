@@ -48,9 +48,11 @@ describe("actionsFor: what this position may do to this line now", () => {
 
   it("lock follows the configured lock role", () => {
     const l = { ...line, state: "awaiting_lock" as const };
+    const fin = actor({ role: "finance", orgUnit: "FRM", entities: ["*"] });
     const dir = actor({ role: "director", orgUnit: "DIR", entities: ["*"] });
-    expect(actionsFor(dir, l, org)).toEqual(["lock"]);
-    expect(actionsFor(dir, l, org, { lockRole: "finance" })).toEqual([]);
+    expect(actionsFor(fin, l, org)).toEqual(["lock"]);
+    expect(actionsFor(dir, l, org)).toEqual([]);
+    expect(actionsFor(dir, l, org, { lockRole: "director" })).toEqual(["lock"]);
   });
 
   it("auditor and admin never act", () => {

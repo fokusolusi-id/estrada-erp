@@ -32,10 +32,10 @@ const RULES: readonly Rule[] = [
 ];
 
 export interface ApprovalConfig {
-  /** Who locks the final version. Open question for the client; Director by default. */
+  /** Who locks the final version. Head Finance by default (client answer 3). */
   lockRole: Role;
 }
-const DEFAULT_CONFIG: ApprovalConfig = { lockRole: "director" };
+const DEFAULT_CONFIG: ApprovalConfig = { lockRole: "finance" };
 
 export interface TransitionRequest {
   action: ApprovalAction;

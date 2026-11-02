@@ -1,0 +1,2 @@
+ALTER TABLE "coa_account" ADD COLUMN "parent_code" text;--> statement-breakpoint
+ALTER TABLE "coa_account" ADD CONSTRAINT "coa_account_parent_code_coa_account_code_fk" FOREIGN KEY ("parent_code") REFERENCES "public"."coa_account"("code") ON DELETE set null ON UPDATE no action;

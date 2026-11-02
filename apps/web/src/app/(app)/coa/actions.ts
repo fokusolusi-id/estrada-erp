@@ -4,14 +4,14 @@ import { revalidatePath } from "next/cache";
 import { and, count, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@estrada/db";
-import { can, remapProblem, type RemapProblem } from "@estrada/domain";
+import { can, coaParentProblem, remapProblem, type CoaParentProblem, type RemapProblem } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
 
 export type CoaState = { ok: boolean; message: string; errors?: Record<string, string[]> };
 
-/** COA Master belongs to Finance (CARA PENGISIAN point 6); the Admin role sits in Finance. */
-async function requireCoaAdmin() {
+/** COA Master belongs to Finance alone (CARA PENGISIAN point 6, confirmed by the client). */
+async function requireCoaOwner() {
   const user = await requireUser();
   return can(user.actor, "coa.manage", null, await loadOrg()) ? user : null;
 }
@@ -23,16 +23,24 @@ const CoaSchema = z.object({
   name: z.string().trim().min(3, "Nama wajib diisi"),
   category: z.enum(CATEGORIES),
   defaultOwnerUnit: z.string().optional(),
+  parentCode: z.string().optional(),
   active: z.string().optional(),
   guidance: z.string().trim().max(2000).optional(),
 });
+
+const PARENT_MESSAGE: Record<CoaParentProblem, string> = {
+  self: "Kode tidak bisa menjadi induknya sendiri.",
+  missing: "Kode induk tidak ditemukan.",
+  category_mismatch: "Induk harus berkategori sama, supaya subtotal tetap di baris P&L yang sama.",
+  cycle: "Induk ini berada di bawah kode tersebut.",
+};
 
 const usedBy = async (code: string) =>
   (await db.select({ n: count() }).from(schema.budgetLine).where(eq(schema.budgetLine.coaCode, code)))[0]?.n ?? 0;
 
 export async function saveCoa(_prev: CoaState, form: FormData): Promise<CoaState> {
-  const admin = await requireCoaAdmin();
-  if (!admin) return { ok: false, message: "Hanya Admin Finance yang dapat mengubah COA Master." };
+  const finance = await requireCoaOwner();
+  if (!finance) return { ok: false, message: "Hanya Finance yang dapat mengubah COA Master." };
   const parsed = CoaSchema.safeParse(Object.fromEntries(form));
   if (!parsed.success) return { ok: false, message: "Periksa isian.", errors: z.flattenError(parsed.error).fieldErrors };
   const v = parsed.data;
@@ -45,11 +53,20 @@ export async function saveCoa(_prev: CoaState, form: FormData): Promise<CoaState
     if (n) return { ok: false, message: `Kategori tidak bisa diubah: kode ini dipakai ${n} baris RKA.` };
   }
 
+  const parentCode = v.parentCode || null;
+  const tree = await db.select({ code: schema.coaAccount.code, category: schema.coaAccount.category, parentCode: schema.coaAccount.parentCode }).from(schema.coaAccount);
+  const parentProblem = coaParentProblem(v.code, parentCode, tree, v.category);
+  if (parentProblem) return { ok: false, message: "Periksa isian.", errors: { parentCode: [PARENT_MESSAGE[parentProblem]] } };
+  if (existing && existing.category !== v.category && tree.some((a) => a.parentCode === v.code)) {
+    return { ok: false, message: "Kategori tidak bisa diubah selama kode ini masih punya anak." };
+  }
+
   const values = {
     name: v.name,
     category: v.category,
     center: v.category === "Revenue" ? ("revenue" as const) : ("cost" as const),
     defaultOwnerUnit: v.defaultOwnerUnit || null,
+    parentCode,
     active: v.active === "on",
     guidance: v.guidance || null,
     updatedAt: new Date(),
@@ -58,7 +75,7 @@ export async function saveCoa(_prev: CoaState, form: FormData): Promise<CoaState
     if (existing) await tx.update(schema.coaAccount).set(values).where(eq(schema.coaAccount.code, v.code));
     else await tx.insert(schema.coaAccount).values({ code: v.code, ...values });
     await tx.insert(schema.auditLog).values({
-      actorUserId: admin.id,
+      actorUserId: finance.id,
       action: existing ? "coa.update" : "coa.create",
       subjectType: "coa_account",
       subjectId: v.code,
@@ -66,20 +83,20 @@ export async function saveCoa(_prev: CoaState, form: FormData): Promise<CoaState
       after: values,
     });
   });
-  revalidatePath("/admin/coa");
+  revalidatePath("/coa");
   return { ok: true, message: existing ? `COA ${v.code} diperbarui.` : `COA ${v.code} ditambahkan.` };
 }
 
 export async function confirmCoa(code: string): Promise<CoaState> {
-  const admin = await requireCoaAdmin();
-  if (!admin) return { ok: false, message: "Hanya Admin Finance yang dapat mengubah COA Master." };
+  const finance = await requireCoaOwner();
+  if (!finance) return { ok: false, message: "Hanya Finance yang dapat mengubah COA Master." };
   const [acc] = await db.select().from(schema.coaAccount).where(eq(schema.coaAccount.code, code));
   if (!acc?.provisional) return { ok: false, message: "Kode ini bukan kode sementara." };
   await db.transaction(async (tx) => {
     await tx.update(schema.coaAccount).set({ provisional: false, guidance: null, updatedAt: new Date() }).where(eq(schema.coaAccount.code, code));
-    await tx.insert(schema.auditLog).values({ actorUserId: admin.id, action: "coa.confirm", subjectType: "coa_account", subjectId: code });
+    await tx.insert(schema.auditLog).values({ actorUserId: finance.id, action: "coa.confirm", subjectType: "coa_account", subjectId: code });
   });
-  revalidatePath("/admin/coa");
+  revalidatePath("/coa");
   return { ok: true, message: `${code} dikonfirmasi sebagai akun COA Master.` };
 }
 
@@ -95,8 +112,8 @@ const REMAP_MESSAGE: Record<RemapProblem, string> = {
 
 /** Moves every line off a provisional code onto an existing one, then removes the provisional code. */
 export async function remapCoa(source: string, target: string): Promise<CoaState> {
-  const admin = await requireCoaAdmin();
-  if (!admin) return { ok: false, message: "Hanya Admin Finance yang dapat mengubah COA Master." };
+  const finance = await requireCoaOwner();
+  if (!finance) return { ok: false, message: "Hanya Finance yang dapat mengubah COA Master." };
   const [src] = await db.select().from(schema.coaAccount).where(eq(schema.coaAccount.code, source));
   if (!src) return { ok: false, message: "Kode asal tidak ditemukan." };
   const [dst] = await db.select().from(schema.coaAccount).where(eq(schema.coaAccount.code, target));
@@ -116,7 +133,7 @@ export async function remapCoa(source: string, target: string): Promise<CoaState
       .returning({ id: schema.budgetLine.id });
     await tx.delete(schema.coaAccount).where(eq(schema.coaAccount.code, source));
     await tx.insert(schema.auditLog).values({
-      actorUserId: admin.id,
+      actorUserId: finance.id,
       action: "coa.remap",
       subjectType: "coa_account",
       subjectId: source,
@@ -125,6 +142,6 @@ export async function remapCoa(source: string, target: string): Promise<CoaState
     });
     return rows.length;
   });
-  revalidatePath("/admin/coa");
+  revalidatePath("/coa");
   return { ok: true, message: `${moved} baris dipindahkan dari ${source} ke ${target}; kode ${source} dihapus.` };
 }

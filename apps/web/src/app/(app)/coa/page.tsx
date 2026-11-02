@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { asc, count, eq } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
-import { can } from "@estrada/domain";
+import { can, coaTree } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { openVersion } from "@/lib/rka";
 import { loadOrg } from "@/lib/workflow";
@@ -23,7 +23,6 @@ export default async function CoaPage() {
   const [accounts, units, usage] = await Promise.all([
     db.select().from(schema.coaAccount).orderBy(asc(schema.coaAccount.code)),
     db.select({ code: schema.orgUnit.code, name: schema.orgUnit.name }).from(schema.orgUnit).orderBy(asc(schema.orgUnit.code)),
-    // Counts only: Admin never sees budget amounts.
     version
       ? db
           .select({ code: schema.budgetLine.coaCode, n: count() })
@@ -71,7 +70,7 @@ export default async function CoaPage() {
         </CardHeader>
         <CardContent>
           <CoaForm
-            accounts={accounts.map((a) => ({ code: a.code, name: a.name, category: a.category, defaultOwnerUnit: a.defaultOwnerUnit, active: a.active, guidance: a.guidance }))}
+            accounts={accounts.map((a) => ({ code: a.code, name: a.name, category: a.category, defaultOwnerUnit: a.defaultOwnerUnit, parentCode: a.parentCode, active: a.active, guidance: a.guidance }))}
             units={units}
           />
         </CardContent>
@@ -80,6 +79,7 @@ export default async function CoaPage() {
       <Card>
         <CardHeader>
           <CardTitle>Daftar COA</CardTitle>
+          <CardDescription>Disusun sebagai pohon: kode anak di bawah induknya.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -94,9 +94,12 @@ export default async function CoaPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {accounts.map((a) => (
-                <TableRow key={a.code}>
-                  <TableCell className="font-medium">{a.code}</TableCell>
+              {coaTree(accounts).map(({ account: a, depth }) => (
+                <TableRow key={a.code} data-depth={depth}>
+                  <TableCell className="font-medium" style={{ paddingLeft: `${0.5 + depth * 1.25}rem` }}>
+                    {depth ? <span className="text-muted-foreground mr-1">└</span> : null}
+                    {a.code}
+                  </TableCell>
                   <TableCell className="whitespace-normal">{a.name}</TableCell>
                   <TableCell>{a.category}</TableCell>
                   <TableCell>{a.defaultOwnerUnit ?? "—"}</TableCell>

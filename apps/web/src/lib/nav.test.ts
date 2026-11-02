@@ -9,7 +9,7 @@ describe("navFor", () => {
   it("keeps budget screens away from Admin", () => {
     const hrefs = navFor("admin").map((n) => n.href);
     expect(hrefs).toEqual(expect.arrayContaining(["/admin/users", "/admin/positions"]));
-    expect(navFor("admin").find((n) => n.href === "/admin/coa")?.phase).toBeUndefined();
+    expect(hrefs).not.toContain("/coa");
     expect(hrefs).not.toContain("/rka");
   });
 
@@ -22,7 +22,7 @@ describe("navFor", () => {
     const live = (role: Parameters<typeof navFor>[0]) => navFor(role).filter((n) => !n.phase).map((n) => n.href);
     expect(live("default_owner")).toContain("/rka/queue");
     expect(live("division_owner")).toContain("/rka/division");
-    expect(live("finance")).toEqual(expect.arrayContaining(["/rka/review", "/rka/lock"]));
+    expect(live("finance")).toEqual(expect.arrayContaining(["/rka/review", "/rka/lock", "/coa"]));
     expect(live("director")).toEqual(expect.arrayContaining(["/rka/lock", "/summary"]));
     expect(live("auditor")).toContain("/summary");
     expect(live("finance")).toContain("/rka/cycle");

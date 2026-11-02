@@ -23,13 +23,13 @@ const HOME: Record<Role, { title: string; body: string; cta?: { href: string; la
   },
   finance: {
     title: "Status board semua divisi",
-    body: "Review konsistensi, minta klarifikasi, dan finalisasi RKA konsolidasi.",
+    body: "Review konsistensi, minta klarifikasi, finalisasi RKA konsolidasi, lalu kunci versi final.",
     cta: { href: "/rka/review", label: "Buka status board" },
   },
   director: {
     title: "Ringkasan RKA",
-    body: "Tinjau Management Summary dan kunci versi final setelah Finance memfinalisasi.",
-    cta: { href: "/rka/lock", label: "Buka Kunci RKA" },
+    body: "Tinjau Management Summary dan status RKA; versi final dikunci oleh Head Finance.",
+    cta: { href: "/summary", label: "Buka Management Summary" },
   },
   auditor: {
     title: "Audit",
@@ -38,7 +38,7 @@ const HOME: Record<Role, { title: string; body: string; cta?: { href: string; la
   },
   admin: {
     title: "Data master",
-    body: "Kelola pengguna, posisi, unit organisasi, entitas, dan COA.",
+    body: "Kelola pengguna, posisi, unit organisasi, dan entitas.",
     cta: { href: "/admin/users", label: "Kelola pengguna" },
   },
 };

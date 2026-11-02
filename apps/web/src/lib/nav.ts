@@ -16,12 +16,13 @@ export const NAV: readonly NavItem[] = [
   { href: "/rka/review", label: "Status Board Finance", roles: ["finance"] },
   { href: "/rka/lock", label: "Kunci RKA", roles: ["finance", "director"] },
   { href: "/rka/cycle", label: "Siklus RKA", roles: ["finance", "director"] },
+  { href: "/coa", label: "COA Master", roles: ["finance"] },
   { href: "/summary", label: "Management Summary", roles: ["division_owner", "finance", "director", "auditor"] },
   { href: "/pipeline", label: "Pipeline", roles: ["finance", "director", "division_owner"], phase: 2 },
   { href: "/cash", label: "Arus Kas", roles: ["finance", "director"], phase: 3 },
   { href: "/admin/users", label: "Pengguna", roles: ["admin"] },
   { href: "/admin/positions", label: "Posisi & pjs", roles: ["admin"] },
-  { href: "/admin/coa", label: "COA Master", roles: ["admin"] },
+
 ];
 
 export function navFor(role: Role): NavItem[] {

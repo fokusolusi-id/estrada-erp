@@ -1,4 +1,4 @@
-import { boolean, date, numeric, pgEnum, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, date, numeric, pgEnum, pgTable, primaryKey, text, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
 export const categoryEnum = pgEnum("coa_category", ["Revenue", "COGS", "OPEX", "OTHERS", "CAPEX"]);
@@ -67,6 +67,8 @@ export const coaAccount = pgTable("coa_account", {
   category: categoryEnum("category").notNull(),
   center: centerEnum("center").notNull(),
   defaultOwnerUnit: text("default_owner_unit").references(() => orgUnit.code),
+  /** Tree set by Finance, e.g. 5500 over 5510 and 5520; same category as the child. */
+  parentCode: text("parent_code").references((): AnyPgColumn => coaAccount.code, { onDelete: "set null" }),
   active: boolean("active").notNull().default(true),
   /** Used in the workbook but missing from COA Master: Finance confirms or remaps it. */
   provisional: boolean("provisional").notNull().default(false),

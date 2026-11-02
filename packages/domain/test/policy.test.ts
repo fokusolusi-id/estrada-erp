@@ -53,9 +53,15 @@ describe("policy", () => {
 
   it("admin manages master data but never edits budget lines", () => {
     const admin = actor({ role: "admin", orgUnit: "FRM", entities: ["*"] });
-    expect(can(admin, "coa.manage", null, org)).toBe(true);
+    expect(can(admin, "org.manage", null, org)).toBe(true);
     expect(can(admin, "line.edit", line, org)).toBe(false);
-    expect(can(actor({ role: "finance", orgUnit: "FRM" }), "coa.manage", null, org)).toBe(false);
+  });
+
+  it("leaves COA Master to Finance alone (client: only Finance adds, edits or deactivates COA)", () => {
+    expect(can(actor({ role: "finance", orgUnit: "FRM", entities: ["*"] }), "coa.manage", null, org)).toBe(true);
+    for (const role of ["admin", "director", "division_owner", "default_owner", "requestor", "auditor"] as const) {
+      expect(can(actor({ role, orgUnit: "FRM", entities: ["*"] }), "coa.manage", null, org)).toBe(false);
+    }
   });
 });
 

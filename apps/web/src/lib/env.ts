@@ -7,7 +7,7 @@ const schema = z.object({
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("ERP Estrada <no-reply@estrada.local>"),
   /** Who locks the final RKA version — open question 3 for the client. */
-  RKA_LOCK_ROLE: z.enum(["director", "finance"]).default("director"),
+  RKA_LOCK_ROLE: z.enum(["director", "finance"]).default("finance"),
   /** Bearer token the daily scheduler sends to /api/cron/reminders. Unset = the endpoint is off. */
   CRON_SECRET: z.string().min(16).optional(),
   /** Items waiting this many days remind whoever holds them. */

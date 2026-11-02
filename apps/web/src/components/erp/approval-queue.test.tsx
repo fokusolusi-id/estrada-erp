@@ -74,4 +74,35 @@ describe("ApprovalQueue", () => {
     expect(screen.getByText("+Rp 2.000.000 (+20,0%)")).toBeTruthy();
     expect(screen.getByText("Nilai bulanan mengandung desimal")).toBeTruthy();
   });
+
+  it("filters by COA, offering only the codes in this position's queue and their parents; a parent shows its children", () => {
+    const coa = [
+      { code: "5300", name: "Biaya jaringan Internet", parentCode: null },
+      { code: "6200", name: "Beban umum", parentCode: null },
+      { code: "6210", name: "Beban Gaji dan Tunjangan", parentCode: "6200" },
+      { code: "6211", name: "Beban Gaji", parentCode: "6210" },
+      { code: "6240", name: "Beban Utilitas", parentCode: "6200" },
+      { code: "6241", name: "Beban internet", parentCode: "6240" },
+      { code: "6221", name: "Beban rekrutmen", parentCode: "6200" },
+    ];
+    render(<ApprovalQueue lines={lines} coa={coa} unit="rp" onAction={vi.fn()} />);
+    const filter = screen.getByLabelText("Filter COA") as HTMLSelectElement;
+    expect([...filter.options].map((o) => o.value)).toEqual(["", "5300", "6200", "6210", "6211", "6240", "6241"]);
+
+    fireEvent.change(filter, { target: { value: "6200" } });
+    expect(screen.getByLabelText("Pilih 6241 SCM")).toBeTruthy();
+    expect(screen.getByLabelText("Pilih 6211 HCM")).toBeTruthy();
+    expect(screen.queryByLabelText("Pilih 5300 SCM")).toBeNull();
+
+    fireEvent.change(filter, { target: { value: "6240" } });
+    expect(screen.queryByLabelText("Pilih 6211 HCM")).toBeNull();
+    expect(screen.getByTestId("subtotal-SCM").textContent).toBe("Rp 237.855.840");
+  });
+
+  it("drops the selection when the filter changes, so hidden lines are never sent", () => {
+    render(<ApprovalQueue lines={lines} coa={[]} unit="rp" onAction={vi.fn()} />);
+    fireEvent.click(screen.getByLabelText("Pilih semua SCM"));
+    fireEvent.change(screen.getByLabelText("Filter COA"), { target: { value: "6241" } });
+    expect((screen.getByLabelText("Pilih 6241 SCM") as HTMLInputElement).checked).toBe(false);
+  });
 });

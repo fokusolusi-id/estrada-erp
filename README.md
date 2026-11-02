@@ -65,7 +65,7 @@ packages/config     shared tsconfig
 
 ## Approval flow
 
-`draft → consolidation → division_approval → finance_review → awaiting_lock → locked`, with comment-required returns from Default Owner and clarifications from Finance. When the last line locks, the version locks; a revision copies it into a new open version, starting at Draft (every division again) or Review Finance (Finance adjusts alone). `RKA_LOCK_ROLE` decides whether the Director or Finance locks (open question for the client).
+`draft → consolidation → division_approval → finance_review → awaiting_lock → locked`, with comment-required returns from Default Owner and clarifications from Finance. When the last line locks, the version locks; a revision copies it into a new open version, starting at Draft (every division again) or Review Finance (Finance adjusts alone). Head Finance locks the final version (client answer 3); `RKA_LOCK_ROLE` can hand it to the Director.
 
 ## Done in this base vs next
 
@@ -82,6 +82,7 @@ packages/config     shared tsconfig
 | Rencana headcount on RKA Saya: per position (heads × cost per head from the start month) it writes a read-only draft line on 6221, owned by HCM | |
 | Importer reads the workbook's 12 recruitment rows with a head count as plan positions; rows it cannot rebuild to the rupiah stay plain lines | |
 | RKA 2026 / Actual 2026 and the change beside each line; workbook review flags on every screen | |
-| COA Master screen: add, edit, deactivate; confirm or remap provisional codes | |
+| COA Master (Finance only, at `/coa`): add, edit, deactivate; confirm or remap provisional codes; parent/child tree (5500 → 5510, 5520), started from the code numbers on import | |
+| COA filter on every approval queue, listing only the codes in that position's lines and their parents | |
 | Discussion on each line (`/rka/line/[id]`): everyone in the cycle who sees the line can ask or answer without moving it; Auditor reads; closed once locked. The requestor, the current holder and the thread hear about it: in-app every time, email at most hourly and without the comment text | |
 | Excel export from Management Summary ("Unduh Excel"): RKA Data in the importer's layout, Rekap, Kontribusi Divisi, Per Entitas; same version, filters and scope as the screen | |

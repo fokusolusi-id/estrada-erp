@@ -6,10 +6,10 @@
  */
 import { basename, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { and, eq, inArray, ne } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import { ORG_UNITS } from "@estrada/db/seed-data";
-import { APPROVAL_STATES, formatIdr, headcountBasis, pnl, type ApprovalState } from "@estrada/domain";
+import { APPROVAL_STATES, formatIdr, headcountBasis, inferCoaParent, pnl, type ApprovalState } from "@estrada/domain";
 import { readRkaWorkbook } from "./workbook";
 
 const { values, positionals } = parseArgs({
@@ -80,6 +80,13 @@ async function main() {
           .onConflictDoUpdate({ target: schema.coaAccount.code, set: { ...row, provisional: false, updatedAt: new Date() } });
       }
     }
+    // The workbook's COA Master is flat: start the tree from what the code numbers imply. A parent Finance set is kept.
+    const all = await tx.select({ code: schema.coaAccount.code, category: schema.coaAccount.category, parentCode: schema.coaAccount.parentCode }).from(schema.coaAccount);
+    for (const a of all.filter((x) => !x.parentCode)) {
+      const parentCode = inferCoaParent(a.code, all);
+      if (parentCode) await tx.update(schema.coaAccount).set({ parentCode }).where(and(eq(schema.coaAccount.code, a.code), isNull(schema.coaAccount.parentCode)));
+    }
+
     const codes = [...new Set(wb.references.map((r) => r.code))];
     await tx.delete(schema.coaReference).where(inArray(schema.coaReference.code, codes));
     await tx.insert(schema.coaReference).values(

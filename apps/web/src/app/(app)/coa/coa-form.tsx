@@ -14,11 +14,12 @@ export interface CoaRecord {
   name: string;
   category: string;
   defaultOwnerUnit: string | null;
+  parentCode: string | null;
   active: boolean;
   guidance: string | null;
 }
 
-const EMPTY: CoaRecord = { code: "", name: "", category: "OPEX", defaultOwnerUnit: null, active: true, guidance: null };
+const EMPTY: CoaRecord = { code: "", name: "", category: "OPEX", defaultOwnerUnit: null, parentCode: null, active: true, guidance: null };
 
 /** Add a code, or pick one to edit. The code itself never changes once lines use it. */
 export function CoaForm({ accounts, units }: { accounts: CoaRecord[]; units: { code: string; name: string }[] }) {
@@ -76,6 +77,20 @@ export function CoaForm({ accounts, units }: { accounts: CoaRecord[]; units: { c
             </option>
           ))}
         </select>
+      </div>
+      <div className="grid gap-2 sm:col-span-2">
+        <Label htmlFor="coa-parent">Induk</Label>
+        <select id="coa-parent" name="parentCode" className={SELECT} defaultValue={r.parentCode ?? ""} aria-invalid={!!err("parentCode")}>
+          <option value="">— Tanpa induk (kode utama) —</option>
+          {accounts
+            .filter((a) => a.code !== r.code)
+            .map((a) => (
+              <option key={a.code} value={a.code}>
+                {a.code} · {a.name} ({a.category})
+              </option>
+            ))}
+        </select>
+        {err("parentCode") ? <p className="text-destructive text-xs">{err("parentCode")}</p> : null}
       </div>
       <div className="grid gap-2 sm:col-span-2">
         <Label htmlFor="coa-guidance">Panduan pengisian</Label>

@@ -17,7 +17,7 @@ export function actionsFor(
   actor: Actor,
   line: LineResource,
   org: OrgTree,
-  cfg: ApprovalConfig = { lockRole: "director" },
+  cfg: ApprovalConfig = { lockRole: "finance" },
 ): ApprovalAction[] {
   if (!inEntity(actor, line.entity)) return [];
   const actions = allowedActions(line.state, actor.role, cfg);

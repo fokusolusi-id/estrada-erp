@@ -44,6 +44,8 @@ function unitAllowed(actor: Actor, line: LineResource, org: OrgTree): boolean {
 export function can(actor: Actor, permission: Permission, resource: LineResource | null, org: OrgTree): boolean {
   switch (permission) {
     case "coa.manage":
+      // COA Master belongs to Finance alone (CARA PENGISIAN point 6, confirmed by the client).
+      return actor.role === "finance";
     case "org.manage":
     case "user.manage":
       return actor.role === "admin";

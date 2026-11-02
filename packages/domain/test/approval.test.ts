@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { allowedActions, openRemark, transition, type ApprovalState } from "../src/approval";
 
 describe("RKA approval state machine (CARA PENGISIAN point 10)", () => {
-  it("runs the happy path Requestor → Default Owner → Division Owner → Finance → Director", () => {
+  it("runs the happy path Requestor → Default Owner → Division Owner → Finance, and Head Finance locks", () => {
     let s: ApprovalState = "draft";
     s = transition(s, { action: "submit", role: "requestor" }).to;
     expect(s).toBe("consolidation");
@@ -12,7 +12,7 @@ describe("RKA approval state machine (CARA PENGISIAN point 10)", () => {
     expect(s).toBe("finance_review");
     s = transition(s, { action: "finalize", role: "finance" }).to;
     expect(s).toBe("awaiting_lock");
-    s = transition(s, { action: "lock", role: "director" }).to;
+    s = transition(s, { action: "lock", role: "finance" }).to;
     expect(s).toBe("locked");
   });
 
@@ -35,10 +35,13 @@ describe("RKA approval state machine (CARA PENGISIAN point 10)", () => {
     expect(allowedActions("locked", "finance")).toEqual([]);
   });
 
-  it("lets Finance lock when the client decides Finance finalises (open question 3)", () => {
-    const r = transition("awaiting_lock", { action: "lock", role: "finance" }, { lockRole: "finance" });
-    expect(r.to).toBe("locked");
-    expect(() => transition("awaiting_lock", { action: "lock", role: "director" }, { lockRole: "finance" })).toThrow();
+  it("leaves the lock to Head Finance, not the Director (client answer 3)", () => {
+    expect(transition("awaiting_lock", { action: "lock", role: "finance" }).to).toBe("locked");
+    expect(() => transition("awaiting_lock", { action: "lock", role: "director" })).toThrow(/not allowed/);
+  });
+
+  it("still lets the lock role be configured", () => {
+    expect(transition("awaiting_lock", { action: "lock", role: "director" }, { lockRole: "director" }).to).toBe("locked");
   });
 });
 
