@@ -20,3 +20,4 @@ test-results/
 
 # Client workbooks: budget data stays off GitHub
 fixtures/*.xlsx
+.vercel

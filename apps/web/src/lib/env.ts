@@ -14,4 +14,7 @@ const schema = z.object({
   REMINDER_PENDING_DAYS: z.coerce.number().int().min(1).default(3),
 });
 
-export const env = schema.parse(process.env);
+// Preview deployments get a new URL each time: fall back to Vercel's own when APP_URL is unset.
+const vercelUrl = process.env.VERCEL_ENV === "preview" && process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined;
+
+export const env = schema.parse({ ...process.env, APP_URL: process.env.APP_URL || vercelUrl });
