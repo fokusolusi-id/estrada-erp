@@ -67,6 +67,24 @@ describe("KpiCard", () => {
     expect(screen.getByText("Rp 12.000.000")).toBeTruthy();
     expect(screen.getByText("Rencana invoice")).toBeTruthy();
   });
+
+  it("shows the change against 2026, green when it is good news and red when not", () => {
+    const { unmount } = render(<KpiCard label="Pendapatan" value={money("12000000")} unit="rp" change={{ pct: money("20"), goodWhenUp: true }} />);
+    const up = screen.getByTestId("kpi-change");
+    expect(up.textContent).toBe("▲ 20,0% vs 2026");
+    expect(up.className).toContain("text-success");
+    unmount();
+    render(<KpiCard label="Total Biaya" value={money("12000000")} unit="rp" change={{ pct: money("20"), goodWhenUp: false }} />);
+    expect(screen.getByTestId("kpi-change").className).toContain("text-destructive");
+  });
+
+  it("keeps a negative figure neutral unless it is a result to watch", () => {
+    const { unmount } = render(<KpiCard label="CAPEX" value={money("-5")} unit="rp" />);
+    expect(screen.getByText("-Rp 5").className).not.toContain("text-destructive");
+    unmount();
+    render(<KpiCard label="Saldo kas akhir" value={money("-5")} unit="rp" signal />);
+    expect(screen.getByText("-Rp 5").className).toContain("text-destructive");
+  });
 });
 
 describe("ScopeBar", () => {

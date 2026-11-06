@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Download } from "lucide-react";
 import Link from "next/link";
-import { ALLOCATION_PROBLEM_LABEL, canPipeline, contribution, formatAmount, pipelineTotals, pnl } from "@estrada/domain";
+import { ALLOCATION_PROBLEM_LABEL, canPipeline, contribution, formatAmount, headline2026, pipelineTotals, pnl, scaleTo, unitDecimals, unitLabel, type Money } from "@estrada/domain";
 import { loadPipeline } from "@/lib/pipeline";
 import { requireUser } from "@/lib/session";
 import { loadSummary, SUMMARY_ROLES, SUMMARY_STATUS, type SummaryParams } from "@/lib/summary";
+import { MONTHS } from "@/components/erp/budget-grid";
+import { PnlChart, RankedBars } from "@/components/erp/charts";
 import { ContributionTable } from "@/components/erp/contribution-table";
 import { EntityAllocationTable } from "@/components/erp/entity-allocation-table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -41,7 +43,18 @@ export default async function SummaryPage({
   const entities = [...new Set(scoped.map((l) => l.entity))].sort();
   const divisions = [...new Set(scoped.map((l) => org.divisionOf(l.ownerUnit)))].sort();
   const rows = pnl(reportLines);
-  const total = (key: string) => rows.find((r) => r.key === key)!.total;
+  const row = (key: string) => rows.find((r) => r.key === key)!;
+  const total = (key: string) => row(key).total;
+  // Charts draw numbers already in the viewer's unit; the figures themselves stay Decimal.
+  const n = (m: Money) => scaleTo(m, unit).toNumber();
+  const chart = { decimals: unitDecimals(unit), unitLabel: unitLabel(unit) };
+  const trend = (key: string) => row(key).months.map(n);
+  // Like for like against RKA 2026, over the lines that carry a 2026 figure; hidden when too few do to mean much.
+  const vs2026 = headline2026(lines);
+  const enough = vs2026.of > 0 && vs2026.covered / vs2026.of >= 0.5;
+  const change = (key: "Revenue" | "TotalCost" | "ProfitBeforeTax" | "CAPEX", goodWhenUp: boolean) =>
+    enough && vs2026.change(key) ? { pct: vs2026.change(key), goodWhenUp } : undefined;
+  const byDivision = contribution(reportLines, (l) => org.divisionOf(l.requestorUnit));
   const locked = lines.filter((l) => l.state === "locked").length;
   const exportQuery = new URLSearchParams(Object.entries({ ...params, version: version?.id }).filter((e): e is [string, string] => !!e[1])).toString();
 
@@ -78,10 +91,10 @@ export default async function SummaryPage({
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="Pendapatan" value={total("Revenue")} unit={unit} note="Rencana invoice" />
-        <KpiCard label="Total Biaya" value={total("TotalCost")} unit={unit} note="COGS + OPEX + OTHERS + CAPEX" />
-        <KpiCard label="Laba Sebelum Pajak" value={total("ProfitBeforeTax")} unit={unit} />
-        <KpiCard label="CAPEX" value={total("CAPEX")} unit={unit} />
+        <KpiCard label="Pendapatan" value={total("Revenue")} unit={unit} note="Rencana invoice" change={change("Revenue", true)} trend={trend("Revenue")} />
+        <KpiCard label="Total Biaya" value={total("TotalCost")} unit={unit} note="COGS + OPEX + OTHERS + CAPEX" change={change("TotalCost", false)} trend={trend("TotalCost")} />
+        <KpiCard label="Laba Sebelum Pajak" value={total("ProfitBeforeTax")} unit={unit} signal change={change("ProfitBeforeTax", true)} trend={trend("ProfitBeforeTax")} />
+        <KpiCard label="CAPEX" value={total("CAPEX")} unit={unit} change={change("CAPEX", false)} trend={trend("CAPEX")} />
       </div>
       {pipeline ? (
         <p className="text-muted-foreground -mt-3 text-sm" data-testid="summary-pipeline">
@@ -91,6 +104,30 @@ export default async function SummaryPage({
           </Link>
         </p>
       ) : null}
+
+      <div className="grid gap-6 xl:grid-cols-3">
+        <Card className="xl:col-span-2">
+          <CardHeader>
+            <CardTitle>Pendapatan, biaya dan laba per bulan</CardTitle>
+            <CardDescription>Batang: pendapatan dan total biaya. Garis: laba sebelum pajak. Dalam {chart.unitLabel}.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PnlChart
+              data={MONTHS.map((m, i) => ({ month: m, revenue: n(row("Revenue").months[i]!), cost: n(row("TotalCost").months[i]!), profit: n(row("ProfitBeforeTax").months[i]!) }))}
+              {...chart}
+            />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Kontribusi per divisi</CardTitle>
+            <CardDescription>Pendapatan dikurangi biaya, per divisi pengusul.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RankedBars data={byDivision.map((c) => ({ name: c.key, value: n(c.net) }))} label="Kontribusi" {...chart} />
+          </CardContent>
+        </Card>
+      </div>
 
       <Card>
         <CardHeader>
@@ -109,7 +146,7 @@ export default async function SummaryPage({
             <CardDescription>Per divisi pengusul, seperti sheet Kontribusi Divisi dan Rekap.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ContributionTable rows={contribution(reportLines, (l) => org.divisionOf(l.requestorUnit))} unit={unit} label="Divisi pengusul" />
+            <ContributionTable rows={byDivision} unit={unit} label="Divisi pengusul" />
           </CardContent>
         </Card>
         <Card>

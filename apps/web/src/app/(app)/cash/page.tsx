@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { canCash, money, sum, ZERO, type CashForecast, type Money } from "@estrada/domain";
+import { canCash, cashWaterfall, money, scaleTo, sum, unitDecimals, unitLabel, ZERO, type CashForecast, type Money } from "@estrada/domain";
 import { CONSOLIDATED, loadCash } from "@/lib/cash";
 import { displayUnit } from "@/lib/display-unit";
 import { requireUser } from "@/lib/session";
 import { CashAssumptions } from "@/components/erp/cash-assumptions";
 import { CashTable, type CashRow } from "@/components/erp/cash-table";
+import { CashBalanceChart, WaterfallChart } from "@/components/erp/charts";
 import { KpiCard } from "@/components/erp/kpi-card";
 import { PageHeader } from "@/components/erp/page-header";
 import { LoanEditor } from "@/components/erp/loan-editor";
@@ -19,6 +20,18 @@ import { deleteLoan, saveCashAssumptions, saveLoan } from "./actions";
 export const metadata: Metadata = { title: "Arus Kas" };
 
 const total = (m: readonly Money[]) => sum([...m]);
+
+const STEP_LABEL = {
+  opening: "Awal",
+  receipts: "Terima",
+  cogs: "COGS",
+  opex: "OPEX",
+  interest: "Bunga",
+  tax: "Pajak",
+  capex: "Capex",
+  financing: "Pinjam",
+  closing: "Akhir",
+} as const;
 
 function cashRows(f: CashForecast): CashRow[] {
   const r = f.rows;
@@ -75,6 +88,8 @@ export default async function CashPage({ searchParams }: { searchParams: Promise
   const lowest = f ? f.rows.closing.reduce((a, b) => (b.lt(a) ? b : a)) : ZERO;
   const lowestMonth = f ? MONTHS[f.rows.closing.indexOf(lowest)] : "";
   const peakNeed = f ? f.rows.fundingNeed.reduce((a, b) => (b.gt(a) ? b : a)) : ZERO;
+  const n = (m: Money) => scaleTo(m, unit).toNumber();
+  const chart = { decimals: unitDecimals(unit), unitLabel: unitLabel(unit) };
   const blank = { cash: "", receivables: "", payables: "", priorYearTax: "", minimumCash: "" };
 
   return (
@@ -98,10 +113,33 @@ export default async function CashPage({ searchParams }: { searchParams: Promise
       {f ? (
         <>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <KpiCard label="Saldo kas akhir Des" value={f.rows.closing[11]!} unit={unit} />
-            <KpiCard label="Saldo terendah" value={lowest} unit={unit} note={lowestMonth} />
+            <KpiCard label="Saldo kas akhir Des" value={f.rows.closing[11]!} unit={unit} signal trend={f.rows.closing.map(n)} />
+            <KpiCard label="Saldo terendah" value={lowest} unit={unit} signal note={lowestMonth} />
             <KpiCard label="Kebutuhan pendanaan tertinggi" value={peakNeed} unit={unit} note="Di bawah saldo kas minimum" />
-            <KpiCard label="Arus kas operasi setahun" value={total(f.rows.operating)} unit={unit} />
+            <KpiCard label="Arus kas operasi setahun" value={total(f.rows.operating)} unit={unit} signal trend={f.rows.operating.map(n)} />
+          </div>
+          <div className="grid gap-6 xl:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Saldo kas akhir per bulan</CardTitle>
+                <CardDescription>Area merah: di bawah saldo kas minimum, yaitu kebutuhan pendanaan. Dalam {chart.unitLabel}.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CashBalanceChart data={MONTHS.map((m, i) => ({ month: m, closing: n(f.rows.closing[i]!) }))} minimum={n(f.rows.minimum[0] ?? ZERO)} {...chart} />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Jembatan arus kas setahun</CardTitle>
+                <CardDescription>Dari saldo awal Januari ke saldo akhir Desember. Hijau menambah kas, merah mengurangi.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <WaterfallChart
+                  steps={cashWaterfall(f.rows).map((st) => ({ label: STEP_LABEL[st.key], start: n(st.start), end: n(st.end), total: st.key === "opening" || st.key === "closing" }))}
+                  {...chart}
+                />
+              </CardContent>
+            </Card>
           </div>
           <Card>
             <CardHeader>

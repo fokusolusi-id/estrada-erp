@@ -15,3 +15,4 @@ export * from "./headcount";
 export * from "./allocation";
 export * from "./pipeline";
 export * from "./cash";
+export * from "./dashboard";

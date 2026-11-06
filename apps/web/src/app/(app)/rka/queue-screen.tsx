@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
-import type { ApprovalState, Role } from "@estrada/domain";
+import { cycleProgress, type ApprovalState, type Role } from "@estrada/domain";
 import { db, schema } from "@estrada/db";
 import { requireUser } from "@/lib/session";
 import { loadScopedLines, openVersion } from "@/lib/rka";
+import { loadOrg } from "@/lib/workflow";
+import { ProgressBoard } from "@/components/erp/progress-board";
 import { ApprovalQueue, type QueueLine } from "@/components/erp/approval-queue";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { actOnLines } from "./actions";
@@ -17,20 +19,25 @@ export async function QueueScreen({
   description,
   roles,
   states,
+  board = false,
 }: {
   title: string;
   description: string;
   roles: readonly Role[];
   states: readonly ApprovalState[];
+  /** Also shows where every division's lines stand in the cycle (the Status Board). */
+  board?: boolean;
 }) {
   const user = await requireUser();
   if (!roles.includes(user.actor.role)) notFound();
 
-  const [version, scoped, coa, unit] = await Promise.all([
+  const [version, scoped, coa, unit, everyLine, org] = await Promise.all([
     openVersion(),
     loadScopedLines(user, states),
     db.select({ code: schema.coaAccount.code, name: schema.coaAccount.name, parentCode: schema.coaAccount.parentCode }).from(schema.coaAccount),
     displayUnit(),
+    board ? loadScopedLines(user) : Promise.resolve([]),
+    loadOrg(),
   ]);
   const lines: QueueLine[] = scoped.map((l) => ({
     id: l.id,
@@ -59,6 +66,17 @@ export async function QueueScreen({
         description={version ? version.name : "Belum ada siklus RKA yang dibuka"}
         filters={<UnitSwitch value={unit} onChange={setDisplayUnit} />}
       />
+      {board ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Posisi RKA per divisi</CardTitle>
+            <CardDescription>Jumlah baris di setiap tahap, dan porsi yang sudah difinalisasi atau dikunci.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ProgressBoard rows={cycleProgress(everyLine, (u) => org.divisionOf(u))} />
+          </CardContent>
+        </Card>
+      ) : null}
       <Card>
         <CardHeader>
           <CardTitle>Menunggu tindakan</CardTitle>

@@ -48,6 +48,9 @@ export const UNITS: readonly { value: Unit; label: string }[] = [
 ];
 const UNIT_DECIMALS: Record<Unit, number> = { rp: 0, juta: 1, miliar: 2 };
 
+/** Decimals shown for a unit, for charts that format their own labels. */
+export const unitDecimals = (unit: Unit) => UNIT_DECIMALS[unit];
+
 export function parseUnit(value: string | undefined | null): Unit {
   return UNITS.some((u) => u.value === value) ? (value as Unit) : "juta";
 }

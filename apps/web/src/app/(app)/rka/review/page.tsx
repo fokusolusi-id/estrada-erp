@@ -10,6 +10,7 @@ export default function FinanceReviewPage() {
       description="RKA divisi yang menunggu review. Minta klarifikasi ke Division Owner dengan catatan, atau finalisasi untuk dikunci."
       roles={["finance"]}
       states={["finance_review"]}
+      board
     />
   );
 }
