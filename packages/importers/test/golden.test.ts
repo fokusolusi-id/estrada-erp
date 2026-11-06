@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { OrgTree, contribution, pnl, sum, type SummaryLine } from "@estrada/domain";
+import { OrgTree, contribution, pipelineTotals, pnl, sum, type SummaryLine } from "@estrada/domain";
 import { ORG_UNITS } from "@estrada/db/seed-data";
 import ExcelJS from "exceljs";
 import { parseRkaData, readRkaWorkbook, sheetRows, writeRkaWorkbook, type ImportedLine } from "../src/index";
@@ -94,6 +94,25 @@ describe.skipIf(!existsSync(WORKBOOK))("golden: RKA_2027_Upd_Fin v2.xlsx", async
   it("keeps 57 workbook flags and 46 cross-division lines", () => {
     expect(lines.filter((l) => l.flags.length)).toHaveLength(57);
     expect(lines.filter((l) => l.crossDivision)).toHaveLength(46);
+  });
+
+  it("reads the Pipeline sheet: 80 deals worth Rp 649,3 bn, weighted from value × probability", () => {
+    const p = wb!.pipeline!;
+    expect(p.problems).toEqual([]);
+    expect(p.deals).toHaveLength(80);
+    const totals = pipelineTotals(p.deals);
+    // The sheet's own weighted column adds to Rp 775,6 bn: rows 59–60 hold a stray SUM(O3:O58) and a ratio.
+    expect([totals.value.toFixed(2), totals.weighted.toFixed(2)]).toEqual(["649331348563.00", "420981860306.70"]);
+    const count = (key: (d: (typeof p.deals)[number]) => string) => p.deals.reduce<Record<string, number>>((m, d) => ({ ...m, [key(d)]: (m[key(d)] ?? 0) + 1 }), {});
+    expect(count((d) => d.entity)).toEqual({ ESTRADA: 65, MATRIK: 13, DJALU: 1, PAS: 1 });
+    expect(count((d) => d.status)).toEqual({ WB: 34, PT: 17, PP: 29 });
+    expect(count((d) => d.coaCode ?? "none")).toEqual({ "4100": 36, "4150": 15, "4200": 12, "4900": 15, none: 2 });
+    expect(p.targets.map((t) => [t.segment, t.target.toFixed(0)])).toEqual([
+      ["Telco Business", "250000000000"],
+      ["Government Business", "150000000000"],
+      ["Enterprise Business", "30000000000"],
+      ["Territory Business", "20000000000"],
+    ]);
   });
 
   it("exports all 192 lines and reads them back to the same totals", async () => {

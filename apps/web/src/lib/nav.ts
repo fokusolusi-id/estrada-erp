@@ -5,6 +5,8 @@ export interface NavItem {
   label: string;
   roles: readonly Role[] | "all";
   icon: string;
+  /** Also shown to these roles when the user's unit sits within `unit` (BCD's people for Pipeline). */
+  alsoIn?: { unit: string; roles: readonly Role[] };
   phase?: number;
 }
 
@@ -21,13 +23,14 @@ export const NAV: readonly NavItem[] = [
   { href: "/rka/allocation", icon: "split", label: "Biaya Bersama", roles: ["finance"] },
   { href: "/coa", icon: "book", label: "COA Master", roles: ["finance"] },
   { href: "/summary", icon: "chart", label: "Management Summary", roles: ["division_owner", "finance", "director", "auditor"] },
-  { href: "/pipeline", icon: "pipeline", label: "Pipeline", roles: ["finance", "director", "division_owner"], phase: 2 },
+  { href: "/pipeline", icon: "pipeline", label: "Pipeline", roles: ["finance", "director", "auditor"], alsoIn: { unit: "BCD", roles: ["requestor", "default_owner", "division_owner"] } },
   { href: "/cash", icon: "wallet", label: "Arus Kas", roles: ["finance", "director"], phase: 3 },
   { href: "/admin/users", icon: "users", label: "Pengguna", roles: ["admin"] },
   { href: "/admin/positions", icon: "seat", label: "Posisi & pjs", roles: ["admin"] },
 
 ];
 
-export function navFor(role: Role): NavItem[] {
-  return NAV.filter((n) => n.roles === "all" || n.roles.includes(role));
+/** `within(unit)` says whether the user's unit sits within `unit`; without it, unit-based items stay hidden. */
+export function navFor(role: Role, within: (unit: string) => boolean = () => false): NavItem[] {
+  return NAV.filter((n) => n.roles === "all" || n.roles.includes(role) || (n.alsoIn?.roles.includes(role) && within(n.alsoIn.unit)));
 }

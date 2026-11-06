@@ -18,6 +18,13 @@ describe("navFor", () => {
     expect(hrefs).toEqual(expect.arrayContaining(["/summary", "/cash"]));
   });
 
+  it("shows Pipeline to BCD's people and to Finance, Direktur and Auditor, not to other divisions", () => {
+    const bcd = (unit: string) => unit === "BCD";
+    expect(navFor("requestor", bcd).map((n) => n.href)).toEqual(["/", "/rka", "/pipeline"]);
+    expect(navFor("division_owner", () => false).map((n) => n.href)).not.toContain("/pipeline");
+    for (const role of ["finance", "director", "auditor"] as const) expect(navFor(role).map((n) => n.href)).toContain("/pipeline");
+  });
+
   it("gives each approver their live queue", () => {
     const live = (role: Parameters<typeof navFor>[0]) => navFor(role).filter((n) => !n.phase).map((n) => n.href);
     expect(live("default_owner")).toContain("/rka/queue");

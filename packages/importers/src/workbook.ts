@@ -1,6 +1,8 @@
 import ExcelJS from "exceljs";
+import type { Money } from "@estrada/domain";
 import { amount, header, type Cell } from "./cells";
 import { parseCoaMaster, type CoaReference, type ImportedCoa } from "./coa-master";
+import { parsePipeline, type ImportedDeal } from "./pipeline";
 import { parseRkaData, provisionalAccounts, type ImportedLine, type ImportProblem, type SourceTotal } from "./rka-data";
 import type { UnitAlias } from "./units";
 
@@ -32,6 +34,8 @@ export interface RkaWorkbook {
   references: CoaReference[];
   lines: ImportedLine[];
   problems: ImportProblem[];
+  /** The Pipeline sheet, when the workbook has one. */
+  pipeline: { deals: ImportedDeal[]; targets: { segment: string; target: Money }[]; problems: ImportProblem[] } | null;
 }
 
 /** Reads a division sheet's own "Total RKA 2027" by sheet name and 1-based row, as "Baris Sumber" counts them. */
@@ -61,5 +65,7 @@ export async function readRkaWorkbook(path: string, units: readonly UnitAlias[])
   await wb.xlsx.readFile(path);
   const { accounts, references } = parseCoaMaster(sheetRows(wb, "COA MASTER"), units);
   const { lines, problems } = parseRkaData(sheetRows(wb, "RKA 2027 Data"), units, sourceTotals(wb));
-  return { accounts: [...accounts, ...provisionalAccounts(lines, accounts)], references, lines, problems };
+  const all = [...accounts, ...provisionalAccounts(lines, accounts)];
+  const pipeline = wb.getWorksheet("Pipeline") ? parsePipeline(sheetRows(wb, "Pipeline"), all) : null;
+  return { accounts: all, references, lines, problems, pipeline };
 }

@@ -18,7 +18,8 @@ const overflow = (page: Page) => page.evaluate(() => document.documentElement.sc
 
 for (const role of Object.keys(E2E_USERS) as E2eRole[]) {
   test(`${role}: every screen fits a phone, and the menu reaches each one`, async ({ page }) => {
-    const screens = navFor(E2E_USERS[role].role).filter((n) => !n.phase);
+    // The e2e org is flat below each division, so a unit sits within another only when it is that unit.
+    const screens = navFor(E2E_USERS[role].role, (unit) => unit === E2E_USERS[role].orgUnit).filter((n) => !n.phase);
     for (const s of screens) {
       await as(role, page, s.href);
       await expect(page.locator("main h1").first()).toBeVisible();

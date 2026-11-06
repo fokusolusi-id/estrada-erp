@@ -3,6 +3,7 @@ import { Building2, UserRound } from "lucide-react";
 import { ROLE_LABEL } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { navFor } from "@/lib/nav";
+import { loadOrg } from "@/lib/workflow";
 import { MobileNav } from "./mobile-nav";
 import { PositionSwitcher } from "./position-switcher";
 import { SignOutButton } from "./sign-out-button";
@@ -12,7 +13,8 @@ import { ThemeSwitcher } from "./theme-switcher";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
-  const nav = navFor(user.actor.role);
+  const org = await loadOrg();
+  const nav = navFor(user.actor.role, (unit) => org.isWithin(user.actor.orgUnit, unit));
   const collapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "1";
 
   return (

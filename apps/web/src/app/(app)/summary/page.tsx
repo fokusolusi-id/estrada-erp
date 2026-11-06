@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Download } from "lucide-react";
-import { ALLOCATION_PROBLEM_LABEL, contribution, pnl } from "@estrada/domain";
+import Link from "next/link";
+import { ALLOCATION_PROBLEM_LABEL, canPipeline, contribution, formatAmount, pipelineTotals, pnl } from "@estrada/domain";
+import { loadPipeline } from "@/lib/pipeline";
 import { requireUser } from "@/lib/session";
 import { loadSummary, SUMMARY_ROLES, SUMMARY_STATUS, type SummaryParams } from "@/lib/summary";
 import { ContributionTable } from "@/components/erp/contribution-table";
@@ -30,6 +32,11 @@ export default async function SummaryPage({
     loadSummary(user, params),
     displayUnit(),
   ]);
+  // Weighted pipeline sits beside revenue, never inside it (plan); only those who may read the register see it.
+  const pipeline =
+    version && canPipeline(user.actor, "view", null, org)
+      ? pipelineTotals((await loadPipeline(version.fiscalYear)).deals.filter((d) => !params.entity || d.entity === params.entity))
+      : null;
   const entities = [...new Set(scoped.map((l) => l.entity))].sort();
   const divisions = [...new Set(scoped.map((l) => org.divisionOf(l.ownerUnit)))].sort();
   const rows = pnl(reportLines);
@@ -75,6 +82,14 @@ export default async function SummaryPage({
         <KpiCard label="Laba Sebelum Pajak" value={total("ProfitBeforeTax")} unit={unit} />
         <KpiCard label="CAPEX" value={total("CAPEX")} unit={unit} />
       </div>
+      {pipeline ? (
+        <p className="text-muted-foreground -mt-3 text-sm" data-testid="summary-pipeline">
+          Di luar RKA: pipeline tertimbang {formatAmount(pipeline.weighted, unit)} dari nilai {formatAmount(pipeline.value, unit)}.{" "}
+          <Link href="/pipeline" className="text-primary underline-offset-4 hover:underline">
+            Buka Pipeline
+          </Link>
+        </p>
+      ) : null}
 
       <Card>
         <CardHeader>

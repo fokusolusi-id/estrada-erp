@@ -1,6 +1,6 @@
 /**
  * Loads an RKA workbook into the database as a new open budget version.
- *   pnpm db:import -- "fixtures/RKA_2027_Upd_Fin v2.xlsx" [--dry-run] [--replace] [--state draft] [--name "RKA 2027 v2 Upd Fin"]
+ *   pnpm db:import -- "fixtures/RKA_2027_Upd_Fin v2.xlsx" [--dry-run] [--replace] [--state draft] [--name "RKA 2027 v2 Upd Fin"] [--pipeline-only]
  * Nothing is guessed: rows the importer cannot place stop the load. Codes missing from COA Master are added
  * as provisional accounts, and the workbook's cleaning flags travel with each line for reviewers.
  */
@@ -9,8 +9,8 @@ import { parseArgs } from "node:util";
 import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import { ORG_UNITS } from "@estrada/db/seed-data";
-import { APPROVAL_STATES, formatIdr, headcountBasis, inferCoaParent, pnl, type ApprovalState } from "@estrada/domain";
-import { readRkaWorkbook } from "./workbook";
+import { APPROVAL_STATES, formatIdr, headcountBasis, inferCoaParent, pipelineTotals, pnl, type ApprovalState } from "@estrada/domain";
+import { readRkaWorkbook, type RkaWorkbook } from "./workbook";
 
 const { values, positionals } = parseArgs({
   // pnpm forwards the "--" in `pnpm db:import -- file --dry-run`; without this the flags would become file names.
@@ -18,6 +18,8 @@ const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: {
     "dry-run": { type: "boolean", default: false },
+    /** Loads only the Pipeline sheet into the register for --year, leaving budget versions alone. */
+    "pipeline-only": { type: "boolean", default: false },
     replace: { type: "boolean", default: false },
     state: { type: "string", default: "draft" },
     name: { type: "string" },
@@ -36,9 +38,10 @@ async function main() {
   const fiscalYear = Number(values.year);
 
   const wb = await readRkaWorkbook(path, ORG_UNITS);
-  if (wb.problems.length) {
-    for (const p of wb.problems) console.error(`  No ${p.no}: ${p.message}`);
-    throw new Error(`${wb.problems.length} rows could not be placed; nothing was loaded`);
+  const problems = [...wb.problems, ...(wb.pipeline?.problems ?? []).map((p) => ({ ...p, message: `Pipeline: ${p.message}` }))];
+  if (problems.length) {
+    for (const p of problems) console.error(`  No ${p.no}: ${p.message}`);
+    throw new Error(`${problems.length} rows could not be placed; nothing was loaded`);
   }
 
   const summary = pnl(wb.lines.map((l) => ({ category: l.category, ownerUnit: l.ownerUnit, entity: l.entity, months: l.months })));
@@ -48,8 +51,24 @@ async function main() {
   console.log(`COA: ${wb.accounts.length - provisional.length} from COA Master, provisional ${provisional.join(", ") || "none"}`);
   console.log(`Lines flagged for review: ${wb.lines.filter((l) => l.flags.length).length}`);
   console.log(`Recruitment rows read as headcount plan positions: ${wb.lines.filter((l) => l.headcount).length}`);
+  if (wb.pipeline) {
+    const p = pipelineTotals(wb.pipeline.deals);
+    console.log(`Pipeline: ${wb.pipeline.deals.length} deals · value ${formatIdr(p.value)} · weighted ${formatIdr(p.weighted)} · ${wb.pipeline.targets.length} segment targets`);
+  }
   if (values["dry-run"]) {
     console.log("Dry run: nothing written.");
+    return;
+  }
+  if (values["pipeline-only"]) {
+    if (!wb.pipeline) throw new Error("The workbook has no Pipeline sheet.");
+    const n = await db.transaction(async (tx) => {
+      const loaded = await loadPipeline(tx, wb.pipeline!, fiscalYear, values.replace!);
+      if (loaded) {
+        await tx.insert(schema.auditLog).values({ action: "import.pipeline", subjectType: "pipeline", subjectId: String(fiscalYear), after: { file: basename(path), deals: loaded } });
+      }
+      return loaded;
+    });
+    console.log(n ? `Loaded ${n} pipeline deals for ${fiscalYear}.` : "Nothing loaded.");
     return;
   }
 
@@ -142,16 +161,41 @@ async function main() {
     );
     if (plans.length) await tx.insert(schema.headcountPlan).values(plans);
 
+    const pipelineDeals = wb.pipeline ? await loadPipeline(tx, wb.pipeline, fiscalYear, values.replace!) : 0;
+
     await tx.insert(schema.auditLog).values({
       action: "import.workbook",
       subjectType: "budget_version",
       subjectId: version!.id,
-      after: { file: basename(path), lines: wb.lines.length, revenue: total("Revenue"), totalCost: total("TotalCost"), provisional, state, headcountPositions: plans.length },
+      after: { file: basename(path), lines: wb.lines.length, revenue: total("Revenue"), totalCost: total("TotalCost"), provisional, state, headcountPositions: plans.length, pipelineDeals },
     });
     return version!.id;
   });
 
   console.log(`Loaded as open version ${versionId} (lines in state "${state}").`);
+}
+
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/**
+ * The Pipeline register is per fiscal year, not per version: it loads once, and again only with --replace,
+ * so deals BCD keeps in the app are not overwritten by a re-import.
+ */
+async function loadPipeline(tx: Tx, pipeline: NonNullable<RkaWorkbook["pipeline"]>, fiscalYear: number, replace: boolean): Promise<number> {
+  const [any] = await tx.select({ id: schema.pipelineDeal.id }).from(schema.pipelineDeal).where(eq(schema.pipelineDeal.fiscalYear, fiscalYear)).limit(1);
+  if (any && !replace) {
+    console.log(`Pipeline ${fiscalYear} already in the app: kept as is (use --replace to load it again).`);
+    return 0;
+  }
+  await tx.delete(schema.pipelineDeal).where(eq(schema.pipelineDeal.fiscalYear, fiscalYear));
+  await tx.delete(schema.pipelineTarget).where(eq(schema.pipelineTarget.fiscalYear, fiscalYear));
+  if (pipeline.deals.length) {
+    await tx.insert(schema.pipelineDeal).values(pipeline.deals.map(({ ref, entity, ...d }) => ({ ...d, fiscalYear, entityCode: entity, sourceRef: `Pipeline #${ref.no}` })));
+  }
+  if (pipeline.targets.length) {
+    await tx.insert(schema.pipelineTarget).values(pipeline.targets.map((t) => ({ fiscalYear, segment: t.segment, target: t.target.toFixed(2) })));
+  }
+  return pipeline.deals.length;
 }
 
 main()

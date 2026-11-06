@@ -89,6 +89,34 @@ test("Finance types in a 2026 actual; the plan stays as it was", async ({ page }
   await expect(page.getByText("This page could not be found.")).toBeVisible();
 });
 
+test("BCD adds a deal to the Pipeline; Finance reads it; other divisions cannot open it", async ({ page }) => {
+  await as("sales", page, "/pipeline");
+  await page.getByRole("button", { name: "Tambah deal" }).click();
+  const form = page.getByRole("form", { name: "Deal" });
+  await form.getByLabel("Customer", { exact: true }).fill("Telkom");
+  await form.getByLabel("End customer").fill("Korlantas");
+  await form.getByLabel("Project").fill("Sewa CPE SBST Online Korlantas Polri TA 2027");
+  await form.getByLabel("COA deal").selectOption("4100");
+  await form.getByLabel("Nilai (exclude PPN)").fill("577.320.000");
+  await form.getByLabel("Status deal").selectOption("WB");
+  await form.getByLabel("Probabilitas (%)").fill("90");
+  await form.getByRole("button", { name: "Simpan deal" }).click();
+  await expect(page.getByText("Deal disimpan.")).toBeVisible();
+  // 577.320.000 × 90% = 519.588.000, never added to RKA revenue.
+  await expect(page.getByTestId("register-total")).toContainText("Rp 519.588.000");
+
+  await as("finance", page, "/pipeline");
+  await expect(page.getByText("Sewa CPE SBST Online Korlantas Polri TA 2027")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Tambah deal" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Ubah/ })).toHaveCount(0);
+
+  await as("finance", page, "/summary");
+  await expect(page.getByTestId("summary-pipeline")).toContainText("pipeline tertimbang Rp 519,6 jt");
+
+  await as("requestor", page, "/pipeline");
+  await expect(page.getByText("This page could not be found.")).toBeVisible();
+});
+
 test("Requestor plans new hires; the plan writes the draft line, owned by HCM", async ({ page }) => {
   await as("requestor", page, "/rka");
   await page.getByRole("button", { name: "Tambah posisi" }).click();
