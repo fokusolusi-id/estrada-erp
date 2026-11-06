@@ -295,6 +295,17 @@ test("Locking the last line locks the version; the Director sees it but cannot r
 });
 
 test("Finance opens a revision of the locked version and adjusts it alone", async ({ page }) => {
+  // A planned position on a locked line: the journey deletes its own hire, so give one line a plan here.
+  const sql = postgres(E2E_DATABASE_URL, { max: 1, onnotice: () => {} });
+  try {
+    await sql`
+      insert into headcount_plan (line_id, position, head_count, start_month, cost_per_head)
+      select l.id, 'Network Engineer', 2, 1, 9910660 from budget_line l join budget_version v on v.id = l.version_id
+      where v.name = 'RKA 2027 (demo)' and l.coa_code = '6241' and l.shared_basis is null limit 1`;
+  } finally {
+    await sql.end();
+  }
+
   await as("finance", page, "/rka/cycle");
   const row = page.getByRole("row").filter({ hasText: "RKA 2027 (demo)" });
   await row.getByLabel("Mulai revisi di").selectOption("finance_review");
@@ -306,4 +317,18 @@ test("Finance opens a revision of the locked version and adjusts it alone", asyn
   await page.goto("/rka/review");
   await expect(page.getByText("RKA 2027 (demo) v2", { exact: true })).toBeVisible();
   await expect(page.getByText("SCM · 3 baris")).toBeVisible();
+
+  // The copy keeps what reports and the plan need: positions, shared-cost bases and head counts per entity.
+  const db2 = postgres(E2E_DATABASE_URL, { max: 1, onnotice: () => {} });
+  try {
+    const [copy] = await db2<{ plans: number; shared: number; heads: number }[]>`
+      select
+        (select count(*)::int from headcount_plan h join budget_line l on l.id = h.line_id where l.version_id = v.id) as plans,
+        (select count(*)::int from budget_line l where l.version_id = v.id and l.shared_basis = 'headcount') as shared,
+        (select coalesce(sum(heads), 0)::int from entity_headcount e where e.version_id = v.id) as heads
+      from budget_version v where v.name = 'RKA 2027 (demo) v2'`;
+    expect(copy).toEqual({ plans: 1, shared: 1, heads: 4 });
+  } finally {
+    await db2.end();
+  }
 });

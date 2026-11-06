@@ -157,6 +157,9 @@ export async function reviseVersion(_prev: CycleState, form: FormData): Promise<
         .returning({ id: schema.budgetLine.id });
       const newId = new Map(lines.map((l, i) => [l.id, inserted[i]!.id]));
       if (amounts.length) await tx.insert(schema.budgetLineAmount).values(amounts.map((a) => ({ ...a, lineId: newId.get(a.lineId)! })));
+      // Planned positions go with their lines, so the copy's salary lines stay computed from the plan.
+      const plans = await tx.select().from(schema.headcountPlan).where(inArray(schema.headcountPlan.lineId, lines.map((l) => l.id)));
+      if (plans.length) await tx.insert(schema.headcountPlan).values(plans.map((p) => ({ ...p, lineId: newId.get(p.lineId)! })));
     }
     const heads = await tx.select().from(schema.entityHeadcount).where(eq(schema.entityHeadcount.versionId, base.id));
     if (heads.length) await tx.insert(schema.entityHeadcount).values(heads.map((h) => ({ ...h, versionId: version!.id })));
