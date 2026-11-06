@@ -33,8 +33,10 @@ async function main() {
     .onConflictDoNothing();
 
   // Demo version with SCM lines from the Project Delivery & Managed Serv sheet (rows 19–21).
+  // Never in production: the real RKA comes from `pnpm db:import`. Set SEED_DEMO=1 to force it.
+  const withDemo = process.env.SEED_DEMO === "1" || process.env.NODE_ENV !== "production";
   const existing = await db.select({ id: budgetVersion.id }).from(budgetVersion).limit(1);
-  if (!existing.length) {
+  if (withDemo && !existing.length) {
     const [version] = await db
       .insert(budgetVersion)
       .values({ fiscalYear: 2027, name: "RKA 2027 (demo)" })
