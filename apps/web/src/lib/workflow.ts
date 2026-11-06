@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { eq, inArray } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import {
@@ -34,10 +35,11 @@ const TRANSITION_LINK: Record<ApprovalAction, string> = {
 
 export const approvalConfig = (): ApprovalConfig => ({ lockRole: env.RKA_LOCK_ROLE as Role });
 
-export async function loadOrg() {
+/** Cached per request: the layout and the page both ask for it, so the org tree is read once. */
+export const loadOrg = cache(async () => {
   const units = await db.select({ code: schema.orgUnit.code, parent: schema.orgUnit.parentCode, type: schema.orgUnit.type }).from(schema.orgUnit);
   return new OrgTree(units);
-}
+});
 
 export class WorkflowError extends Error {}
 
