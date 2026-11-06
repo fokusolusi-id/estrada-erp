@@ -46,7 +46,7 @@ test("1. Requestor drafts a line like in Excel and submits to the Default Owner"
 
 test("Requestor cannot open an approver's queue", async ({ page }) => {
   await as("requestor", page, "/rka/queue");
-  await expect(page.getByText("This page could not be found.")).toBeVisible();
+  await expect(page.getByText("Halaman tidak ditemukan atau tidak dapat diakses")).toBeVisible();
 });
 
 test("Finance arranges COA Master as a tree; no one else can change it", async ({ page }) => {
@@ -92,7 +92,7 @@ test("Finance types in a 2026 actual; the plan stays as it was", async ({ page }
   await expect(page.getByRole("textbox", { name: /Actual 2026 baris/ })).toHaveValue("4.100.000.000");
 
   await as("requestor", page, "/rka/actual");
-  await expect(page.getByText("This page could not be found.")).toBeVisible();
+  await expect(page.getByText("Halaman tidak ditemukan atau tidak dapat diakses")).toBeVisible();
 });
 
 test("BCD adds a deal to the Pipeline; Finance reads it; other divisions cannot open it", async ({ page }) => {
@@ -120,7 +120,7 @@ test("BCD adds a deal to the Pipeline; Finance reads it; other divisions cannot 
   await expect(page.getByTestId("summary-pipeline")).toContainText("pipeline tertimbang Rp 519,6 jt");
 
   await as("requestor", page, "/pipeline");
-  await expect(page.getByText("This page could not be found.")).toBeVisible();
+  await expect(page.getByText("Halaman tidak ditemukan atau tidak dapat diakses")).toBeVisible();
 });
 
 test("Finance fills the cash assumptions and a loan; the forecast follows; the Director reads it", async ({ page }) => {
@@ -149,7 +149,7 @@ test("Finance fills the cash assumptions and a loan; the forecast follows; the D
   await expect(page.getByRole("button", { name: "Tambah fasilitas" })).toHaveCount(0);
 
   await as("requestor", page, "/cash");
-  await expect(page.getByText("This page could not be found.")).toBeVisible();
+  await expect(page.getByText("Halaman tidak ditemukan atau tidak dapat diakses")).toBeVisible();
 });
 
 test("Requestor plans new hires; the plan writes the draft line, owned by HCM", async ({ page }) => {
@@ -294,7 +294,7 @@ test("Finance splits a shared cost across the entities by headcount; the Summary
   await expect(page.getByTestId("allocation-ESTRADA").getByTestId("allocated")).toHaveText("(59,5)");
 
   await as("requestor", page, "/rka/allocation");
-  await expect(page.getByText("This page could not be found.")).toBeVisible();
+  await expect(page.getByText("Halaman tidak ditemukan atau tidak dapat diakses")).toBeVisible();
 });
 
 test("4. Finance finalises", async ({ page }) => {
