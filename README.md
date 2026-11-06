@@ -86,6 +86,7 @@ packages/config     shared tsconfig
 | Satuan switch (angka penuh, juta, miliar) on Summary, queues, RKA Saya and line pages, remembered per viewer | |
 | New cycle proposes 31 Desember of the running year as its submission deadline (Batas pengajuan) | |
 | A line with a typed total and no months (FRM's Rp 45 jt training line) is spread evenly over Jan–Des at import, flagged, and stays editable | |
+| Biaya Bersama (Finance): mark a cost line as shared by revenue share, headcount (typed per entity) or fixed percentages; Management Summary and its Excel split it across ESTRADA, MATRIK, DJALU and PAS, lines unchanged; locked lines keep their split | |
 | Realisasi 2026 (Finance): type or paste each line's 2026 actual from an Excel column; audited, never changes the plan | |
 | Responsive: a header menu on phones; every live screen checked at 375 px for each role (e2e `phone` project) | |
 | COA filter on every approval queue, listing only the codes in that position's lines and their parents | |

@@ -12,3 +12,4 @@ export * from "./coa";
 export * from "./cycle";
 export * from "./comments";
 export * from "./headcount";
+export * from "./allocation";

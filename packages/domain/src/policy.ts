@@ -29,7 +29,8 @@ export type Permission =
   | "report.view"
   | "audit.view"
   | "cycle.manage"
-  | "actual.edit";
+  | "actual.edit"
+  | "allocation.manage";
 
 const COMPANY_WIDE: readonly Role[] = ["finance", "director", "auditor", "admin"];
 
@@ -67,6 +68,9 @@ export function can(actor: Actor, permission: Permission, resource: LineResource
       // Realisasi 2026 is typed in by Finance for now (client answer 1). It sits beside the plan and never changes it,
       // so it may be filled in at any stage, after the lock included.
       return !!resource && actor.role === "finance" && entityAllowed(actor, resource.entity);
+    case "allocation.manage":
+      // Which costs are shared, and on what basis, changes reports only; a locked RKA keeps the split it was locked with.
+      return !!resource && actor.role === "finance" && resource.state !== "locked" && entityAllowed(actor, resource.entity);
     case "line.edit": {
       if (!resource) return false;
       if (!entityAllowed(actor, resource.entity)) return false;

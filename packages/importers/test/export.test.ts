@@ -74,6 +74,23 @@ describe("writeRkaWorkbook", () => {
     expect(ent.map((r) => r[0])).toEqual(["ESTRADA", "MATRIK", "Total"]);
   });
 
+  it("writes Per Entitas after shared-cost allocation when the screen has one", async () => {
+    const allocation = [
+      { key: "ESTRADA", revenue: money("120"), costBefore: money("100"), allocated: money("-40"), costAfter: money("60"), netAfter: money("60") },
+      { key: "MATRIK", revenue: money("30"), costBefore: money("0"), allocated: money("40"), costAfter: money("40"), netAfter: money("-10") },
+    ];
+    const buf = await writeRkaWorkbook({ year: 2027, title: "RKA 2027 v2", lines: LINES, divisionOf: (u) => DIVISION[u]!, pnlLabel: PNL_LABEL, entityAllocation: allocation });
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(buf);
+    const rows = sheetRows(wb, "Per Entitas");
+    expect(rows.find((r) => r[0] === "Entitas")).toEqual(["Entitas", "Pendapatan", "Biaya sendiri", "Alokasi biaya bersama", "Total Biaya", "Kontribusi"]);
+    expect(rows.filter((r) => typeof r[2] === "number")).toEqual([
+      ["ESTRADA", 120, 100, -40, 60, 60],
+      ["MATRIK", 30, 0, 40, 40, -10],
+      ["Total", 150, 100, 0, 100, 50],
+    ]);
+  });
+
   it("names the version on every sheet and states the unit is full rupiah", async () => {
     const wb = await exported();
     for (const name of ["Rekap", "Kontribusi Divisi", "Per Entitas"]) {

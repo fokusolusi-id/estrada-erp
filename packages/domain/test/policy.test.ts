@@ -121,3 +121,22 @@ describe("actual.edit: Realisasi 2026 typed in by hand for now (client answer 1)
     expect(can(fin, "actual.edit", null, org)).toBe(false);
   });
 });
+
+describe("allocation.manage: Finance marks shared costs and their basis (client decision)", () => {
+  const fin = actor({ role: "finance", orgUnit: "FRM", entities: ["*"] });
+
+  it("belongs to Finance at any stage before the lock: allocation only changes reports, and the final RKA stays as locked", () => {
+    for (const state of ["draft", "consolidation", "finance_review", "awaiting_lock"] as const) {
+      expect(can(fin, "allocation.manage", { ...line, state }, org)).toBe(true);
+    }
+    expect(can(fin, "allocation.manage", { ...line, state: "locked" }, org)).toBe(false);
+  });
+
+  it("stays within Finance's entities, and no one else may set it", () => {
+    expect(can(actor({ role: "finance", orgUnit: "FRM", entities: ["MATRIK"] }), "allocation.manage", line, org)).toBe(false);
+    for (const role of ["requestor", "default_owner", "division_owner", "director", "auditor", "admin"] as const) {
+      expect(can(actor({ role, orgUnit: "SCM", entities: ["*"] }), "allocation.manage", line, org)).toBe(false);
+    }
+    expect(can(fin, "allocation.manage", null, org)).toBe(false);
+  });
+});

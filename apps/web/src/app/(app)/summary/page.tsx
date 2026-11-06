@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Download } from "lucide-react";
-import { contribution, pnl } from "@estrada/domain";
+import { ALLOCATION_PROBLEM_LABEL, contribution, pnl } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { loadSummary, SUMMARY_ROLES, SUMMARY_STATUS, type SummaryParams } from "@/lib/summary";
 import { ContributionTable } from "@/components/erp/contribution-table";
+import { EntityAllocationTable } from "@/components/erp/entity-allocation-table";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { KpiCard } from "@/components/erp/kpi-card";
 import { PnlTable } from "@/components/erp/pnl-table";
 import { ScopeBar } from "@/components/erp/scope-bar";
@@ -24,10 +26,13 @@ export default async function SummaryPage({
   const user = await requireUser();
   if (!SUMMARY_ROLES.includes(user.actor.role)) notFound();
   const params = await searchParams;
-  const [{ versions, version, scoped, lines, org }, unit] = await Promise.all([loadSummary(user, params), displayUnit()]);
+  const [{ versions, version, scoped, lines, reportLines, org, entityRows, allocationProblems, sharedLines }, unit] = await Promise.all([
+    loadSummary(user, params),
+    displayUnit(),
+  ]);
   const entities = [...new Set(scoped.map((l) => l.entity))].sort();
   const divisions = [...new Set(scoped.map((l) => org.divisionOf(l.ownerUnit)))].sort();
-  const rows = pnl(lines);
+  const rows = pnl(reportLines);
   const total = (key: string) => rows.find((r) => r.key === key)!.total;
   const locked = lines.filter((l) => l.state === "locked").length;
   const exportQuery = new URLSearchParams(Object.entries({ ...params, version: version?.id }).filter((e): e is [string, string] => !!e[1])).toString();
@@ -88,16 +93,32 @@ export default async function SummaryPage({
             <CardDescription>Per divisi pengusul, seperti sheet Kontribusi Divisi dan Rekap.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ContributionTable rows={contribution(lines, (l) => org.divisionOf(l.requestorUnit))} unit={unit} label="Divisi pengusul" />
+            <ContributionTable rows={contribution(reportLines, (l) => org.divisionOf(l.requestorUnit))} unit={unit} label="Divisi pengusul" />
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle>Per entitas</CardTitle>
-            <CardDescription>Entitas dengan pendapatan tanpa biaya perlu aturan alokasi biaya bersama.</CardDescription>
+            <CardDescription>
+              {sharedLines
+                ? `Setelah alokasi ${sharedLines} baris biaya bersama ke ESTRADA, MATRIK, DJALU dan PAS. Baris RKA tidak berubah.`
+                : "Belum ada biaya bersama. Finance menandainya di menu Biaya Bersama."}
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ContributionTable rows={contribution(lines, (l) => l.entity)} unit={unit} label="Entitas" />
+          <CardContent className="grid gap-4">
+            {allocationProblems.length ? (
+              <Alert>
+                <AlertDescription>
+                  {allocationProblems.length} baris biaya bersama belum dapat dialokasikan dan tetap di entitas asalnya:{" "}
+                  {[...new Set(allocationProblems.map((p) => ALLOCATION_PROBLEM_LABEL[p.problem]))].join("; ")}.
+                </AlertDescription>
+              </Alert>
+            ) : null}
+            {sharedLines ? (
+              <EntityAllocationTable rows={entityRows} unit={unit} />
+            ) : (
+              <ContributionTable rows={contribution(lines, (l) => l.entity)} unit={unit} label="Entitas" />
+            )}
           </CardContent>
         </Card>
       </div>

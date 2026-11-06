@@ -213,6 +213,27 @@ test("The Default Owner, not emailed, still finds the whole thread on the line",
   await expect(page.getByLabel("Komentar", { exact: true })).toBeVisible();
 });
 
+test("Finance splits a shared cost across the entities by headcount; the Summary shows each entity's share", async ({ page }) => {
+  await as("finance", page, "/rka/allocation");
+  await page.getByLabel("Headcount ESTRADA").fill("3");
+  await page.getByLabel("Headcount MATRIK").fill("1");
+  await page.getByRole("button", { name: "Simpan headcount" }).click();
+  await expect(page.getByText("Headcount disimpan.")).toBeVisible();
+
+  await page.getByLabel("Cari COA atau uraian").fill("6241");
+  await lineRow(page, "237.855.840").getByLabel(/Dasar alokasi baris/).selectOption("headcount");
+  await page.getByRole("button", { name: "Simpan (1)" }).click();
+  await expect(page.getByText("1 baris disimpan.")).toBeVisible();
+
+  await as("finance", page, "/summary");
+  // 6241: 19.821.320 x 12 = 237.855.840, carried by ESTRADA; MATRIK has 1 of 4 heads, so a quarter moves to it.
+  await expect(page.getByTestId("allocation-MATRIK").getByTestId("allocated")).toHaveText("Rp 59,5 jt");
+  await expect(page.getByTestId("allocation-ESTRADA").getByTestId("allocated")).toHaveText("-Rp 59,5 jt");
+
+  await as("requestor", page, "/rka/allocation");
+  await expect(page.getByText("This page could not be found.")).toBeVisible();
+});
+
 test("4. Finance finalises", async ({ page }) => {
   await as("finance", page, "/rka/review");
   await page.getByLabel("Pilih semua SCM").check();

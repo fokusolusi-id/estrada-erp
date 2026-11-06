@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import { contribution, pnl, sum, type Category, type Money, type PnlKey } from "@estrada/domain";
+import { contribution, pnl, sum, type Category, type EntityAllocationRow, type Money, type PnlKey } from "@estrada/domain";
 import { MONTHS, RKA_DATA_COLUMNS } from "./rka-data";
 
 export interface ExportLine {
@@ -29,6 +29,10 @@ export interface ExportInput {
   /** Division name for a unit, used for Divisi columns and Kontribusi Divisi. */
   divisionOf: (unit: string) => string;
   pnlLabel: Record<PnlKey, string>;
+  /** The lines as the screen's reports read them (shared costs split), for Rekap and Kontribusi Divisi; defaults to `lines`. */
+  reportLines?: readonly ExportLine[];
+  /** Per Entitas after shared-cost allocation, as the screen shows it; without it the sheet groups the lines as entered. */
+  entityAllocation?: readonly EntityAllocationRow[];
 }
 
 const CATEGORY_CELL: Record<Category, string> = { Revenue: "REVENUE", COGS: "COGS", OPEX: "OPEX", OTHERS: "OTHERS", CAPEX: "CAPEX" };
@@ -103,7 +107,8 @@ export async function writeRkaWorkbook(input: ExportInput): Promise<ExcelJS.Buff
   // Rekap: the Management Summary's P&L by month.
   const rekap = titled("Rekap", `Rekap RKA ${input.year}`);
   headerRow(rekap, ["Uraian", ...MONTHS, "Total"]);
-  for (const r of pnl(lines)) {
+  const report = input.reportLines ?? lines;
+  for (const r of pnl(report)) {
     const row = rekap.addRow([input.pnlLabel[r.key], ...r.months.map(num), num(r.total)]);
     if (r.derived) row.font = { bold: true };
   }
@@ -114,15 +119,26 @@ export async function writeRkaWorkbook(input: ExportInput): Promise<ExcelJS.Buff
   const contributionSheet = (name: string, label: string, keyOf: (l: ExportLine) => string) => {
     const ws = titled(name, name);
     headerRow(ws, [label, "Pendapatan", "Total Biaya", "Kontribusi", "Baris"]);
-    const rows = contribution(lines, keyOf);
+    const rows = contribution(report, keyOf);
     for (const c of rows) ws.addRow([c.key, num(c.revenue), num(c.cost), num(c.net), c.lines]);
     const total = (pick: (c: (typeof rows)[number]) => Money) => num(sum(rows.map(pick)));
-    ws.addRow(["Total", total((c) => c.revenue), total((c) => c.cost), total((c) => c.net), lines.length]).font = { bold: true };
+    ws.addRow(["Total", total((c) => c.revenue), total((c) => c.cost), total((c) => c.net), report.length]).font = { bold: true };
     ws.getColumn(1).width = 30;
     for (let c = 2; c <= 4; c++) Object.assign(ws.getColumn(c), { width: 20, numFmt: IDR });
   };
   contributionSheet("Kontribusi Divisi", "Divisi pengusul", (l) => divisionOf(l.requestorUnit));
-  contributionSheet("Per Entitas", "Entitas", (l) => l.entity);
+  if (input.entityAllocation) {
+    const rows = input.entityAllocation;
+    const ws = titled("Per Entitas", "Per Entitas setelah alokasi biaya bersama");
+    headerRow(ws, ["Entitas", "Pendapatan", "Biaya sendiri", "Alokasi biaya bersama", "Total Biaya", "Kontribusi"]);
+    for (const r of rows) ws.addRow([r.key, num(r.revenue), num(r.costBefore), num(r.allocated), num(r.costAfter), num(r.netAfter)]);
+    const total = (pick: (r: EntityAllocationRow) => Money) => num(sum(rows.map(pick)));
+    ws.addRow(["Total", total((r) => r.revenue), total((r) => r.costBefore), total((r) => r.allocated), total((r) => r.costAfter), total((r) => r.netAfter)]).font = { bold: true };
+    ws.getColumn(1).width = 30;
+    for (let c = 2; c <= 6; c++) Object.assign(ws.getColumn(c), { width: 22, numFmt: IDR });
+  } else {
+    contributionSheet("Per Entitas", "Entitas", (l) => l.entity);
+  }
 
   return wb.xlsx.writeBuffer();
 }

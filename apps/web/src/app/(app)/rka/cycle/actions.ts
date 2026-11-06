@@ -148,6 +148,8 @@ export async function reviseVersion(_prev: CycleState, form: FormData): Promise<
             actual2026: l.actual2026,
             reviewFlags: l.reviewFlags,
             sourceRef: l.sourceRef,
+            sharedBasis: l.sharedBasis,
+            sharedFixed: l.sharedFixed,
             createdBy: l.createdBy,
             state: start,
           })),
@@ -156,6 +158,8 @@ export async function reviseVersion(_prev: CycleState, form: FormData): Promise<
       const newId = new Map(lines.map((l, i) => [l.id, inserted[i]!.id]));
       if (amounts.length) await tx.insert(schema.budgetLineAmount).values(amounts.map((a) => ({ ...a, lineId: newId.get(a.lineId)! })));
     }
+    const heads = await tx.select().from(schema.entityHeadcount).where(eq(schema.entityHeadcount.versionId, base.id));
+    if (heads.length) await tx.insert(schema.entityHeadcount).values(heads.map((h) => ({ ...h, versionId: version!.id })));
     await tx.insert(schema.auditLog).values({
       actorUserId: user.id,
       action: "cycle.revise",

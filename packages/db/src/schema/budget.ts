@@ -25,6 +25,9 @@ export const approvalStateEnum = pgEnum("approval_state", [
   "locked",
 ]);
 
+/** How a shared cost splits across the entities in reports (client decision: all three bases). */
+export const allocationBasisEnum = pgEnum("allocation_basis", ["revenue", "headcount", "fixed"]);
+
 /** A version is immutable once locked; a revision copies it. */
 export const budgetVersion = pgTable("budget_version", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -72,6 +75,10 @@ export const budgetLine = pgTable(
     /** Where an imported line came from, e.g. "RKA 2027 Data #21 (Finance & Risk Management row 26)". */
     sourceRef: text("source_ref"),
     state: approvalStateEnum("state").notNull().default("draft"),
+    /** Set by Finance when the line is a shared cost; reports split it across the entities, the line itself stays. */
+    sharedBasis: allocationBasisEnum("shared_basis"),
+    /** Percent per entity as typed, for the fixed basis. */
+    sharedFixed: jsonb("shared_fixed").$type<Record<string, string>>(),
     createdBy: text("created_by").references(() => user.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -90,6 +97,21 @@ export const budgetLineAmount = pgTable(
     amount: numeric("amount", { precision: 20, scale: 2 }).notNull().default("0"),
   },
   (t) => [primaryKey({ columns: [t.lineId, t.month] })],
+);
+
+/** Head count per entity that Finance types for a version: the headcount basis for shared costs. */
+export const entityHeadcount = pgTable(
+  "entity_headcount",
+  {
+    versionId: uuid("version_id")
+      .notNull()
+      .references(() => budgetVersion.id, { onDelete: "cascade" }),
+    entityCode: text("entity_code")
+      .notNull()
+      .references(() => companyEntity.code),
+    heads: integer("heads").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.versionId, t.entityCode] })],
 );
 
 /**
