@@ -2,14 +2,13 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { asc, count, eq } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
-import { can, coaTree } from "@estrada/domain";
+import { can } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { openVersion } from "@/lib/rka";
 import { loadOrg } from "@/lib/workflow";
+import { CoaTree } from "@/components/erp/coa-tree";
 import { ProvisionalCoa, type CoaOption } from "@/components/erp/provisional-coa";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { confirmCoa, remapCoa } from "./actions";
 import { CoaForm } from "./coa-form";
 
@@ -79,44 +78,21 @@ export default async function CoaPage() {
       <Card>
         <CardHeader>
           <CardTitle>Daftar COA</CardTitle>
-          <CardDescription>Disusun sebagai pohon: kode anak di bawah induknya.</CardDescription>
+          <CardDescription>Per kategori, kode anak di bawah induknya. Klik panah untuk membuka atau menutup cabang.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Kode</TableHead>
-                <TableHead>Nama</TableHead>
-                <TableHead>Kategori</TableHead>
-                <TableHead>Default owner</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Baris</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {coaTree(accounts).map(({ account: a, depth }) => (
-                <TableRow key={a.code} data-depth={depth}>
-                  <TableCell className="font-medium" style={{ paddingLeft: `${0.5 + depth * 1.25}rem` }}>
-                    {depth ? <span className="text-muted-foreground mr-1">└</span> : null}
-                    {a.code}
-                  </TableCell>
-                  <TableCell className="whitespace-normal">{a.name}</TableCell>
-                  <TableCell>{a.category}</TableCell>
-                  <TableCell>{a.defaultOwnerUnit ?? "—"}</TableCell>
-                  <TableCell>
-                    {a.provisional ? (
-                      <Badge className="bg-warning/20 text-foreground border-transparent">Sementara</Badge>
-                    ) : a.active ? (
-                      "Aktif"
-                    ) : (
-                      <span className="text-muted-foreground">Nonaktif</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">{linesOf.get(a.code) ?? 0}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <CoaTree
+            accounts={accounts.map((a) => ({
+              code: a.code,
+              name: a.name,
+              category: a.category,
+              parentCode: a.parentCode,
+              defaultOwnerUnit: a.defaultOwnerUnit,
+              active: a.active,
+              provisional: a.provisional,
+              lines: linesOf.get(a.code) ?? 0,
+            }))}
+          />
         </CardContent>
       </Card>
     </div>

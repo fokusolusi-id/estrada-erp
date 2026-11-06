@@ -60,7 +60,13 @@ test("Finance arranges COA Master as a tree; no one else can change it", async (
   await page.getByLabel("Induk").selectOption("6240");
   await page.getByRole("button", { name: "Simpan perubahan" }).click();
   await expect(page.getByText("COA 6241 diperbarui.")).toBeVisible();
-  await expect(page.locator('tr[data-depth="1"]').filter({ hasText: "6241" })).toBeVisible();
+  const tree = page.getByRole("treegrid", { name: "Pohon COA" });
+  await expect(tree.locator('tr[data-code="6241"]')).toHaveAttribute("aria-level", "2");
+  // The parent folds its branch shut and open again.
+  await tree.getByRole("button", { name: "Tutup 6240" }).click();
+  await expect(tree.locator('tr[data-code="6241"]')).toHaveCount(0);
+  await tree.getByRole("button", { name: "Buka 6240" }).click();
+  await expect(tree.locator('tr[data-code="6241"]')).toBeVisible();
 
   // A parent must share the category, so subtotals stay in their P&L row.
   await page.getByLabel("Ubah kode yang ada").selectOption("5300");
