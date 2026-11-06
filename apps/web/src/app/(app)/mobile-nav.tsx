@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import type { NavItem } from "@/lib/nav";
+import { NavIcon } from "./nav-icon";
 import { Button } from "@/components/ui/button";
 
 /** The sidebar's links on a phone: a button in the header opens them over the page. */
@@ -21,9 +22,10 @@ export function MobileNav({ items }: { items: readonly NavItem[] }) {
               key={item.href}
               href={item.href}
               onClick={() => setOpen(false)}
-              className="hover:bg-sidebar-accent flex items-center justify-between rounded-md px-3 py-2.5 text-sm"
+              className="hover:bg-sidebar-accent flex items-center gap-3 rounded-md px-3 py-2.5 text-sm"
             >
-              {item.label}
+              <NavIcon name={item.icon} />
+              <span className="flex-1">{item.label}</span>
               {item.phase ? <span className="text-muted-foreground text-[10px]">Fase {item.phase}</span> : null}
             </Link>
           ))}
