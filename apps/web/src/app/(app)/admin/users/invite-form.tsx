@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { EntityMultiSelect, type EntityOption } from "@/components/erp/entity-multi-select";
 import { inviteUser, type InviteState } from "./actions";
 
 const SELECT =
@@ -12,9 +13,11 @@ const SELECT =
 export function InviteForm({
   units,
   roles,
+  entities,
 }: {
   units: { code: string; name: string }[];
   roles: { value: string; label: string }[];
+  entities: EntityOption[];
 }) {
   const [state, action, pending] = useActionState<InviteState, FormData>(inviteUser, { ok: false, message: "" });
   const err = (f: string) => state.errors?.[f]?.[0];
@@ -55,9 +58,9 @@ export function InviteForm({
           ))}
         </select>
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor="entities">Entitas (pisahkan koma, * = semua)</Label>
-        <Input id="entities" name="entities" defaultValue="ESTRADA" />
+      <div className="grid gap-2 sm:col-span-2">
+        <Label>Entitas</Label>
+        <EntityMultiSelect options={entities} defaultValue={["ESTRADA"]} />
       </div>
       <div className="flex items-center gap-3 sm:col-span-2">
         <Button type="submit" disabled={pending}>

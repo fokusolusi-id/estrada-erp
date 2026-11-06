@@ -35,14 +35,24 @@ export function Sidebar({ items, defaultCollapsed }: { items: readonly NavItem[]
         collapsed ? "w-14" : "w-60",
       )}
     >
-      <div className={cn("flex h-14 items-center gap-2 px-3", collapsed && "justify-center px-0")}>
+      <div className={cn("flex items-center gap-2 px-3", collapsed ? "flex-col py-3" : "h-14")}>
         <Image src="/logo.png" alt="ERP Estrada" width={32} height={32} className="size-8 shrink-0" priority />
         {collapsed ? null : (
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-primary truncate font-semibold leading-tight">ERP Estrada</div>
-            <div className="text-muted-foreground text-xs leading-tight">RKA 2027</div>
+            <div className="text-muted-foreground truncate text-xs leading-tight">Perencanaan Anggaran</div>
           </div>
         )}
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={collapsed ? "Perluas menu" : "Ciutkan menu"}
+          aria-expanded={!collapsed}
+          title={collapsed ? "Perluas menu" : "Ciutkan menu"}
+          className="hover:bg-sidebar-accent text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-md"
+        >
+          {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+        </button>
       </div>
       <nav aria-label="Menu utama" className="flex flex-1 flex-col gap-0.5 px-2 py-2">
         {items.map((item) => {
@@ -71,19 +81,6 @@ export function Sidebar({ items, defaultCollapsed }: { items: readonly NavItem[]
           );
         })}
       </nav>
-      <div className="border-sidebar-border border-t p-2">
-        <button
-          type="button"
-          onClick={toggle}
-          aria-label={collapsed ? "Perluas menu" : "Ciutkan menu"}
-          aria-expanded={!collapsed}
-          title={collapsed ? "Perluas menu" : "Ciutkan menu"}
-          className={cn("hover:bg-sidebar-accent text-muted-foreground flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm", collapsed && "justify-center px-0")}
-        >
-          {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
-          {collapsed ? null : "Ciutkan"}
-        </button>
-      </div>
     </aside>
   );
 }

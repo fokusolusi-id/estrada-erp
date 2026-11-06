@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db, schema } from "@estrada/db";
 import { ROLES, can } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
+import { entityList } from "@/lib/entity-scope";
 import { loadOrg } from "@/lib/workflow";
 
 export type PositionState = { ok: boolean; message: string; errors?: Record<string, string[]> };
@@ -19,7 +20,6 @@ const CreateSchema = z.object({
   orgUnit: z.string().min(1, "Pilih unit"),
   title: z.string().trim().min(2, "Jabatan wajib diisi"),
   role: z.enum(ROLES),
-  entities: z.string().default("ESTRADA"),
   actingUserId: z.string().optional(),
 });
 
@@ -31,6 +31,7 @@ export async function createPosition(_prev: PositionState, form: FormData): Prom
   const parsed = CreateSchema.safeParse(Object.fromEntries(form));
   if (!parsed.success) return { ok: false, message: "Periksa isian.", errors: z.flattenError(parsed.error).fieldErrors };
   const input = parsed.data;
+  const entities = entityList(form);
   const actingUserId = input.actingUserId || null;
 
   const [unit] = await db.select().from(schema.orgUnit).where(eq(schema.orgUnit.code, input.orgUnit));
@@ -45,7 +46,6 @@ export async function createPosition(_prev: PositionState, form: FormData): Prom
       .insert(schema.position)
       .values({ orgUnitCode: input.orgUnit, title: input.title, role: input.role, actingUserId })
       .returning({ id: schema.position.id });
-    const entities = input.entities.split(",").map((e) => e.trim()).filter(Boolean);
     if (entities.length) {
       await tx.insert(schema.positionEntityScope).values(entities.map((entityCode) => ({ positionId: pos!.id, entityCode })));
     }
@@ -54,7 +54,7 @@ export async function createPosition(_prev: PositionState, form: FormData): Prom
       action: "position.create",
       subjectType: "position",
       subjectId: pos!.id,
-      after: { ...input, actingUserId },
+      after: { ...input, entities, actingUserId },
     });
   });
 
@@ -95,4 +95,69 @@ export async function setActing(_prev: PositionState, form: FormData): Promise<P
 
   revalidatePath("/admin/positions");
   return { ok: true, message: actingUserId ? "pjs ditetapkan." : "pjs dicabut; posisi kosong." };
+}
+
+const UpdateSchema = z.object({
+  positionId: z.string().uuid(),
+  orgUnit: z.string().min(1, "Pilih unit"),
+  title: z.string().trim().min(2, "Jabatan wajib diisi"),
+  role: z.enum(ROLES),
+  holderUserId: z.string().optional(),
+});
+
+/** Edits a position's unit, title, role, entities and (optionally) holder. */
+export async function updatePosition(_prev: PositionState, form: FormData): Promise<PositionState> {
+  const admin = await requireOrgAdmin();
+  if (!admin) return { ok: false, message: "Hanya Admin yang dapat mengelola posisi." };
+
+  const parsed = UpdateSchema.safeParse(Object.fromEntries(form));
+  if (!parsed.success) return { ok: false, message: "Periksa isian.", errors: z.flattenError(parsed.error).fieldErrors };
+  const input = parsed.data;
+  const entities = entityList(form);
+  if (!entities.length) return { ok: false, message: "Pilih minimal satu entitas.", errors: { entities: ["Pilih minimal satu entitas"] } };
+  const hasHolderField = form.has("holderUserId");
+  const holderUserId = input.holderUserId || null;
+
+  const [pos] = await db.select().from(schema.position).where(eq(schema.position.id, input.positionId));
+  if (!pos) return { ok: false, message: "Posisi tidak ditemukan." };
+  const [unit] = await db.select().from(schema.orgUnit).where(eq(schema.orgUnit.code, input.orgUnit));
+  if (!unit) return { ok: false, message: "Unit tidak dikenal." };
+  if (hasHolderField && holderUserId) {
+    const [u] = await db.select({ id: schema.user.id }).from(schema.user).where(eq(schema.user.id, holderUserId));
+    if (!u) return { ok: false, message: "Pemegang tidak ditemukan." };
+  }
+
+  const before = await db
+    .select({ e: schema.positionEntityScope.entityCode })
+    .from(schema.positionEntityScope)
+    .where(eq(schema.positionEntityScope.positionId, pos.id));
+
+  await db.transaction(async (tx) => {
+    const nextHolder = hasHolderField ? holderUserId : pos.holderUserId;
+    await tx
+      .update(schema.position)
+      .set({
+        orgUnitCode: input.orgUnit,
+        title: input.title,
+        role: input.role,
+        holderUserId: nextHolder,
+        // A held position has no pjs.
+        actingUserId: nextHolder ? null : pos.actingUserId,
+      })
+      .where(eq(schema.position.id, pos.id));
+    await tx.delete(schema.positionEntityScope).where(eq(schema.positionEntityScope.positionId, pos.id));
+    await tx.insert(schema.positionEntityScope).values(entities.map((entityCode) => ({ positionId: pos.id, entityCode })));
+    await tx.insert(schema.auditLog).values({
+      actorUserId: admin.id,
+      action: "position.update",
+      subjectType: "position",
+      subjectId: pos.id,
+      before: { orgUnit: pos.orgUnitCode, title: pos.title, role: pos.role, holderUserId: pos.holderUserId, entities: before.map((b) => b.e) },
+      after: { orgUnit: input.orgUnit, title: input.title, role: input.role, holderUserId: hasHolderField ? holderUserId : pos.holderUserId, entities },
+    });
+  });
+
+  revalidatePath("/admin/positions");
+  revalidatePath("/admin/users");
+  return { ok: true, message: "Posisi disimpan." };
 }

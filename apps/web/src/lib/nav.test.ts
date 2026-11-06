@@ -8,7 +8,7 @@ describe("navFor", () => {
 
   it("keeps budget screens away from Admin", () => {
     const hrefs = navFor("admin").map((n) => n.href);
-    expect(hrefs).toEqual(expect.arrayContaining(["/admin/users", "/admin/positions"]));
+    expect(hrefs).toEqual(expect.arrayContaining(["/admin/users", "/admin/master", "/admin/positions"]));
     expect(hrefs).not.toContain("/coa");
     expect(hrefs).not.toContain("/rka");
   });

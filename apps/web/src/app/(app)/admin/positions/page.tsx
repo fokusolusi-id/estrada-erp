@@ -9,6 +9,7 @@ import { loadOrg } from "@/lib/workflow";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import Link from "next/link";
 import { ActingForm, CreatePositionForm } from "./position-forms";
 
 export const metadata: Metadata = { title: "Posisi & pjs" };
@@ -18,10 +19,11 @@ export default async function PositionsPage() {
   const org = await loadOrg();
   if (!can(user.actor, "org.manage", null, org)) redirect("/");
 
-  const [positions, users, units, version] = await Promise.all([
+  const [positions, users, units, entityRows, version] = await Promise.all([
     db.select().from(schema.position).orderBy(asc(schema.position.orgUnitCode), asc(schema.position.title)),
     db.select({ id: schema.user.id, name: schema.user.name, email: schema.user.email }).from(schema.user).orderBy(asc(schema.user.name)),
     db.select({ code: schema.orgUnit.code, name: schema.orgUnit.name }).from(schema.orgUnit).orderBy(asc(schema.orgUnit.code)),
+    db.select({ code: schema.companyEntity.code, name: schema.companyEntity.name }).from(schema.companyEntity).orderBy(asc(schema.companyEntity.code)),
     openVersion(),
   ]);
   // Counts only: Admin never sees budget content.
@@ -41,6 +43,7 @@ export default async function PositionsPage() {
   const nameOf = new Map(users.map((u) => [u.id, u.name]));
   const userOptions = users.map((u) => ({ value: u.id, label: `${u.name} · ${u.email}` }));
   const unitOptions = units.map((u) => ({ value: u.code, label: `${u.code} · ${u.name}` }));
+  const entityOptions = entityRows.map((e) => ({ value: e.code, label: e.code }));
   const roleOptions = ROLES.map((r) => ({ value: r, label: ROLE_LABEL[r] }));
 
   return (
@@ -96,6 +99,7 @@ export default async function PositionsPage() {
                 <TableHead>Role</TableHead>
                 <TableHead>Pemegang</TableHead>
                 <TableHead>pjs</TableHead>
+                <TableHead className="w-16" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -114,6 +118,11 @@ export default async function PositionsPage() {
                       <ActingForm positionId={p.id} current={p.actingUserId} users={userOptions} />
                     )}
                   </TableCell>
+                  <TableCell>
+                    <Link href={`/admin/positions/${p.id}`} className="text-primary text-sm underline-offset-4 hover:underline">
+                      Edit
+                    </Link>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -131,6 +140,7 @@ export default async function PositionsPage() {
             units={unitOptions}
             roles={roleOptions}
             users={userOptions}
+            entities={entityOptions}
             {...(missing ? { defaults: { orgUnit: missing.unit, role: missing.role } } : {})}
           />
         </CardContent>
