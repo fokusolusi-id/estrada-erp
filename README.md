@@ -54,7 +54,7 @@ packages/config     shared tsconfig
 - Rows the importer cannot place stop the load; nothing is guessed.
 - COA codes the lines use but COA Master lacks (4300, 1615, …) are added as **provisional** accounts for Finance to confirm or remap.
 - COA Master's per-entity-group 2026 figures are kept in `coa_reference`; each line keeps its RKA 2026, Actual 2026, source row and the workbook's cleaning flags.
-- The golden test (`packages/importers/test/golden.test.ts`) checks the import against Rekap to the rupiah: revenue Rp 457,830,698,346, total cost Rp 294,400,936,589.71, every category, requestor division and unit, and month. It skips when the workbook is absent, as in CI.
+- The golden test (`packages/importers/test/golden.test.ts`) checks the import against the workbook to the rupiah: revenue Rp 457,830,698,346, total cost Rp 294,445,936,589.71 (the Management Summary figure; Rekap's Rp 294,400,936,589.71 leaves out the FRM line below), every category, requestor division and unit, and month. It skips when the workbook is absent, as in CI.
 
 ## Login and roles
 
@@ -84,7 +84,8 @@ packages/config     shared tsconfig
 | RKA 2026 / Actual 2026 and the change beside each line; workbook review flags on every screen | |
 | COA Master (Finance only, at `/coa`): add, edit, deactivate; confirm or remap provisional codes; parent/child tree (5500 → 5510, 5520), started from the code numbers on import | |
 | Satuan switch (angka penuh, juta, miliar) on Summary, queues, RKA Saya and line pages, remembered per viewer | |
-| New cycle proposes 31 Desember of the running year as its deadline | |
+| New cycle proposes 31 Desember of the running year as its submission deadline (Batas pengajuan) | |
+| A line with a typed total and no months (FRM's Rp 45 jt training line) is spread evenly over Jan–Des at import, flagged, and stays editable | |
 | Realisasi 2026 (Finance): type or paste each line's 2026 actual from an Excel column; audited, never changes the plan | |
 | Responsive: a header menu on phones; every live screen checked at 375 px for each role (e2e `phone` project) | |
 | COA filter on every approval queue, listing only the codes in that position's lines and their parents | |

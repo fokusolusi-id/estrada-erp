@@ -40,13 +40,13 @@ describe.skipIf(!existsSync(WORKBOOK))("golden: RKA_2027_Upd_Fin v2.xlsx", async
 
   it("reproduces revenue (invoice plan) and total cost to the rupiah", () => {
     expect(row("Revenue").total.toFixed(2)).toBe("457830698346.00");
-    expect(row("TotalCost").total.toFixed(2)).toBe("294400936589.71");
+    expect(row("TotalCost").total.toFixed(2)).toBe("294445936589.71");
   });
 
   it("reproduces each category", () => {
     expect(["COGS", "OPEX", "OTHERS", "CAPEX"].map((k) => row(k).total.toFixed(2))).toEqual([
       "242031043835.71",
-      "31963806954.00",
+      "32008806954.00",
       "8176400000.00",
       "12229685800.00",
     ]);
@@ -55,7 +55,7 @@ describe.skipIf(!existsSync(WORKBOOK))("golden: RKA_2027_Upd_Fin v2.xlsx", async
   it("reproduces revenue per entity, and shows that all cost sits on ESTRADA", () => {
     const byEntity = contribution(asSummary(lines), (l) => l.entity);
     expect(Object.fromEntries(byEntity.map((e) => [e.key, [e.revenue.toFixed(0), e.cost.toFixed(2)]]))).toEqual({
-      ESTRADA: ["354120789363", "294400936589.71"],
+      ESTRADA: ["354120789363", "294445936589.71"],
       MATRIK: ["96309508983", "0.00"],
       DJALU: ["5283600000", "0.00"],
       PAS: ["2116800000", "0.00"],
@@ -64,7 +64,7 @@ describe.skipIf(!existsSync(WORKBOOK))("golden: RKA_2027_Upd_Fin v2.xlsx", async
 
   it("reproduces Rekap's cost per requestor division and unit", () => {
     expect(costBy((l) => org.divisionOf(l.requestorUnit))).toEqual({
-      FRM: "9751946260.00",
+      FRM: "9796946260.00",
       HCM: "29205945824.00",
       PDMS: "65677959505.71",
       BCD: "173573200000.00",
@@ -75,13 +75,14 @@ describe.skipIf(!existsSync(WORKBOOK))("golden: RKA_2027_Upd_Fin v2.xlsx", async
 
   it("reproduces Rekap's monthly total cost", () => {
     const m = row("TotalCost").months;
-    expect([m[0]!.toFixed(2), m[11]!.toFixed(2), sum(m).toFixed(2)]).toEqual(["49099172580.33", "36490502616.58", "294400936589.71"]);
+    expect([m[0]!.toFixed(2), m[11]!.toFixed(2), sum(m).toFixed(2)]).toEqual(["49102922580.33", "36494252616.58", "294445936589.71"]);
   });
 
-  it("explains the Rp 45 jt gap: one FRM line has a typed total and no months", () => {
+  it("spreads the FRM line that has only a typed Rp 45 jt total evenly over the year, and says so", () => {
     const l = lines.find((x) => x.ref.no === 21)!;
-    expect([l.coaCode, l.requestorUnit, l.ownerUnit, sum(l.months).toFixed(0)]).toEqual(["6222", "FRM", "HCM", "0"]);
-    expect(l.flags.join(" ")).toMatch(/Rp45 jt diketik manual/);
+    expect([l.coaCode, l.requestorUnit, l.ownerUnit, sum(l.months).toFixed(0)]).toEqual(["6222", "FRM", "HCM", "45000000"]);
+    expect(new Set(l.months.map((m) => m.toFixed(0)))).toEqual(new Set(["3750000"]));
+    expect(l.flags.join(" ")).toMatch(/dibagi rata/);
   });
 
   it("adds the 9 codes missing from COA Master as provisional, for Finance to decide", () => {
@@ -108,7 +109,7 @@ describe.skipIf(!existsSync(WORKBOOK))("golden: RKA_2027_Upd_Fin v2.xlsx", async
     const back = parseRkaData(sheetRows(wb, "RKA 2027 Data"), ORG_UNITS);
     expect(back.problems).toEqual([]);
     const totals = pnl(asSummary(back.lines));
-    expect(["Revenue", "TotalCost"].map((k) => totals.find((r) => r.key === k)!.total.toFixed(2))).toEqual(["457830698346.00", "294400936589.71"]);
+    expect(["Revenue", "TotalCost"].map((k) => totals.find((r) => r.key === k)!.total.toFixed(2))).toEqual(["457830698346.00", "294445936589.71"]);
     expect(back.lines.filter((l) => l.crossDivision)).toHaveLength(46);
   });
 });

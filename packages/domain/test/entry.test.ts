@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { fillRight, parseIdr, parsePaste, pasteMonths } from "../src/entry";
-import { money, ZERO } from "../src/money";
+import { fillRight, parseIdr, parsePaste, pasteMonths, spreadEvenly } from "../src/entry";
+import { money, sum, ZERO } from "../src/money";
 
 const str = (ms: readonly { toString(): string }[]) => ms.map((m) => m.toString());
 
@@ -63,5 +63,18 @@ describe("pasteMonths and fillRight", () => {
     const out = fillRight(start, 3);
     expect(str(out.slice(0, 2))).toEqual(["0", "0"]);
     expect(out.slice(2).every((m) => m.eq(money("19821320")))).toBe(true);
+  });
+});
+
+describe("spreadEvenly: a typed yearly total split over Jan–Des (client decision on the FRM Rp 45 jt line)", () => {
+  it("splits Rp 45.000.000 into Rp 3.750.000 a month", () => {
+    expect(str(spreadEvenly(money("45000000")))).toEqual(Array.from({ length: 12 }, () => "3750000"));
+  });
+
+  it("puts the leftover cents in December so the months add up to the total exactly", () => {
+    const out = spreadEvenly(money("100000"));
+    expect(str(out.slice(0, 11))).toEqual(Array.from({ length: 11 }, () => "8333.33"));
+    expect(out[11]!.toString()).toBe("8333.37");
+    expect(sum(out).toString()).toBe("100000");
   });
 });

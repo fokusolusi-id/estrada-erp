@@ -1,4 +1,4 @@
-import { formatIdr, headcountFromMonths, sum, ZERO, type Category, type HeadcountRow, type Money } from "@estrada/domain";
+import { formatIdr, headcountFromMonths, spreadEvenly, sum, ZERO, type Category, type HeadcountRow, type Money } from "@estrada/domain";
 import { amount, header, text, type Cell } from "./cells";
 import { centerOf, category, unitResolver, type UnitAlias } from "./units";
 import type { ImportedCoa } from "./coa-master";
@@ -37,7 +37,14 @@ export const RKA_DATA_COLUMNS = ["No", "Sumber Sheet", "Baris Sumber", "COA Code
 const COLS = RKA_DATA_COLUMNS.filter((c) => !["Divisi Requestor", "Divisi Budget Owner", "Dasar Entitas"].includes(c));
 
 /** Sheet "RKA 2027 Data": the workbook's own clean list of every budget line. Rows it cannot place are reported, never guessed. */
-export function parseRkaData(rows: Cell[][], units: readonly UnitAlias[]): { lines: ImportedLine[]; problems: ImportProblem[] } {
+/** The "Total RKA 2027" a source sheet row holds; the data sheet only sums that row's months, so a total typed without them is lost there. */
+export type SourceTotal = (sheet: string, row: number) => Money | null;
+
+export function parseRkaData(
+  rows: Cell[][],
+  units: readonly UnitAlias[],
+  sourceTotal: SourceTotal = () => null,
+): { lines: ImportedLine[]; problems: ImportProblem[] } {
   const h = header(rows, COLS);
   const unit = unitResolver(units);
   const lines: ImportedLine[] = [];
@@ -60,10 +67,17 @@ export function parseRkaData(rows: Cell[][], units: readonly UnitAlias[]): { lin
     if (!cat) { fail(`Kategori tidak dikenal: ${text(r[h.col("Category")])}`); continue; }
     if (!entity) { fail("Entitas kosong"); continue; }
 
-    const months = MONTHS.map((m) => amount(r[h.col(m)]) ?? ZERO);
+    let months = MONTHS.map((m) => amount(r[h.col(m)]) ?? ZERO);
     const flags = text(r[h.col("Flag Cleaning")]).split(";").map((f) => f.trim()).filter(Boolean);
-    const typed = amount(r[h.col("Total RKA 2027")]);
-    if (typed && !typed.minus(sum(months)).abs().lte(0.01)) {
+    const sourceRow = Number(text(r[h.col("Baris Sumber")]));
+    const sheet = text(r[h.col("Sumber Sheet")]);
+    let typed = amount(r[h.col("Total RKA 2027")]);
+    if (sum(months).isZero() && (!typed || typed.isZero()) && sheet && sourceRow > 0) typed = sourceTotal(sheet, sourceRow);
+    if (typed && !typed.isZero() && sum(months).isZero()) {
+      // A total typed without months is spread evenly; the owner can still change any month (client decision).
+      months = spreadEvenly(typed);
+      flags.push(`Total ${formatIdr(typed)} tanpa rincian bulan, dibagi rata Jan–Des`);
+    } else if (typed && !typed.minus(sum(months)).abs().lte(0.01)) {
       flags.push(`Total diketik ${formatIdr(typed)} tidak sama dengan jumlah bulan`);
     }
     const qty = text(r[h.col("Qty (Org)")]);
@@ -71,10 +85,9 @@ export function parseRkaData(rows: Cell[][], units: readonly UnitAlias[]): { lin
     const item = text(r[h.col("Keterangan / Item")]) || null;
     const heads = Number(qty);
     const headcount = item && qty && Number.isInteger(heads) ? headcountFromMonths(item, heads, months) : null;
-    const sourceRow = Number(text(r[h.col("Baris Sumber")]));
 
     lines.push({
-      ref: { no, sheet: text(r[h.col("Sumber Sheet")]), row: Number.isFinite(sourceRow) && sourceRow > 0 ? sourceRow : null },
+      ref: { no, sheet, row: Number.isFinite(sourceRow) && sourceRow > 0 ? sourceRow : null },
       coaCode,
       coaName: text(r[h.col("COA Name")]),
       category: cat,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { money } from "@estrada/domain";
+import { money, sum } from "@estrada/domain";
 import { parseCoaMaster, parseRkaData, provisionalAccounts, type Cell } from "../src/index";
 
 const UNITS = [
@@ -97,8 +97,22 @@ describe("parseRkaData", () => {
   });
 
   it("flags a typed total that the months do not add up to", () => {
-    const row = dataRow({ "Total RKA 2027": 45000000 }, months(0));
+    const row = dataRow({ "Total RKA 2027": 45000000 }, months(1000000));
     expect(parseRkaData(DATA([row]), UNITS).lines[0]!.flags).toEqual(["Total diketik Rp 45.000.000 tidak sama dengan jumlah bulan"]);
+  });
+
+  it("spreads a total typed without months evenly over Jan–Des, and says so (client decision)", () => {
+    const row = dataRow({ "Total RKA 2027": 45000000 }, months(0));
+    const [line] = parseRkaData(DATA([row]), UNITS).lines;
+    expect(line!.months.map((m) => m.toFixed(0))).toEqual(months(3750000).map(String));
+    expect(line!.flags).toEqual(["Total Rp 45.000.000 tanpa rincian bulan, dibagi rata Jan–Des"]);
+  });
+
+  it("finds that total on the source sheet when the data sheet only sums the empty months", () => {
+    const row = dataRow({ "Sumber Sheet": "Finance & Risk Management", "Baris Sumber": 26, "Total RKA 2027": 0 }, months(0));
+    const lookup = (sheet: string, n: number) => (sheet === "Finance & Risk Management" && n === 26 ? money(45000000) : null);
+    const [line] = parseRkaData(DATA([row]), UNITS, lookup).lines;
+    expect(sum(line!.months).toFixed(0)).toBe("45000000");
   });
 });
 

@@ -51,7 +51,7 @@ export function waitingTooLong(lastMoved: Date, now: Date, days: number): boolea
   return now.getTime() - lastMoved.getTime() >= days * DAY;
 }
 
-/** The deadline a new cycle starts with: RKA must be final by 31 December of the running year (client answer 7). */
+/** The submission deadline a new cycle starts with: 31 December of the running year (client decision: it is the submission deadline, not the lock). */
 export function defaultDeadline(fiscalYear: number): string {
   return `${fiscalYear - 1}-12-31`;
 }

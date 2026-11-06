@@ -40,7 +40,7 @@ export function OpenCycleForm({ fiscalYear }: { fiscalYear: number }) {
           onChange={(e) => setPicked(e.target.value)}
           required
         />
-        <p className="text-muted-foreground text-xs">RKA final paling lambat 31 Desember tahun berjalan.</p>
+        <p className="text-muted-foreground text-xs">Batas pengajuan usulan oleh requestor; standarnya 31 Desember tahun berjalan.</p>
         {state.errors?.deadline ? <p className="text-destructive text-xs">{state.errors.deadline[0]}</p> : null}
       </div>
       <div className="flex flex-wrap items-center gap-3 sm:col-span-3">

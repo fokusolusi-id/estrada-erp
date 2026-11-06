@@ -62,7 +62,7 @@ describe("reminders, counted in Jakarta calendar days", () => {
   });
 });
 
-describe("defaultDeadline: RKA is final by the end of the running year (client answer 7)", () => {
+describe("defaultDeadline: requestors submit by 31 December of the running year (client decision)", () => {
   it("proposes 31 December of the year before the fiscal year", () => {
     expect(defaultDeadline(2027)).toBe("2026-12-31");
     expect(defaultDeadline(2028)).toBe("2027-12-31");

@@ -1,3 +1,4 @@
+import Decimal from "decimal.js";
 import { money, ZERO, type Money } from "./money";
 
 const GROUPED = { ".": /^\d{1,3}(\.\d{3})+$/, ",": /^\d{1,3}(,\d{3})+$/ } as const;
@@ -79,4 +80,10 @@ export function pasteMonths(months: readonly Money[], start: number, cells: read
 export function fillRight(months: readonly Money[], from: number): Money[] {
   const value = months[from - 1] ?? ZERO;
   return months.map((m, i) => (i >= from - 1 ? value : m));
+}
+
+/** Splits a yearly total evenly over Jan–Des to the sen; December takes the leftover so the months add up exactly. */
+export function spreadEvenly(total: Money): Money[] {
+  const month = total.div(12).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+  return Array.from({ length: 12 }, (_, i) => (i < 11 ? month : total.minus(month.times(11))));
 }
