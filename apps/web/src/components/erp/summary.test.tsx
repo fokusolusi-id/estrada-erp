@@ -34,12 +34,19 @@ describe("PnlTable", () => {
     expect(screen.getByTestId("pnl-Revenue").getAttribute("data-derived")).toBe("false");
   });
 
-  it("shows the yearly total per row and flags a loss", () => {
+  it("names the unit once in the header and shows bare figures, with a loss in brackets and red", () => {
     render(<PnlTable rows={pnl(lines)} unit="rp" />);
-    expect(within(screen.getByTestId("pnl-Revenue")).getByTestId("total").textContent).toBe("Rp 12.000.000");
+    expect(screen.getByRole("columnheader", { name: /Uraian \(Rp\)/ })).toBeTruthy();
+    expect(within(screen.getByTestId("pnl-Revenue")).getByTestId("total").textContent).toBe("12.000.000");
     const loss = within(screen.getByTestId("pnl-OperatingProfit")).getByTestId("total");
-    expect(loss.textContent).toBe("-Rp 1.200.000");
+    expect(loss.textContent).toBe("(1.200.000)");
     expect(loss.querySelector(".text-destructive")).toBeTruthy();
+  });
+
+  it("keeps costs out of red and shows a dash for an empty row", () => {
+    render(<PnlTable rows={pnl(lines)} unit="juta" />);
+    expect(within(screen.getByTestId("pnl-COGS")).getByTestId("total").querySelector(".text-destructive")).toBeNull();
+    expect(within(screen.getByTestId("pnl-CAPEX")).getByTestId("total").textContent).toBe("–");
   });
 });
 
@@ -47,9 +54,10 @@ describe("ContributionTable", () => {
   it("lists each group's revenue, cost, net and share of total cost", () => {
     render(<ContributionTable rows={contribution(lines, (l) => l.entity)} unit="rp" label="Entitas" />);
     const matrik = screen.getByTestId("contribution-MATRIK");
-    expect(within(matrik).getByTestId("cost").textContent).toBe("Rp 8.400.000");
+    expect(screen.getByRole("columnheader", { name: /Total Biaya \(Rp\)/ })).toBeTruthy();
+    expect(within(matrik).getByTestId("cost").textContent).toBe("8.400.000");
     expect(within(matrik).getByTestId("share").textContent).toBe("63,6%");
-    expect(screen.getByTestId("contribution-total-cost").textContent).toBe("Rp 13.200.000");
+    expect(screen.getByTestId("contribution-total-cost").textContent).toBe("13.200.000");
   });
 });
 

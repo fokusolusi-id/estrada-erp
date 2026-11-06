@@ -28,11 +28,27 @@
   --color-ring: var(--ring);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-state-draft: var(--state-draft);
+  --color-state-consolidation: var(--state-consolidation);
+  --color-state-division: var(--state-division);
+  --color-state-finance: var(--state-finance);
+  --color-state-awaiting: var(--state-awaiting);
+  --color-state-locked: var(--state-locked);
+  --color-cat-revenue: var(--cat-revenue);
+  --color-cat-cogs: var(--cat-cogs);
+  --color-cat-opex: var(--cat-opex);
+  --color-cat-others: var(--cat-others);
+  --color-cat-capex: var(--cat-capex);
+  --color-entity-estrada: var(--entity-estrada);
+  --color-entity-matrik: var(--entity-matrik);
+  --color-entity-djalu: var(--entity-djalu);
+  --color-entity-pas: var(--entity-pas);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-border: var(--sidebar-border);
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
@@ -58,6 +74,26 @@
   --ring: oklch(0.62 0.17 268);
   --success: oklch(0.6 0.15 150);
   --warning: oklch(0.75 0.15 75);
+  /* Meaning colours (design matrix). Each pairs with text or an icon, never colour alone. */
+  --info: oklch(0.6 0.13 240);
+  /* Approval state, Draft to Terkunci. */
+  --state-draft: oklch(0.55 0.02 260);
+  --state-consolidation: oklch(0.62 0.13 230);
+  --state-division: oklch(0.52 0.18 275);
+  --state-finance: oklch(0.7 0.15 70);
+  --state-awaiting: oklch(0.55 0.2 300);
+  --state-locked: oklch(0.6 0.14 160);
+  /* P&L category, the same in every chart. */
+  --cat-revenue: oklch(0.62 0.15 160);
+  --cat-cogs: oklch(0.68 0.17 50);
+  --cat-opex: oklch(0.55 0.17 260);
+  --cat-others: oklch(0.6 0.02 260);
+  --cat-capex: oklch(0.55 0.2 305);
+  /* Entity, the same in every chart and legend. */
+  --entity-estrada: oklch(0.38 0.14 265);
+  --entity-matrik: oklch(0.6 0.11 190);
+  --entity-djalu: oklch(0.72 0.15 75);
+  --entity-pas: oklch(0.62 0.19 10);
   --sidebar: oklch(0.975 0.015 265);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-accent: oklch(0.92 0.05 265);
@@ -85,6 +121,22 @@
   --ring: oklch(0.6 0.15 268);
   --success: oklch(0.7 0.15 150);
   --warning: oklch(0.8 0.15 75);
+  --info: oklch(0.72 0.12 240);
+  --state-draft: oklch(0.7 0.02 260);
+  --state-consolidation: oklch(0.74 0.12 230);
+  --state-division: oklch(0.7 0.15 275);
+  --state-finance: oklch(0.8 0.14 75);
+  --state-awaiting: oklch(0.72 0.16 300);
+  --state-locked: oklch(0.74 0.13 160);
+  --cat-revenue: oklch(0.74 0.14 160);
+  --cat-cogs: oklch(0.76 0.15 55);
+  --cat-opex: oklch(0.7 0.14 260);
+  --cat-others: oklch(0.72 0.02 260);
+  --cat-capex: oklch(0.7 0.17 305);
+  --entity-estrada: oklch(0.7 0.13 265);
+  --entity-matrik: oklch(0.74 0.1 190);
+  --entity-djalu: oklch(0.8 0.14 80);
+  --entity-pas: oklch(0.72 0.17 10);
   --sidebar: oklch(0.2 0.045 265);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.3 0.08 268);
@@ -100,6 +152,9 @@
   }
   .tabular {
     font-variant-numeric: tabular-nums;
+  }
+  main h1 {
+    @apply tracking-tight;
   }
 }
 

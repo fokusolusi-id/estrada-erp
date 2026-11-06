@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatAmount, formatIdr, money, parseUnit, scaleTo, sum, UNITS } from "../src/money";
+import { formatAmount, formatFigure, formatIdr, money, parseUnit, scaleTo, sum, unitLabel, UNITS, ZERO } from "../src/money";
 
 describe("money", () => {
   it("adds without float noise (workbook showed -5.85e-09 variances)", () => {
@@ -49,5 +49,26 @@ describe("display unit (client: angka penuh, juta or miliar)", () => {
     expect(parseUnit("miliar")).toBe("miliar");
     expect(parseUnit("ribu")).toBe("juta");
     expect(parseUnit(undefined)).toBe("juta");
+  });
+});
+
+describe("formatFigure: report cells, with the unit named once in the column header", () => {
+  it("shows the number alone, rounded for the unit", () => {
+    expect(formatFigure(money("27763568757"), "juta")).toBe("27.763,6");
+    expect(formatFigure(money("457830698346"), "miliar")).toBe("457,83");
+    expect(formatFigure(money("519588000"), "rp")).toBe("519.588.000");
+  });
+
+  it("puts negatives in brackets, as accounting reports do", () => {
+    expect(formatFigure(money("-11023475540.33"), "juta")).toBe("(11.023,5)");
+  });
+
+  it("shows a dash for zero, and for amounts that round to zero in the unit", () => {
+    expect(formatFigure(ZERO, "juta")).toBe("–");
+    expect(formatFigure(money("20000"), "juta")).toBe("–");
+  });
+
+  it("names the unit for the column header", () => {
+    expect([unitLabel("rp"), unitLabel("juta"), unitLabel("miliar")]).toEqual(["Rp", "Rp juta", "Rp miliar"]);
   });
 });

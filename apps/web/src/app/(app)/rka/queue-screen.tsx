@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { actOnLines } from "./actions";
 import { displayUnit } from "@/lib/display-unit";
 import { UnitSwitch } from "@/components/erp/unit-switch";
+import { PageHeader } from "@/components/erp/page-header";
 import { setDisplayUnit } from "@/app/(app)/unit-actions";
 
 /** Shared body of the approver screens: lines in the given states that this position may see. */
@@ -53,13 +54,11 @@ export async function QueueScreen({
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">{title}</h1>
-          <p className="text-muted-foreground text-sm">{version ? version.name : "Belum ada siklus RKA yang dibuka"}</p>
-        </div>
-        <UnitSwitch value={unit} onChange={setDisplayUnit} />
-      </div>
+      <PageHeader
+        title={title}
+        description={version ? version.name : "Belum ada siklus RKA yang dibuka"}
+        filters={<UnitSwitch value={unit} onChange={setDisplayUnit} />}
+      />
       <Card>
         <CardHeader>
           <CardTitle>Menunggu tindakan</CardTitle>

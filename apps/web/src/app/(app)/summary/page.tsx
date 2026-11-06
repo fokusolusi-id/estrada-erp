@@ -10,6 +10,7 @@ import { ContributionTable } from "@/components/erp/contribution-table";
 import { EntityAllocationTable } from "@/components/erp/entity-allocation-table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { KpiCard } from "@/components/erp/kpi-card";
+import { PageHeader } from "@/components/erp/page-header";
 import { PnlTable } from "@/components/erp/pnl-table";
 import { ScopeBar } from "@/components/erp/scope-bar";
 import { displayUnit } from "@/lib/display-unit";
@@ -46,35 +47,35 @@ export default async function SummaryPage({
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Management Summary</h1>
-          <p className="text-muted-foreground text-sm">
-            {version ? version.name : "Belum ada siklus RKA yang dibuka"} · {lines.length} baris, {locked} terkunci
-          </p>
-        </div>
-        <div className="flex flex-wrap items-end gap-3">
-          <UnitSwitch value={unit} onChange={setDisplayUnit} />
-        <ScopeBar
-          filters={[
-            ...(versions.length > 1
-              ? [{ name: "version", label: "Versi", options: versions.map((v) => ({ value: v.id, label: `${v.name}${v.status === "locked" ? " (terkunci)" : ""}` })) }]
-              : []),
-            { name: "entity", label: "Entitas", options: [{ value: "", label: "Semua entitas" }, ...entities.map((e) => ({ value: e, label: e }))] },
-            { name: "division", label: "Divisi", options: [{ value: "", label: "Semua divisi" }, ...divisions.map((d) => ({ value: d, label: d }))] },
-            { name: "status", label: "Status", options: Object.entries(SUMMARY_STATUS).map(([value, s]) => ({ value, label: s.label })) },
-          ]}
-        />
-          {version && (
+      <PageHeader
+        title="Management Summary"
+        description={<>{version ? version.name : "Belum ada siklus RKA yang dibuka"} · {lines.length} baris, {locked} terkunci</>}
+        actions={
+          version ? (
             <Button asChild variant="outline">
               <a href={`/api/export/rka?${exportQuery}`} download>
                 <Download aria-hidden />
                 Unduh Excel
               </a>
             </Button>
-          )}
-        </div>
-      </div>
+          ) : null
+        }
+        filters={
+          <>
+            <UnitSwitch value={unit} onChange={setDisplayUnit} />
+            <ScopeBar
+              filters={[
+                ...(versions.length > 1
+                  ? [{ name: "version", label: "Versi", options: versions.map((v) => ({ value: v.id, label: `${v.name}${v.status === "locked" ? " (terkunci)" : ""}` })) }]
+                  : []),
+                { name: "entity", label: "Entitas", options: [{ value: "", label: "Semua entitas" }, ...entities.map((e) => ({ value: e, label: e }))] },
+                { name: "division", label: "Divisi", options: [{ value: "", label: "Semua divisi" }, ...divisions.map((d) => ({ value: d, label: d }))] },
+                { name: "status", label: "Status", options: Object.entries(SUMMARY_STATUS).map(([value, s]) => ({ value, label: s.label })) },
+              ]}
+            />
+          </>
+        }
+      />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="Pendapatan" value={total("Revenue")} unit={unit} note="Rencana invoice" />

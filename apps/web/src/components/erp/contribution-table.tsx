@@ -1,6 +1,6 @@
-import { sum, type Contribution, type Unit } from "@estrada/domain";
+import { sum, unitLabel, type Contribution, type Unit } from "@estrada/domain";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MoneyCell } from "./money-cell";
+import { FigureCell } from "./money-cell";
 
 const pct = (part: Contribution["cost"], whole: Contribution["cost"]) =>
   whole.isZero() ? "—" : `${part.div(whole).times(100).toFixed(1).replace(".", ",")}%`;
@@ -14,8 +14,12 @@ export function ContributionTable({ rows, unit = "juta", label }: { rows: Contri
       <TableHeader>
         <TableRow>
           <TableHead>{label}</TableHead>
-          <TableHead className="text-right">Pendapatan</TableHead>
-          <TableHead className="text-right">Total Biaya</TableHead>
+          <TableHead className="text-right">
+            Pendapatan <span className="text-muted-foreground font-normal">({unitLabel(unit)})</span>
+          </TableHead>
+          <TableHead className="text-right">
+            Total Biaya <span className="text-muted-foreground font-normal">({unitLabel(unit)})</span>
+          </TableHead>
           <TableHead className="text-right">Porsi biaya</TableHead>
           <TableHead className="text-right">Selisih</TableHead>
         </TableRow>
@@ -25,16 +29,16 @@ export function ContributionTable({ rows, unit = "juta", label }: { rows: Contri
           <TableRow key={r.key} data-testid={`contribution-${r.key}`}>
             <TableCell className="font-medium">{r.key}</TableCell>
             <TableCell className="text-right">
-              <MoneyCell value={r.revenue} unit={unit} />
+              <FigureCell value={r.revenue} unit={unit} />
             </TableCell>
             <TableCell className="text-right" data-testid="cost">
-              <MoneyCell value={r.cost} unit={unit} />
+              <FigureCell value={r.cost} unit={unit} />
             </TableCell>
             <TableCell className="text-right tabular" data-testid="share">
               {pct(r.cost, cost)}
             </TableCell>
             <TableCell className="text-right">
-              <MoneyCell value={r.net} unit={unit} />
+              <FigureCell value={r.net} unit={unit} signal />
             </TableCell>
           </TableRow>
         ))}
@@ -43,14 +47,14 @@ export function ContributionTable({ rows, unit = "juta", label }: { rows: Contri
         <TableRow>
           <TableCell>Total</TableCell>
           <TableCell className="text-right">
-            <MoneyCell value={revenue} unit={unit} />
+            <FigureCell value={revenue} unit={unit} />
           </TableCell>
           <TableCell className="text-right" data-testid="contribution-total-cost">
-            <MoneyCell value={cost} unit={unit} />
+            <FigureCell value={cost} unit={unit} />
           </TableCell>
           <TableCell className="text-right">100%</TableCell>
           <TableCell className="text-right">
-            <MoneyCell value={revenue.minus(cost)} unit={unit} />
+            <FigureCell value={revenue.minus(cost)} unit={unit} signal />
           </TableCell>
         </TableRow>
       </TableFooter>

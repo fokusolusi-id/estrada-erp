@@ -27,10 +27,10 @@ export function ScopeBar({ filters }: { filters: ScopeFilter[] }) {
   };
 
   return (
-    <div className="flex flex-wrap items-end gap-3">
+    <div className="contents">
       {filters.map((f) => (
         <div key={f.name} className="grid gap-1">
-          <Label htmlFor={`scope-${f.name}`} className="text-muted-foreground text-xs">
+          <Label htmlFor={`scope-${f.name}`} className="text-muted-foreground text-xs font-medium">
             {f.label}
           </Label>
           <select id={`scope-${f.name}`} className={SELECT} value={params.get(f.name) ?? f.options[0]?.value ?? ""} onChange={(e) => set(f.name, e.target.value)}>

@@ -56,3 +56,21 @@ export function parseUnit(value: string | undefined | null): Unit {
 export function formatAmount(value: Money, unit: Unit): string {
   return formatIdr(value, { unit, decimals: UNIT_DECIMALS[unit] });
 }
+
+const UNIT_LABEL: Record<Unit, string> = { rp: "Rp", juta: "Rp juta", miliar: "Rp miliar" };
+
+/** The unit for a column header, so report cells can show the number alone. */
+export const unitLabel = (unit: Unit) => UNIT_LABEL[unit];
+
+/**
+ * A report cell: the number in the viewer's unit without "Rp" or the unit, negatives in brackets as accounting
+ * reports show them, and a dash where the amount is zero at that precision.
+ */
+export function formatFigure(value: Money, unit: Unit): string {
+  const decimals = UNIT_DECIMALS[unit];
+  const scaled = scaleTo(value, unit).toDecimalPlaces(decimals);
+  if (scaled.isZero()) return "–";
+  const [int, frac] = scaled.abs().toFixed(decimals).split(".");
+  const text = `${int!.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}${frac ? `,${frac}` : ""}`;
+  return scaled.isNegative() ? `(${text})` : text;
+}

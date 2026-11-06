@@ -131,7 +131,7 @@ test("Finance fills the cash assumptions and a loan; the forecast follows; the D
   await page.getByRole("button", { name: "Simpan asumsi" }).click();
   await expect(page.getByText("Asumsi disimpan.")).toBeVisible();
   await expect(page.getByText("Arus kas bulanan", { exact: true })).toBeVisible();
-  await expect(page.getByTestId("cash-opening").getByTestId("m1")).toHaveText("Rp 1.000,0 jt");
+  await expect(page.getByTestId("cash-opening").getByTestId("m1")).toHaveText("1.000,0");
 
   await page.getByRole("button", { name: "Tambah fasilitas" }).click();
   await page.getByLabel("Nama fasilitas").fill("KMK Mandiri");
@@ -139,12 +139,12 @@ test("Finance fills the cash assumptions and a loan; the forecast follows; the D
   await page.getByLabel("Penarikan Mar").fill("10.000.000.000");
   await page.getByRole("button", { name: "Simpan fasilitas" }).click();
   await expect(page.getByText("Fasilitas disimpan.")).toBeVisible();
-  await expect(page.getByTestId("cash-financing").getByTestId("m3")).toHaveText("Rp 10.000,0 jt");
+  await expect(page.getByTestId("cash-financing").getByTestId("m3")).toHaveText("10.000,0");
   // Interest from March: 10 bn x 12% / 12 = 100 jt a month, paid in the month.
-  await expect(page.getByTestId("cash-interest").getByTestId("m3")).toHaveText("-Rp 100,0 jt");
+  await expect(page.getByTestId("cash-interest").getByTestId("m3")).toHaveText("(100,0)");
 
   await as("director", page, "/cash");
-  await expect(page.getByTestId("cash-financing").getByTestId("m3")).toHaveText("Rp 10.000,0 jt");
+  await expect(page.getByTestId("cash-financing").getByTestId("m3")).toHaveText("10.000,0");
   await expect(page.getByRole("button", { name: "Simpan asumsi" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Tambah fasilitas" })).toHaveCount(0);
 
@@ -290,8 +290,8 @@ test("Finance splits a shared cost across the entities by headcount; the Summary
 
   await as("finance", page, "/summary");
   // 6241: 19.821.320 x 12 = 237.855.840, carried by ESTRADA; MATRIK has 1 of 4 heads, so a quarter moves to it.
-  await expect(page.getByTestId("allocation-MATRIK").getByTestId("allocated")).toHaveText("Rp 59,5 jt");
-  await expect(page.getByTestId("allocation-ESTRADA").getByTestId("allocated")).toHaveText("-Rp 59,5 jt");
+  await expect(page.getByTestId("allocation-MATRIK").getByTestId("allocated")).toHaveText("59,5");
+  await expect(page.getByTestId("allocation-ESTRADA").getByTestId("allocated")).toHaveText("(59,5)");
 
   await as("requestor", page, "/rka/allocation");
   await expect(page.getByText("This page could not be found.")).toBeVisible();

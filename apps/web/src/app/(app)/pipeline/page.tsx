@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { and, asc, eq } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
-import { canPipeline, pipelineBySegment, pipelineTotals, sum, ZERO } from "@estrada/domain";
+import { canPipeline, pipelineBySegment, pipelineTotals, sum, unitLabel, ZERO } from "@estrada/domain";
 import { displayUnit } from "@/lib/display-unit";
 import { loadPipeline, pipelineYear } from "@/lib/pipeline";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
 import { KpiCard } from "@/components/erp/kpi-card";
-import { MoneyCell } from "@/components/erp/money-cell";
+import { PageHeader } from "@/components/erp/page-header";
+import { FigureCell } from "@/components/erp/money-cell";
 import { PipelineRegister } from "@/components/erp/pipeline-register";
 import { UnitSwitch } from "@/components/erp/unit-switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,15 +50,11 @@ export default async function PipelinePage() {
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Pipeline {year}</h1>
-          <p className="text-muted-foreground text-sm">
-            Dikelola BCD. Nilai tertimbang = nilai (exclude PPN) × probabilitas; tidak dijumlahkan ke pendapatan RKA.
-          </p>
-        </div>
-        <UnitSwitch value={unit} onChange={setDisplayUnit} />
-      </div>
+      <PageHeader
+        title={`Pipeline ${year}`}
+        description="Dikelola BCD. Nilai tertimbang = nilai (exclude PPN) × probabilitas; tidak dijumlahkan ke pendapatan RKA."
+        filters={<UnitSwitch value={unit} onChange={setDisplayUnit} />}
+      />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="Nilai pipeline" value={totals.value} unit={unit} note={`${deals.length} deal`} />
@@ -75,7 +72,9 @@ export default async function PipelinePage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Segmen</TableHead>
+                <TableHead>
+                  Segmen <span className="text-muted-foreground font-normal">({unitLabel(unit)})</span>
+                </TableHead>
                 <TableHead className="text-right">Deal</TableHead>
                 <TableHead className="text-right">Nilai</TableHead>
                 <TableHead className="text-right">Tertimbang</TableHead>
@@ -89,12 +88,12 @@ export default async function PipelinePage() {
                   <TableCell className="font-medium">{s.segment}</TableCell>
                   <TableCell className="tabular text-right">{s.deals}</TableCell>
                   <TableCell className="text-right">
-                    <MoneyCell value={s.value} unit={unit} />
+                    <FigureCell value={s.value} unit={unit} />
                   </TableCell>
                   <TableCell className="text-right" data-testid="weighted">
-                    <MoneyCell value={s.weighted} unit={unit} />
+                    <FigureCell value={s.weighted} unit={unit} />
                   </TableCell>
-                  <TableCell className="text-right">{s.target ? <MoneyCell value={s.target} unit={unit} /> : "—"}</TableCell>
+                  <TableCell className="text-right">{s.target ? <FigureCell value={s.target} unit={unit} /> : "–"}</TableCell>
                   <TableCell className="tabular text-right">{pct(s.weighted, s.target)}</TableCell>
                 </TableRow>
               ))}
@@ -104,13 +103,13 @@ export default async function PipelinePage() {
                 <TableCell>Total</TableCell>
                 <TableCell className="tabular text-right">{deals.length}</TableCell>
                 <TableCell className="text-right">
-                  <MoneyCell value={totals.value} unit={unit} />
+                  <FigureCell value={totals.value} unit={unit} />
                 </TableCell>
                 <TableCell className="text-right">
-                  <MoneyCell value={totals.weighted} unit={unit} />
+                  <FigureCell value={totals.weighted} unit={unit} />
                 </TableCell>
                 <TableCell className="text-right">
-                  <MoneyCell value={targetTotal} unit={unit} />
+                  <FigureCell value={targetTotal} unit={unit} />
                 </TableCell>
                 <TableCell className="tabular text-right">{pct(totals.weighted, targetTotal)}</TableCell>
               </TableRow>

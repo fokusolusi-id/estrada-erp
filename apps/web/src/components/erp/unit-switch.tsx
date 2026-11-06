@@ -9,10 +9,10 @@ export function UnitSwitch({ value, onChange }: { value: Unit; onChange: (unit: 
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   return (
-    <label className="text-muted-foreground flex items-center gap-2 text-sm">
-      Satuan
+    <label className="grid gap-1">
+      <span className="text-muted-foreground text-xs font-medium">Satuan</span>
       <select
-        className="border-input text-foreground h-8 rounded-md border bg-transparent px-2 text-sm outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+        className="border-input text-foreground h-9 rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]"
         value={value}
         disabled={pending}
         onChange={(e) => {

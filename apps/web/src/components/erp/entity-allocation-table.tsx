@@ -1,6 +1,6 @@
-import { sum, type EntityAllocationRow, type Money, type Unit } from "@estrada/domain";
+import { sum, unitLabel, type EntityAllocationRow, type Money, type Unit } from "@estrada/domain";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MoneyCell } from "./money-cell";
+import { FigureCell } from "./money-cell";
 
 /** Per entitas after shared costs are split: own cost, the shared cost moved to or from the entity, and the result. */
 export function EntityAllocationTable({ rows, unit = "juta" }: { rows: EntityAllocationRow[]; unit?: Unit }) {
@@ -8,14 +8,16 @@ export function EntityAllocationTable({ rows, unit = "juta" }: { rows: EntityAll
   const cells = (r: Pick<EntityAllocationRow, "revenue" | "costBefore" | "allocated" | "costAfter" | "netAfter">) =>
     (["revenue", "costBefore", "allocated", "costAfter", "netAfter"] as const).map((k) => (
       <TableCell key={k} className="text-right" data-testid={k}>
-        <MoneyCell value={r[k]} unit={unit} />
+        <FigureCell value={r[k]} unit={unit} signal={k === "netAfter"} />
       </TableCell>
     ));
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Entitas</TableHead>
+          <TableHead>
+            Entitas <span className="text-muted-foreground font-normal">({unitLabel(unit)})</span>
+          </TableHead>
           <TableHead className="text-right">Pendapatan</TableHead>
           <TableHead className="text-right">Biaya sendiri</TableHead>
           <TableHead className="text-right">Alokasi biaya bersama</TableHead>

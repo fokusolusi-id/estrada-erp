@@ -7,6 +7,7 @@ import { requireUser } from "@/lib/session";
 import { CashAssumptions } from "@/components/erp/cash-assumptions";
 import { CashTable, type CashRow } from "@/components/erp/cash-table";
 import { KpiCard } from "@/components/erp/kpi-card";
+import { PageHeader } from "@/components/erp/page-header";
 import { LoanEditor } from "@/components/erp/loan-editor";
 import { MONTHS } from "@/components/erp/budget-grid";
 import { ScopeBar } from "@/components/erp/scope-bar";
@@ -27,14 +28,14 @@ function cashRows(f: CashForecast): CashRow[] {
     { key: "opex", label: "Pembayaran OPEX", months: r.opexPaid, total: total(r.opexPaid) },
     { key: "interest", label: "Bunga & biaya bank", months: r.interestPaid, total: total(r.interestPaid) },
     { key: "tax", label: "Pajak (PPh 25 + PPh 29)", months: r.taxPaid, total: total(r.taxPaid) },
-    { key: "operating", label: "Arus kas operasi", months: r.operating, total: total(r.operating), derived: true },
+    { key: "operating", signal: true, label: "Arus kas operasi", months: r.operating, total: total(r.operating), derived: true },
     { key: "capex", section: "Investasi dan pendanaan", label: "Belanja modal (Capex)", months: r.capexPaid, total: total(r.capexPaid) },
     { key: "financing", label: "Pencairan / (pelunasan) pinjaman", months: r.financing, total: total(r.financing) },
-    { key: "net", label: "Arus kas bersih", months: r.net, total: total(r.net), derived: true },
+    { key: "net", signal: true, label: "Arus kas bersih", months: r.net, total: total(r.net), derived: true },
     { key: "opening", section: "Saldo kas", label: "Saldo kas awal", months: r.opening },
-    { key: "closing", label: "Saldo kas akhir", months: r.closing, derived: true },
+    { key: "closing", signal: true, label: "Saldo kas akhir", months: r.closing, derived: true },
     { key: "minimum", label: "Saldo kas minimum", months: r.minimum },
-    { key: "surplus", label: "Surplus / (defisit) terhadap minimum", months: r.surplus },
+    { key: "surplus", signal: true, label: "Surplus / (defisit) terhadap minimum", months: r.surplus },
     { key: "funding", label: "Kebutuhan tambahan pendanaan", months: r.fundingNeed, derived: true },
     { key: "receivables", section: "Modal kerja", label: "Piutang usaha akhir bulan", months: r.receivablesEnd },
     { key: "payables", label: "Utang usaha vendor akhir bulan", months: r.payablesEnd },
@@ -50,7 +51,7 @@ function pnlRows(f: CashForecast): CashRow[] {
     { key: "p-opex", label: "OPEX tunai", months: p.opex.months, total: p.opex.total },
     { key: "p-dep", label: "Penyusutan & amortisasi (non-kas)", months: p.depreciation.months, total: p.depreciation.total },
     { key: "p-others", label: "Beban lain-lain (bunga Obligo + bank)", months: p.others.months, total: p.others.total },
-    { key: "p-pbt", label: "Laba sebelum pajak", months: pbt, total: p.profitBeforeTax, derived: true },
+    { key: "p-pbt", signal: true, label: "Laba sebelum pajak", months: pbt, total: p.profitBeforeTax, derived: true },
     { key: "p-tax", label: "Pajak kini (angsuran)", months: p.tax.months, total: p.tax.total },
   ];
 }
@@ -78,20 +79,21 @@ export default async function CashPage({ searchParams }: { searchParams: Promise
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Arus Kas {view.year}</h1>
-          <p className="text-muted-foreground text-sm">
-            Dari baris {view.versionName} setelah alokasi biaya bersama, asumsi kas dan Obligo. {scope === CONSOLIDATED ? "Konsolidasi = jumlah keempat entitas." : `Entitas ${scope}.`}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-end gap-3">
-          <UnitSwitch value={unit} onChange={setDisplayUnit} />
-          <ScopeBar
-            filters={[{ name: "entity", label: "Entitas", options: [{ value: "", label: "Konsolidasi" }, ...view.entities.map((e) => ({ value: e, label: e }))] }]}
-          />
-        </div>
-      </div>
+      <PageHeader
+        title={`Arus Kas ${view.year}`}
+        description={
+          <>
+            Dari baris {view.versionName} setelah alokasi biaya bersama, asumsi kas dan Obligo.{" "}
+            {scope === CONSOLIDATED ? "Konsolidasi = jumlah keempat entitas." : `Entitas ${scope}.`}
+          </>
+        }
+        filters={
+          <>
+            <UnitSwitch value={unit} onChange={setDisplayUnit} />
+            <ScopeBar filters={[{ name: "entity", label: "Entitas", options: [{ value: "", label: "Konsolidasi" }, ...view.entities.map((e) => ({ value: e, label: e }))] }]} />
+          </>
+        }
+      />
 
       {f ? (
         <>

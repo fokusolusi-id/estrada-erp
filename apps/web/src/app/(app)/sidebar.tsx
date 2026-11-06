@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -55,11 +55,19 @@ export function Sidebar({ items, defaultCollapsed }: { items: readonly NavItem[]
         </button>
       </div>
       <nav aria-label="Menu utama" className="flex flex-1 flex-col gap-0.5 px-2 py-2">
-        {items.map((item) => {
+        {items.map((item, i) => {
           const on = active(pathname, item.href, items);
+          const section = item.group && item.group !== items[i - 1]?.group ? item.group : null;
           return (
+            <Fragment key={item.href}>
+              {section ? (
+                collapsed ? (
+                  <hr className="border-sidebar-border mx-2 my-2" />
+                ) : (
+                  <div className="text-muted-foreground px-3 pt-4 pb-1 text-[11px] font-semibold tracking-wider uppercase">{section}</div>
+                )
+              ) : null}
             <Link
-              key={item.href}
               href={item.href}
               title={collapsed ? item.label : undefined}
               aria-label={collapsed ? item.label : undefined}
@@ -78,6 +86,7 @@ export function Sidebar({ items, defaultCollapsed }: { items: readonly NavItem[]
                 </>
               )}
             </Link>
+            </Fragment>
           );
         })}
       </nav>
