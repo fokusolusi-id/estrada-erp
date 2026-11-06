@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import "@fontsource-variable/inter";
 import "./globals.css";
+import { NavigationProgress } from "@/components/erp/navigation-progress";
 
 export const metadata: Metadata = {
   title: { default: "ERP Estrada", template: "%s · ERP Estrada" },
@@ -18,6 +20,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
       </head>
       <body className="flex min-h-full flex-col">
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         {children}
         <SpeedInsights />
         <Analytics />
