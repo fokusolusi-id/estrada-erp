@@ -35,8 +35,8 @@ test("1. Requestor drafts a line like in Excel and submits to the Default Owner"
   await row.getByRole("button", { name: "Isi ke kanan" }).click();
   await expect(page.getByTestId("editor-total-3")).toHaveText("Rp 18.000.000");
   await page.getByLabel("Dasar perhitungan baris 3").fill("Rp 1,5 jt per bulan");
-  await row.getByRole("button", { name: "Simpan" }).click();
-  await expect(page.getByText("Baris tersimpan.")).toBeVisible();
+  await page.getByRole("button", { name: "Simpan (1)" }).click();
+  await expect(page.getByText("1 baris tersimpan.")).toBeVisible();
 
   for (const n of [1, 2, 3]) await page.getByLabel(`Pilih baris ${n}`).check();
   await page.getByRole("button", { name: "Kirim ke Default Owner (3)" }).click();
@@ -199,8 +199,8 @@ test("Requestor sees why the line came back, fixes it and resubmits", async ({ p
   await as("requestor", page, "/rka");
   await expect(page.getByText("Dikembalikan oleh Bayu (Head SCM): “Lampirkan kontrak cabang”")).toBeVisible();
   await page.getByLabel("Dasar perhitungan baris 1").fill("Kontrak cabang No. 12/2027, Rp 1,5 jt per bulan");
-  await page.getByRole("button", { name: "Simpan" }).click();
-  await expect(page.getByText("Baris tersimpan.")).toBeVisible();
+  await page.getByRole("button", { name: "Simpan (1)" }).click();
+  await expect(page.getByText("1 baris tersimpan.")).toBeVisible();
   await page.getByLabel("Pilih baris 1").check();
   await page.getByRole("button", { name: "Kirim ke Default Owner (1)" }).click();
   await expect(page.getByText("1 baris diproses.")).toBeVisible();

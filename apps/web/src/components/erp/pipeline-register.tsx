@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MoneyCell } from "./money-cell";
+import { MoneyInput } from "./money-input";
 
 export interface RegisterDeal extends DealInput {
   id: string;
@@ -294,7 +295,7 @@ function DealForm({
         </select>,
         true,
       )}
-      {field("Nilai (exclude PPN)", <Input aria-label="Nilai (exclude PPN)" inputMode="decimal" className="tabular text-right" value={d.value} onChange={(e) => set({ value: e.target.value })} />)}
+      {field("Nilai (exclude PPN)", <MoneyInput aria-label="Nilai (exclude PPN)" value={d.value} onChange={(e) => set({ value: e.target.value })} />)}
       {field(
         "Status",
         <select aria-label="Status deal" className={SELECT} value={d.status} onChange={(e) => set({ status: e.target.value as DealSave["status"] })}>

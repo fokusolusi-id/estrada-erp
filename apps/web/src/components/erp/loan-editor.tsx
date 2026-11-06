@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Landmark, Plus } from "lucide-react";
 import { useState, useTransition } from "react";
 import { formatIdr, money, parseIdr } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MONTHS } from "./budget-grid";
 import { MoneyCell } from "./money-cell";
+import { MoneyInput } from "./money-input";
+import { EmptyState } from "./empty-state";
 
 /** A facility in Obligo Pinjaman Bank; amounts as plain decimal strings, the rate as a yearly fraction. */
 export interface LoanRow {
@@ -135,8 +137,8 @@ export function LoanEditor({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={7} className="text-muted-foreground py-6 text-center">
-                Belum ada fasilitas pinjaman.
+              <TableCell colSpan={7}>
+                <EmptyState icon={Landmark} title="Belum ada fasilitas pinjaman." description={editable ? "Tambah fasilitas untuk memasukkan pinjaman bank dan bunganya ke arus kas." : undefined} />
               </TableCell>
             </TableRow>
           )}
@@ -189,10 +191,14 @@ function LoanForm({
     drawdown: drawdown as string[],
     repayment: repayment as string[],
   });
-  const text = (label: string, value: string, onChange: (v: string) => void, right = false) => (
+  const text = (label: string, value: string, onChange: (v: string) => void, kind: "text" | "number" | "money" = "text") => (
     <label className="grid gap-1 text-sm">
       <span className="text-muted-foreground text-xs">{label}</span>
-      <Input aria-label={label} inputMode={right ? "decimal" : undefined} className={right ? "tabular text-right" : undefined} value={value} onChange={(e) => onChange(e.target.value)} />
+      {kind === "money" ? (
+        <MoneyInput aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} />
+      ) : (
+        <Input aria-label={label} inputMode={kind === "number" ? "decimal" : undefined} className={kind === "number" ? "tabular text-right" : undefined} value={value} onChange={(e) => onChange(e.target.value)} />
+      )}
     </label>
   );
   const grid = (label: string, values: string[], key: "drawdown" | "repayment") => (
@@ -238,9 +244,9 @@ function LoanForm({
             ))}
           </select>
         </label>
-        {text("Suku bunga (%)", f.rate, (v) => set({ rate: v }), true)}
-        {text("Saldo awal 1 Jan", f.openingBalance, (v) => set({ openingBalance: v }), true)}
-        {text("Plafon", f.creditLimit ?? "", (v) => set({ creditLimit: v }), true)}
+        {text("Suku bunga (%)", f.rate, (v) => set({ rate: v }), "number")}
+        {text("Saldo awal 1 Jan", f.openingBalance, (v) => set({ openingBalance: v }), "money")}
+        {text("Plafon", f.creditLimit ?? "", (v) => set({ creditLimit: v }), "money")}
         <div className="sm:col-span-2">{text("Keterangan", f.notes ?? "", (v) => set({ notes: v }))}</div>
       </div>
       <Table>

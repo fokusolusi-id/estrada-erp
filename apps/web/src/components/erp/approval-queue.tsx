@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, CheckCheck, Lock, MessageCircleQuestion, Send, Undo2, type LucideIcon } from "lucide-react";
+import { BadgeCheck, CheckCheck, CircleCheck, Lock, MessageCircleQuestion, Send, Undo2, type LucideIcon } from "lucide-react";
 import { Fragment, useState, useTransition } from "react";
 import { coaSubtree, coaTree, money, sum, type ApprovalAction, type ApprovalState, type Unit } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { DiscussionLink } from "./budget-grid";
 import { MoneyCell } from "./money-cell";
 import { StatusBadge } from "./status-badge";
 import { VarianceCell } from "./variance-cell";
+import { EmptyState } from "./empty-state";
 
 /** A line in an approval queue: months as plain decimal strings, plus what this position may do to it. */
 export interface QueueLine {
@@ -167,7 +168,7 @@ export function ApprovalQueue({
     return (
       <div className="grid gap-2 py-8 text-center">
         {message ? <p className={message.ok ? "text-success text-sm" : "text-destructive text-sm"}>{message.text}</p> : null}
-        <p className="text-muted-foreground text-sm">Tidak ada baris yang menunggu Anda.</p>
+        <EmptyState icon={CircleCheck} title="Tidak ada baris yang menunggu Anda." description="Semua baris di tahap ini sudah diproses. Baris baru muncul di sini saat dikirim kepada Anda, dan Anda menerima email." />
       </div>
     );
   }

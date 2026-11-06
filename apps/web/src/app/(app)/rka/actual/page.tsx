@@ -7,6 +7,8 @@ import { loadOrg } from "@/lib/workflow";
 import { ActualEntry, type ActualLine } from "@/components/erp/actual-entry";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { saveActuals } from "./actions";
+import { Gauge } from "lucide-react";
+import { EmptyState } from "@/components/erp/empty-state";
 
 export const metadata: Metadata = { title: "Realisasi 2026" };
 
@@ -49,7 +51,7 @@ export default async function ActualPage() {
           {lines.length ? (
             <ActualEntry lines={lines} onSave={saveActuals} />
           ) : (
-            <p className="text-muted-foreground py-8 text-center text-sm">Belum ada baris RKA di versi ini.</p>
+            <EmptyState icon={Gauge} title="Belum ada baris RKA di versi ini." description="Realisasi diisi per baris setelah baris RKA ada." />
           )}
         </CardContent>
       </Card>

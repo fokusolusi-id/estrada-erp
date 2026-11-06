@@ -9,6 +9,8 @@ import { BudgetEditor, type EditorLine } from "@/components/erp/budget-editor";
 import { HeadcountPlan, type PlanPosition } from "@/components/erp/headcount-plan";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { deleteLine, saveHeadcount, saveLine, submitLines } from "./actions";
+import { FileText } from "lucide-react";
+import { EmptyState } from "@/components/erp/empty-state";
 
 /** The workbook budgets new hires on Beban rekrutmen, owned by HCM. */
 const HEADCOUNT_COA = "6221";
@@ -58,7 +60,7 @@ export default async function RkaPage() {
             <CardTitle>Draft usulan</CardTitle>
             <CardDescription>
               Isi nominal dalam Rupiah. Tempel blok dari Excel langsung ke sel bulan, atau isi satu bulan lalu tekan “Isi ke kanan”.
-              Simpan tiap baris, centang yang sudah siap, lalu kirim ke Default Owner.
+              Perubahan disimpan sekaligus lewat tombol Simpan di bawah; centang baris yang sudah siap, lalu kirim ke Default Owner.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -110,7 +112,7 @@ export default async function RkaPage() {
           {others.length ? (
             <BudgetGrid lines={others} unit={unit} />
           ) : (
-            <p className="text-muted-foreground py-8 text-center text-sm">Belum ada baris anggaran di tahap ini.</p>
+            <EmptyState icon={FileText} title="Belum ada baris anggaran di tahap ini." description="Baris yang sudah Anda kirim tampil di sini beserta tahapnya." />
           )}
         </CardContent>
       </Card>

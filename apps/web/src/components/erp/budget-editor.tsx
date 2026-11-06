@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, type ClipboardEvent, type KeyboardEvent } from "react";
-import { ArrowRightToLine, Plus, Send, Trash2 } from "lucide-react";
+import { ArrowRightToLine, Info, Plus, Save, Send, Trash2, TriangleAlert } from "lucide-react";
 import { fillRight, formatIdr, money, parseIdr, parsePaste, sum, ZERO, type Money } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -108,6 +108,7 @@ export function BudgetEditor({
   const rows = [...editable, ...lines.filter((l) => l.planned).map(toRow)];
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const [notesOpen, setNotesOpen] = useState<Set<string>>(new Set());
   const [pending, startTransition] = useTransition();
 
   const update = (key: string, patch: Partial<Row>) =>
@@ -154,28 +155,32 @@ export function BudgetEditor({
     }
   };
 
-  const save = (rowIdx: number) => {
-    const r = rows[rowIdx]!;
-    const months = parsed[rowIdx]!;
-    if (months.some((m) => !m)) return;
+  // Every changed row is saved from one bar, like a sheet; a row that is not valid yet holds the save back.
+  const changed = editable.filter((r) => r.dirty);
+  const changedValid = changed.every((r) => parsed[rows.findIndex((x) => x.key === r.key)]!.every(Boolean));
+  const saveAll = () =>
     startTransition(async () => {
-      const res = await onSave({
-        ...(r.id ? { id: r.id } : {}),
-        coaCode: r.coaCode,
-        entityCode: r.entityCode,
-        ownerUnit: r.ownerUnit,
-        item: r.item,
-        basis: r.basis,
-        months: months.map((m) => m!.toFixed()),
-      });
-      setMessage({ ok: res.ok, text: res.message });
-      setRows((rs) =>
-        rs.map((x) =>
-          x.key !== r.key ? x : res.ok ? { ...x, id: res.id ?? x.id, dirty: false, errors: {} } : { ...x, errors: res.errors ?? {} },
-        ),
-      );
+      let saved = 0;
+      let failure: string | null = null;
+      for (const r of changed) {
+        const months = parsed[rows.findIndex((x) => x.key === r.key)]!;
+        const res = await onSave({
+          ...(r.id ? { id: r.id } : {}),
+          coaCode: r.coaCode,
+          entityCode: r.entityCode,
+          ownerUnit: r.ownerUnit,
+          item: r.item,
+          basis: r.basis,
+          months: months.map((m) => m!.toFixed()),
+        });
+        if (res.ok) saved += 1;
+        else failure ??= res.message;
+        setRows((rs) =>
+          rs.map((x) => (x.key !== r.key ? x : res.ok ? { ...x, id: res.id ?? x.id, dirty: false, errors: {} } : { ...x, errors: res.errors ?? {} })),
+        );
+      }
+      setMessage(failure ? { ok: false, text: saved ? `${saved} baris tersimpan. ${failure}` : failure } : { ok: true, text: `${saved} baris tersimpan.` });
     });
-  };
 
   const remove = (rowIdx: number) => {
     const r = rows[rowIdx]!;
@@ -241,9 +246,9 @@ export function BudgetEditor({
         <TableBody>
           {rows.map((r, i) => {
             const n = i + 1;
-            const valid = parsed[i]!.every(Boolean);
             const canSubmit = !!r.id && !r.dirty;
             const locked = !!r.planned;
+            const hasNotes = !!(r.flags?.length || r.rka2026 || r.actual2026);
             return (
               <TableRow key={r.key} className={cn(r.dirty && "bg-warning/5")}>
                 <TableCell>
@@ -289,28 +294,59 @@ export function BudgetEditor({
                     onChange={(e) => update(r.key, { item: e.target.value })}
                   />
                   {r.errors.coaCode ? <span className="text-destructive text-xs">{r.errors.coaCode}</span> : null}
-                  {r.rka2026 || r.actual2026 ? (
-                    <span className="text-muted-foreground text-xs">
-                      2026: RKA {r.rka2026 ? formatIdr(money(r.rka2026)) : "—"} · Actual {r.actual2026 ? formatIdr(money(r.actual2026)) : "—"}
-                    </span>
+                  {hasNotes ? (
+                    notesOpen.has(r.key) ? (
+                      <div className="bg-muted/60 grid max-w-64 gap-1 rounded-md p-2 text-xs whitespace-normal">
+                        {r.rka2026 || r.actual2026 ? (
+                          <span className="text-muted-foreground">
+                            2026: RKA {r.rka2026 ? formatIdr(money(r.rka2026)) : "—"} · Actual {r.actual2026 ? formatIdr(money(r.actual2026)) : "—"}
+                          </span>
+                        ) : null}
+                        {r.flags?.map((f) => (
+                          <span key={f} className="flex gap-1.5">
+                            <TriangleAlert aria-hidden className="text-state-finance mt-px size-3.5 shrink-0" />
+                            {f}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null
                   ) : null}
-                  {r.flags?.map((f) => (
-                    <span key={f} className="bg-warning/15 max-w-56 rounded px-1.5 py-0.5 text-xs whitespace-normal">
-                      {f}
-                    </span>
-                  ))}
                   {r.remark ? (
                     <span className="bg-warning/15 max-w-56 rounded px-1.5 py-1 text-xs whitespace-normal">
                       Dikembalikan oleh {r.remark.by}: “{r.remark.comment}”
                     </span>
                   ) : null}
                   {locked ? <span className="text-muted-foreground text-xs">Dihitung dari Rencana headcount</span> : null}
-                  {r.id ? <DiscussionLink id={r.id} count={r.commentCount} /> : null}
+                  <div className="flex items-center gap-3">
+                    {r.id ? <DiscussionLink id={r.id} count={r.commentCount} /> : null}
+                    {hasNotes ? (
+                      <button
+                        type="button"
+                        aria-label={`Catatan baris ${n}`}
+                        aria-expanded={notesOpen.has(r.key)}
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded px-1 text-xs font-medium hover:underline",
+                          r.flags?.length ? "text-state-finance" : "text-muted-foreground",
+                        )}
+                        onClick={() =>
+                          setNotesOpen((s) => {
+                            const next = new Set(s);
+                            if (next.has(r.key)) next.delete(r.key);
+                            else next.add(r.key);
+                            return next;
+                          })
+                        }
+                      >
+                        {r.flags?.length ? <TriangleAlert aria-hidden className="size-3.5" /> : <Info aria-hidden className="size-3.5" />}
+                        {r.flags?.length ? `${r.flags.length} catatan` : "2026"}
+                      </button>
+                    ) : null}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <select
                     aria-label={`Entitas baris ${n}`}
-                    className={SELECT}
+                    className={cn(SELECT, "min-w-32")}
                     disabled={locked}
                     value={r.entityCode}
                     aria-invalid={!!r.errors.entityCode}
@@ -345,7 +381,7 @@ export function BudgetEditor({
                       data-cell={`${i}-${j + 1}`}
                       disabled={locked}
                       inputMode="decimal"
-                      className="tabular h-8 min-w-28 text-right"
+                      className="tabular hover:border-input focus-visible:border-ring h-8 min-w-28 border-transparent bg-transparent text-right shadow-none"
                       value={c}
                       aria-invalid={!parsed[i]![j]}
                       onChange={(e) => setCells(r.key, r.cells.map((x, k) => (k === j ? e.target.value : x)))}
@@ -378,9 +414,6 @@ export function BudgetEditor({
                     <Button type="button" size="sm" variant="ghost" aria-label="Isi ke kanan" title="Isi bulan terpilih sampai Des" disabled={locked} onClick={() => onFillRight(i)}>
                       <ArrowRightToLine />
                     </Button>
-                    <Button type="button" size="sm" disabled={locked || !valid || !r.dirty || pending} onClick={() => save(i)}>
-                      Simpan
-                    </Button>
                     <Button type="button" size="sm" variant="ghost" aria-label="Hapus baris" disabled={locked || pending} onClick={() => remove(i)}>
                       <Trash2 />
                     </Button>
@@ -402,6 +435,18 @@ export function BudgetEditor({
           </TableFooter>
         ) : null}
       </Table>
+      {changed.length ? (
+        <div className="bg-card sticky bottom-3 z-20 flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3 shadow-md">
+          <span className="text-sm">
+            <span className="bg-state-finance mr-2 inline-block size-2 rounded-full align-middle" aria-hidden />
+            {changed.length} baris belum disimpan
+            {!changedValid ? <span className="text-destructive"> · ada nominal yang belum benar</span> : null}
+          </span>
+          <Button type="button" disabled={!changedValid || pending} onClick={saveAll}>
+            <Save aria-hidden /> Simpan ({changed.length})
+          </Button>
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-center gap-3">
         <Button type="button" variant="outline" onClick={addRow}>
           <Plus /> Tambah baris

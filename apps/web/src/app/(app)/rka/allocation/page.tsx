@@ -9,6 +9,8 @@ import { EntityBases } from "@/components/erp/entity-bases";
 import { SharedCostEditor, type SharedCostLine } from "@/components/erp/shared-cost-editor";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { saveEntityHeadcount, saveSharedCosts } from "./actions";
+import { Split } from "lucide-react";
+import { EmptyState } from "@/components/erp/empty-state";
 
 export const metadata: Metadata = { title: "Biaya Bersama" };
 
@@ -83,7 +85,7 @@ export default async function AllocationPage() {
           {lines.length ? (
             <SharedCostEditor lines={lines} entities={ctx.entities} onSave={saveSharedCosts} />
           ) : (
-            <p className="text-muted-foreground py-8 text-center text-sm">Belum ada baris biaya di versi ini.</p>
+            <EmptyState icon={Split} title="Belum ada baris biaya di versi ini." description="Baris biaya muncul setelah unit mengisi RKA atau workbook diimpor." />
           )}
         </CardContent>
       </Card>

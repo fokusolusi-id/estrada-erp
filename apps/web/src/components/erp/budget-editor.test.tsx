@@ -59,18 +59,30 @@ describe("BudgetEditor", () => {
     setup();
     fireEvent.change(cell(1, 1), { target: { value: "lima juta" } });
     expect(cell(1, 1).getAttribute("aria-invalid")).toBe("true");
-    expect((screen.getAllByRole("button", { name: "Simpan" })[0] as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole("button", { name: "Simpan (1)" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("saves months as plain decimals, never formatted text", async () => {
     const props = setup();
     fireEvent.change(cell(1, 1), { target: { value: "1.234.567,89" } });
-    fireEvent.click(screen.getAllByRole("button", { name: "Simpan" })[0]!);
+    fireEvent.click(screen.getByRole("button", { name: "Simpan (1)" }));
     await waitFor(() => expect(props.onSave).toHaveBeenCalled());
     const arg = (props.onSave.mock.calls[0] as unknown[])[0] as { months: string[]; id: string };
     expect(arg.id).toBe(lines[0]!.id);
     expect(arg.months[0]).toBe("1234567.89");
     expect(arg.months[1]).toBe("0");
+  });
+
+  it("saves every changed row in one go from the save bar, and says how many", async () => {
+    const props = setup();
+    expect(screen.queryByRole("button", { name: /^Simpan/ })).toBeNull();
+    fireEvent.change(cell(1, 1), { target: { value: "1.000" } });
+    fireEvent.change(cell(2, 1), { target: { value: "2.000" } });
+    expect(screen.getByText("2 baris belum disimpan")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Simpan (2)" }));
+    await waitFor(() => expect(props.onSave).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText("2 baris tersimpan.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^Simpan/ })).toBeNull();
   });
 
   it("defaults the budget owner to the COA's default owner unit", () => {
@@ -99,10 +111,13 @@ describe("BudgetEditor", () => {
     expect(screen.getByText("Dikembalikan oleh Bayu (Head SCM): “Basis kontrak belum dilampirkan”")).toBeTruthy();
   });
 
-  it("shows the 2026 figures and review flags while the requestor edits", () => {
+  it("folds the 2026 figures and review flags behind one notes button, so rows stay short", () => {
     setup();
+    expect(screen.queryByText("Cek potensi double counting dengan RKA HCM")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Catatan baris 1" }));
     expect(screen.getByText("2026: RKA Rp 200.000.000 · Actual Rp 180.000.000")).toBeTruthy();
     expect(screen.getByText("Cek potensi double counting dengan RKA HCM")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Catatan baris 2" })).toBeNull();
   });
 
   it("links each saved draft to its discussion, so questions reach the requestor while they edit", () => {

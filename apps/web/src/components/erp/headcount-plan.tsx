@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, UserPlus } from "lucide-react";
 import { formatIdr, headcountMonths, money, parseIdr, sum, type Money } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 import { MONTHS } from "./budget-grid";
 import { MoneyCell } from "./money-cell";
+import { EmptyState } from "./empty-state";
 
 /** A saved position, serialisable to the client: cost per head as a plain decimal string. */
 export interface PlanPosition {
@@ -224,7 +225,7 @@ export function HeadcountPlan({
           </TableBody>
         </Table>
       ) : (
-        <p className="text-muted-foreground py-4 text-center text-sm">Belum ada posisi yang direncanakan.</p>
+        <EmptyState icon={UserPlus} title="Belum ada posisi yang direncanakan." description="Tambah posisi untuk rekrutmen baru; baris gajinya dihitung otomatis." />
       )}
       <div className="flex flex-wrap items-center gap-3">
         <Button type="button" variant="outline" onClick={add}>
