@@ -29,10 +29,14 @@ export const requireUser = cache(async (): Promise<CurrentUser> => {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/login");
 
-  const rows = await db
-    .select()
-    .from(schema.position)
-    .where(or(eq(schema.position.holderUserId, session.user.id), eq(schema.position.actingUserId, session.user.id)));
+  // Admin needs every seat too; fetch both at once and keep the second only for admins (one round trip, not two).
+  const [rows, allSeats] = await Promise.all([
+    db
+      .select()
+      .from(schema.position)
+      .where(or(eq(schema.position.holderUserId, session.user.id), eq(schema.position.actingUserId, session.user.id))),
+    db.select().from(schema.position),
+  ]);
 
   const positions = rows.map((p) => ({
     id: p.id,
@@ -48,8 +52,7 @@ export const requireUser = cache(async (): Promise<CurrentUser> => {
   let acting = active;
   let viewAs: CurrentUser["viewAs"] = null;
   if (realRole === "admin") {
-    const seats = await db.select().from(schema.position);
-    const options = seats
+    const options = allSeats
       .filter((p) => p.role !== "admin")
       .map((p) => ({ id: p.id, title: p.title, role: p.role, orgUnit: p.orgUnitCode }))
       .sort((a, b) => a.role.localeCompare(b.role) || a.title.localeCompare(b.title));

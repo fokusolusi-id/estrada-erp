@@ -12,8 +12,7 @@ import { Sidebar, SIDEBAR_COOKIE } from "./sidebar";
 import { ThemeSwitcher } from "./theme-switcher";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const user = await requireUser();
-  const org = await loadOrg();
+  const [user, org] = await Promise.all([requireUser(), loadOrg()]);
   const nav = navFor(user.actor.role, (unit) => org.isWithin(user.actor.orgUnit, unit));
   const collapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "1";
 
