@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { OrgTree, contribution, pipelineTotals, pnl, sum, type SummaryLine } from "@estrada/domain";
+import { OrgTree, cashForecast, consolidateCash, contribution, loanSchedule, pipelineTotals, pnl, sum, ZERO, type Money, type SummaryLine } from "@estrada/domain";
 import { ORG_UNITS } from "@estrada/db/seed-data";
 import ExcelJS from "exceljs";
 import { parseRkaData, readRkaWorkbook, sheetRows, writeRkaWorkbook, type ImportedLine } from "../src/index";
@@ -113,6 +113,43 @@ describe.skipIf(!existsSync(WORKBOOK))("golden: RKA_2027_Upd_Fin v2.xlsx", async
       ["Enterprise Business", "30000000000"],
       ["Territory Business", "20000000000"],
     ]);
+  });
+
+  it("reads the cash assumptions, openings and Obligo the forecast needs", () => {
+    const c = wb!.cash!;
+    expect([c.settings.collectionLag, c.settings.cogsPaymentLag, c.settings.taxRate, c.settings.minimumCash.toFixed(0)]).toEqual([2, 1, "0.22", "7000000000"]);
+    expect([...c.settings.interestCoa].sort()).toEqual(["7220", "7221", "7222", "7225", "7226"]);
+    expect([...c.settings.nonCashCoa].sort()).toEqual(["6290", "6291", "6292", "6293"]);
+    expect([...c.openings.keys()]).toEqual(["ESTRADA", "MATRIK", "DJALU", "PAS"]);
+    const e = c.openings.get("ESTRADA")!;
+    expect([e.cash, e.receivables, e.payables, e.priorYearTax, e.minimumCash].map((x) => x.toFixed(2))).toEqual(["4054912335.90", "20823092606.29", "8891995641.74", "8332260170.18", "7000000000.00"]);
+    // Only the existing loan carries figures; "Fasilitas Baru 1–9" are empty placeholders.
+    expect(c.facilities.map((f) => [f.name, f.entity, f.rate, f.openingBalance.toFixed(2)])).toEqual([["Pinjaman Bank Existing (Mandiri/BRI/BCA/CIMB)", "ESTRADA", "0.1", "40782658280.84"]]);
+  });
+
+  it("reproduces Forecast CF Bulanan 2027 per entity and consolidated, within a rupiah", () => {
+    const c = wb!.cash!;
+    // The workbook's lines as it had them: FRM's Rp 45 jt line without months.
+    const asWorkbook = lines.map((l) => (l.ref.no === 21 ? { ...l, months: l.months.map(() => ZERO) } : l));
+    const zeros = Array.from({ length: 12 }, () => ZERO);
+    const forecasts = [...c.openings].map(([entity, opening]) => {
+      const loans = c.facilities.filter((f) => f.entity === entity).map((f) => ({ f, s: loanSchedule(f, f.drawdown, f.repayment) }));
+      const total = (pick: (x: (typeof loans)[number]) => readonly Money[]) => loans.reduce((acc, x) => acc.map((v, i) => v.plus(pick(x)[i]!)), zeros);
+      const flows = { drawdown: total((x) => x.f.drawdown), repayment: total((x) => x.f.repayment), interest: total((x) => x.s.interest) };
+      return [entity, cashForecast(asWorkbook.filter((l) => l.entity === entity), opening, c.settings, flows)] as const;
+    });
+    const near = (got: readonly Money[], want: readonly string[]) => got.forEach((g, i) => expect(g.minus(want[i]!).abs().lt(1), `month ${i + 1}: ${g.toFixed(2)} vs ${want[i]}`).toBe(true));
+    const by = Object.fromEntries(forecasts);
+    near(by.ESTRADA!.rows.closing.slice(11), ["-141563730779.89"]);
+    near(by.MATRIK!.rows.closing.slice(11), ["75121417006.74"]);
+    expect(by.MATRIK!.pnl.tax.months[0]!.minus("1765674331.355").abs().lt(0.01)).toBe(true);
+
+    const all = consolidateCash(Object.values(by), c.settings.minimumCash);
+    expect(all.pnl.profitBeforeTax.minus("178887181728.20").abs().lt(1)).toBe(true);
+    near(all.pnl.tax.months.slice(0, 1), ["3279598331.68"]);
+    near(all.rows.receipts.slice(0, 3), ["20823092606.29", "0", "27763568757.00"]);
+    near(all.rows.closing, ["2879831055.09", "-45074810899.60", "-43790616324.54", "-65233044306.65", "-59189527266.59", "-65871985019.53", "-59015320760.47", "-61359353095.40", "-83396525430.34", "-97438766734.28", "-41525538588.22", "-60670001773.15"]);
+    near([all.rows.fundingNeed.reduce((a, b) => (b.gt(a) ? b : a))], ["104438766734.28"]);
   });
 
   it("exports all 192 lines and reads them back to the same totals", async () => {

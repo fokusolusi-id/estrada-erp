@@ -117,6 +117,35 @@ test("BCD adds a deal to the Pipeline; Finance reads it; other divisions cannot 
   await expect(page.getByText("This page could not be found.")).toBeVisible();
 });
 
+test("Finance fills the cash assumptions and a loan; the forecast follows; the Director reads it", async ({ page }) => {
+  await as("finance", page, "/cash");
+  await expect(page.getByText("Asumsi arus kas 2027 belum diisi.")).toBeVisible();
+  await page.getByLabel("Saldo kas awal ESTRADA").fill("1.000.000.000");
+  await page.getByLabel("Kas minimum konsolidasi").fill("500.000.000");
+  await page.getByRole("button", { name: "Simpan asumsi" }).click();
+  await expect(page.getByText("Asumsi disimpan.")).toBeVisible();
+  await expect(page.getByText("Arus kas bulanan", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("cash-opening").getByTestId("m1")).toHaveText("Rp 1.000,0 jt");
+
+  await page.getByRole("button", { name: "Tambah fasilitas" }).click();
+  await page.getByLabel("Nama fasilitas").fill("KMK Mandiri");
+  await page.getByLabel("Suku bunga (%)").fill("12");
+  await page.getByLabel("Penarikan Mar").fill("10.000.000.000");
+  await page.getByRole("button", { name: "Simpan fasilitas" }).click();
+  await expect(page.getByText("Fasilitas disimpan.")).toBeVisible();
+  await expect(page.getByTestId("cash-financing").getByTestId("m3")).toHaveText("Rp 10.000,0 jt");
+  // Interest from March: 10 bn x 12% / 12 = 100 jt a month, paid in the month.
+  await expect(page.getByTestId("cash-interest").getByTestId("m3")).toHaveText("-Rp 100,0 jt");
+
+  await as("director", page, "/cash");
+  await expect(page.getByTestId("cash-financing").getByTestId("m3")).toHaveText("Rp 10.000,0 jt");
+  await expect(page.getByRole("button", { name: "Simpan asumsi" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Tambah fasilitas" })).toHaveCount(0);
+
+  await as("requestor", page, "/cash");
+  await expect(page.getByText("This page could not be found.")).toBeVisible();
+});
+
 test("Requestor plans new hires; the plan writes the draft line, owned by HCM", async ({ page }) => {
   await as("requestor", page, "/rka");
   await page.getByRole("button", { name: "Tambah posisi" }).click();

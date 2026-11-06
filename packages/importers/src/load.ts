@@ -20,6 +20,8 @@ const { values, positionals } = parseArgs({
     "dry-run": { type: "boolean", default: false },
     /** Loads only the Pipeline sheet into the register for --year, leaving budget versions alone. */
     "pipeline-only": { type: "boolean", default: false },
+    /** Loads only the cash assumptions and Obligo for --year, leaving budget versions alone. */
+    "cash-only": { type: "boolean", default: false },
     replace: { type: "boolean", default: false },
     state: { type: "string", default: "draft" },
     name: { type: "string" },
@@ -51,12 +53,26 @@ async function main() {
   console.log(`COA: ${wb.accounts.length - provisional.length} from COA Master, provisional ${provisional.join(", ") || "none"}`);
   console.log(`Lines flagged for review: ${wb.lines.filter((l) => l.flags.length).length}`);
   console.log(`Recruitment rows read as headcount plan positions: ${wb.lines.filter((l) => l.headcount).length}`);
+  if (wb.cash) {
+    const c = wb.cash;
+    console.log(`Cash: lag ${c.settings.collectionLag}/${c.settings.cogsPaymentLag} months · PPh ${c.settings.taxRate} · ${c.openings.size} entities · ${c.facilities.length} loan facilities · interest COA ${c.settings.interestCoa.join(", ")} · non-cash COA ${c.settings.nonCashCoa.join(", ")}`);
+  }
   if (wb.pipeline) {
     const p = pipelineTotals(wb.pipeline.deals);
     console.log(`Pipeline: ${wb.pipeline.deals.length} deals · value ${formatIdr(p.value)} · weighted ${formatIdr(p.weighted)} · ${wb.pipeline.targets.length} segment targets`);
   }
   if (values["dry-run"]) {
     console.log("Dry run: nothing written.");
+    return;
+  }
+  if (values["cash-only"]) {
+    if (!wb.cash) throw new Error("The workbook has no Forecast CF Bulanan sheet.");
+    const loaded = await db.transaction(async (tx) => {
+      const ok = await loadCash(tx, wb.cash!, fiscalYear, values.replace!);
+      if (ok) await tx.insert(schema.auditLog).values({ action: "import.cash", subjectType: "cash", subjectId: String(fiscalYear), after: { file: basename(path), facilities: wb.cash!.facilities.length } });
+      return ok;
+    });
+    console.log(loaded ? `Loaded cash assumptions and ${wb.cash.facilities.length} loan facilities for ${fiscalYear}.` : "Nothing loaded.");
     return;
   }
   if (values["pipeline-only"]) {
@@ -162,12 +178,13 @@ async function main() {
     if (plans.length) await tx.insert(schema.headcountPlan).values(plans);
 
     const pipelineDeals = wb.pipeline ? await loadPipeline(tx, wb.pipeline, fiscalYear, values.replace!) : 0;
+    const cashLoaded = wb.cash ? await loadCash(tx, wb.cash, fiscalYear, values.replace!) : false;
 
     await tx.insert(schema.auditLog).values({
       action: "import.workbook",
       subjectType: "budget_version",
       subjectId: version!.id,
-      after: { file: basename(path), lines: wb.lines.length, revenue: total("Revenue"), totalCost: total("TotalCost"), provisional, state, headcountPositions: plans.length, pipelineDeals },
+      after: { file: basename(path), lines: wb.lines.length, revenue: total("Revenue"), totalCost: total("TotalCost"), provisional, state, headcountPositions: plans.length, pipelineDeals, cashLoaded },
     });
     return version!.id;
   });
@@ -196,6 +213,48 @@ async function loadPipeline(tx: Tx, pipeline: NonNullable<RkaWorkbook["pipeline"
     await tx.insert(schema.pipelineTarget).values(pipeline.targets.map((t) => ({ fiscalYear, segment: t.segment, target: t.target.toFixed(2) })));
   }
   return pipeline.deals.length;
+}
+
+/** Cash assumptions and loans are per fiscal year, like the Pipeline: loaded once, again only with --replace. */
+async function loadCash(tx: Tx, cash: NonNullable<RkaWorkbook["cash"]>, fiscalYear: number, replace: boolean): Promise<boolean> {
+  const [any] = await tx.select({ y: schema.cashSetting.fiscalYear }).from(schema.cashSetting).where(eq(schema.cashSetting.fiscalYear, fiscalYear));
+  if (any && !replace) {
+    console.log(`Cash ${fiscalYear} already in the app: kept as is (use --replace to load it again).`);
+    return false;
+  }
+  await tx.delete(schema.cashSetting).where(eq(schema.cashSetting.fiscalYear, fiscalYear));
+  await tx.delete(schema.cashOpening).where(eq(schema.cashOpening.fiscalYear, fiscalYear));
+  await tx.delete(schema.loanFacility).where(eq(schema.loanFacility.fiscalYear, fiscalYear));
+  const s = cash.settings;
+  await tx.insert(schema.cashSetting).values({
+    fiscalYear,
+    collectionLag: s.collectionLag,
+    cogsPaymentLag: s.cogsPaymentLag,
+    taxRate: s.taxRate,
+    minimumCash: s.minimumCash.toFixed(2),
+    interestCoa: [...s.interestCoa],
+    nonCashCoa: [...s.nonCashCoa],
+  });
+  await tx.insert(schema.cashOpening).values(
+    [...cash.openings].map(([entityCode, o]) => ({
+      fiscalYear,
+      entityCode,
+      cash: o.cash.toFixed(2),
+      receivables: o.receivables.toFixed(2),
+      payables: o.payables.toFixed(2),
+      priorYearTax: o.priorYearTax.toFixed(2),
+      minimumCash: o.minimumCash.toFixed(2),
+    })),
+  );
+  for (const f of cash.facilities) {
+    const [row] = await tx
+      .insert(schema.loanFacility)
+      .values({ fiscalYear, name: f.name, type: f.type, entityCode: f.entity, rate: f.rate, openingBalance: f.openingBalance.toFixed(2), creditLimit: f.limit?.toFixed(2) ?? null, project: f.project, notes: f.notes })
+      .returning({ id: schema.loanFacility.id });
+    const moves = f.drawdown.map((d, i) => ({ facilityId: row!.id, month: i + 1, drawdown: d.toFixed(2), repayment: f.repayment[i]!.toFixed(2) })).filter((m) => m.drawdown !== "0.00" || m.repayment !== "0.00");
+    if (moves.length) await tx.insert(schema.loanMove).values(moves);
+  }
+  return true;
 }
 
 main()

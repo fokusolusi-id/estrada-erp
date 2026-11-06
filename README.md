@@ -29,7 +29,7 @@ Log in as the admin, open **Pengguna**, and invite users. With no `RESEND_API_KE
 | --- | --- |
 | `pnpm test` | All Vitest projects (domain + web) |
 | `pnpm e2e` | Playwright journeys: requestor to Director lock, on a throwaway `estrada_e2e` database and a dev server on :3100 (needs Postgres running and the `estrada` role above; first run: `pnpm --filter web exec playwright install chromium`) |
-| `pnpm db:import -- "<file.xlsx>"` | Load an RKA workbook as the open version. `--dry-run` prints totals only; `--replace` reloads a version that is not locked; `--state` sets the lines' approval state (default `draft`). The Pipeline sheet loads into the register for `--year` once (again only with `--replace`); `--pipeline-only` loads just that sheet |
+| `pnpm db:import -- "<file.xlsx>"` | Load an RKA workbook as the open version. `--dry-run` prints totals only; `--replace` reloads a version that is not locked; `--state` sets the lines' approval state (default `draft`). The Pipeline sheet loads into the register for `--year` once (again only with `--replace`); `--pipeline-only` loads just that sheet. Cash assumptions and Obligo load the same way; `--cash-only` loads just those |
 | `GET /api/cron/reminders` | Daily reminders (deadline 7/3/1 days, items waiting `REMINDER_PENDING_DAYS`); call once a day with `Authorization: Bearer $CRON_SECRET`. Each reminder is sent once |
 | `GET /api/export/rka?version=&entity=&division=&status=` | The Management Summary as an `.xlsx` (signed in; Division Owner, Finance, Director, Auditor). Its RKA Data sheet uses the importer's columns |
 | `pnpm typecheck` | `tsc` in every package |
@@ -87,7 +87,8 @@ packages/config     shared tsconfig
 | New cycle proposes 31 Desember of the running year as its submission deadline (Batas pengajuan) | |
 | A line with a typed total and no months (FRM's Rp 45 jt training line) is spread evenly over Jan–Des at import, flagged, and stays editable | |
 | Biaya Bersama (Finance): mark a cost line as shared by revenue share, headcount (typed per entity) or fixed percentages; Management Summary and its Excel split it across ESTRADA, MATRIK, DJALU and PAS, lines unchanged; locked lines keep their split | |
-| Pipeline (BCD keeps it; Finance, Direktur, Auditor read): deals with value excl. PPN, status, probability and period; weighted value = value × probability, per segment against BCD's targets; imported from the Pipeline sheet (80 deals, Rp 649,3 bn, weighted Rp 421,0 bn); shown beside revenue on Management Summary, never added to it | Arus Kas (next batch) |
+| Pipeline (BCD keeps it; Finance, Direktur, Auditor read): deals with value excl. PPN, status, probability and period; weighted value = value × probability, per segment against BCD's targets; imported from the Pipeline sheet (80 deals, Rp 649,3 bn, weighted Rp 421,0 bn); shown beside revenue on Management Summary, never added to it | |
+| Arus Kas (Finance edits; Direktur, Auditor read): monthly cash forecast per entity and consolidated from the RKA lines after Biaya Bersama, collection and payment lags, PPh instalments, opening balances and Obligo loans (interest = outstanding × rate / 12, replacing RKA interest COAs); funding need below minimum cash; reproduces Forecast CF Bulanan 2027 within a rupiah | |
 | Realisasi 2026 (Finance): type or paste each line's 2026 actual from an Excel column; audited, never changes the plan | |
 | Responsive: a header menu on phones; every live screen checked at 375 px for each role (e2e `phone` project) | |
 | COA filter on every approval queue, listing only the codes in that position's lines and their parents | |

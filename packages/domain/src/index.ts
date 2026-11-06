@@ -14,3 +14,4 @@ export * from "./comments";
 export * from "./headcount";
 export * from "./allocation";
 export * from "./pipeline";
+export * from "./cash";

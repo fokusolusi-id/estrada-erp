@@ -2,6 +2,7 @@ import ExcelJS from "exceljs";
 import type { Money } from "@estrada/domain";
 import { amount, header, type Cell } from "./cells";
 import { parseCoaMaster, type CoaReference, type ImportedCoa } from "./coa-master";
+import { parseCash, type ImportedCash } from "./cash";
 import { parsePipeline, type ImportedDeal } from "./pipeline";
 import { parseRkaData, provisionalAccounts, type ImportedLine, type ImportProblem, type SourceTotal } from "./rka-data";
 import type { UnitAlias } from "./units";
@@ -36,6 +37,8 @@ export interface RkaWorkbook {
   problems: ImportProblem[];
   /** The Pipeline sheet, when the workbook has one. */
   pipeline: { deals: ImportedDeal[]; targets: { segment: string; target: Money }[]; problems: ImportProblem[] } | null;
+  /** Forecast CF Bulanan, the per-entity CF sheets and Obligo Pinjaman Bank, when the workbook has them. */
+  cash: ImportedCash | null;
 }
 
 /** Reads a division sheet's own "Total RKA 2027" by sheet name and 1-based row, as "Baris Sumber" counts them. */
@@ -67,5 +70,18 @@ export async function readRkaWorkbook(path: string, units: readonly UnitAlias[])
   const { lines, problems } = parseRkaData(sheetRows(wb, "RKA 2027 Data"), units, sourceTotals(wb));
   const all = [...accounts, ...provisionalAccounts(lines, accounts)];
   const pipeline = wb.getWorksheet("Pipeline") ? parsePipeline(sheetRows(wb, "Pipeline"), all) : null;
-  return { accounts: all, references, lines, problems, pipeline };
+  const cashSheet = wb.worksheets.find((w) => /^Forecast CF Bulanan \d{4}$/.test(w.name));
+  const cash = cashSheet
+    ? parseCash(
+        {
+          consolidated: sheetRows(wb, cashSheet.name),
+          entities: wb.worksheets
+            .filter((w) => w.name.startsWith(`CF ${cashSheet.name.slice(-4)} `))
+            .map((w) => [w.name.slice(8).toUpperCase(), sheetRows(wb, w.name)] as [string, Cell[][]]),
+          obligo: wb.getWorksheet("Obligo Pinjaman Bank") ? sheetRows(wb, "Obligo Pinjaman Bank") : null,
+        },
+        all,
+      )
+    : null;
+  return { accounts: all, references, lines, problems, pipeline, cash };
 }

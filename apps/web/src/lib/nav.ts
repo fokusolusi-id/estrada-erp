@@ -24,7 +24,7 @@ export const NAV: readonly NavItem[] = [
   { href: "/coa", icon: "book", label: "COA Master", roles: ["finance"] },
   { href: "/summary", icon: "chart", label: "Management Summary", roles: ["division_owner", "finance", "director", "auditor"] },
   { href: "/pipeline", icon: "pipeline", label: "Pipeline", roles: ["finance", "director", "auditor"], alsoIn: { unit: "BCD", roles: ["requestor", "default_owner", "division_owner"] } },
-  { href: "/cash", icon: "wallet", label: "Arus Kas", roles: ["finance", "director"], phase: 3 },
+  { href: "/cash", icon: "wallet", label: "Arus Kas", roles: ["finance", "director", "auditor"] },
   { href: "/admin/users", icon: "users", label: "Pengguna", roles: ["admin"] },
   { href: "/admin/positions", icon: "seat", label: "Posisi & pjs", roles: ["admin"] },
 
