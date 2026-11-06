@@ -1,5 +1,6 @@
 "use client";
 
+import { Plus } from "lucide-react";
 import { useState, useTransition } from "react";
 import {
   DEAL_STATUSES,
@@ -112,7 +113,7 @@ export function PipelineRegister({
           {message ? <p className={message.ok ? "text-success text-sm" : "text-destructive text-sm"}>{message.message}</p> : null}
           {canAdd ? (
             <Button type="button" onClick={() => setEditing(blank())}>
-              Tambah deal
+              <Plus aria-hidden /> Tambah deal
             </Button>
           ) : null}
         </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { Save } from "lucide-react";
 import { useState, useTransition } from "react";
 import { ALLOCATION_BASES, ALLOCATION_PROBLEM_LABEL, BASIS_LABEL, fixedProblem, money, type AllocationBasis } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
@@ -85,7 +86,7 @@ export function SharedCostEditor({ lines, entities, onSave }: { lines: SharedCos
         <div className="flex flex-wrap items-center gap-3">
           {message ? <p className={message.ok ? "text-success text-sm" : "text-destructive text-sm"}>{message.message}</p> : null}
           <Button type="button" disabled={!changed.length || invalid || pending} onClick={save}>
-            Simpan ({changed.length})
+            <Save aria-hidden /> Simpan ({changed.length})
           </Button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { Plus } from "lucide-react";
 import { useState, useTransition } from "react";
 import { formatIdr, money, parseIdr } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
@@ -66,7 +67,7 @@ export function LoanEditor({
             type="button"
             onClick={() => setEditing({ id: null, name: "", type: "new", entity: entities[0] ?? "", rate: "0", openingBalance: "0", creditLimit: null, notes: null, drawdown: zeros, repayment: zeros })}
           >
-            Tambah fasilitas
+            <Plus aria-hidden /> Tambah fasilitas
           </Button>
         ) : null}
       </div>

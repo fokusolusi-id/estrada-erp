@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, type ClipboardEvent, type KeyboardEvent } from "react";
-import { ArrowRightToLine, Plus, Trash2 } from "lucide-react";
+import { ArrowRightToLine, Plus, Send, Trash2 } from "lucide-react";
 import { fillRight, formatIdr, money, parseIdr, parsePaste, sum, ZERO, type Money } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -407,7 +407,7 @@ export function BudgetEditor({
           <Plus /> Tambah baris
         </Button>
         <Button type="button" disabled={!chosen.length || pending} onClick={submit}>
-          Kirim ke Default Owner ({chosen.length})
+          <Send aria-hidden /> Kirim ke Default Owner ({chosen.length})
         </Button>
         {message ? <p className={message.ok ? "text-success text-sm" : "text-destructive text-sm"}>{message.text}</p> : null}
       </div>

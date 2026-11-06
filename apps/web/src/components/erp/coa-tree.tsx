@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import { coaTree, type Category } from "@estrada/domain";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,10 +55,10 @@ export function CoaTree({ accounts }: { accounts: CoaTreeAccount[] }) {
         <Input aria-label="Cari COA" placeholder="Cari kode atau nama" className="h-8 max-w-xs" value={query} onChange={(e) => setQuery(e.target.value)} />
         <div className="flex gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => setClosed(new Set())}>
-            Buka semua
+            <ChevronsUpDown aria-hidden /> Buka semua
           </Button>
           <Button type="button" variant="outline" size="sm" onClick={() => setClosed(new Set(hasChildren))}>
-            Tutup semua
+            <ChevronsDownUp aria-hidden /> Tutup semua
           </Button>
         </div>
       </div>

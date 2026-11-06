@@ -1,5 +1,6 @@
 "use client";
 
+import { BadgeCheck, CheckCheck, Lock, MessageCircleQuestion, Send, Undo2, type LucideIcon } from "lucide-react";
 import { Fragment, useState, useTransition } from "react";
 import { coaSubtree, coaTree, money, sum, type ApprovalAction, type ApprovalState, type Unit } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,15 @@ export const ACTION_LABEL: Record<ApprovalAction, string> = {
   clarify: "Minta klarifikasi",
   finalize: "Finalisasi",
   lock: "Kunci versi",
+};
+const ACTION_ICON: Record<ApprovalAction, LucideIcon> = {
+  submit: Send,
+  return: Undo2,
+  consolidate: Send,
+  approve: CheckCheck,
+  clarify: MessageCircleQuestion,
+  finalize: BadgeCheck,
+  lock: Lock,
 };
 const NEEDS_COMMENT: readonly ApprovalAction[] = ["return", "clarify"];
 const ORDER: readonly ApprovalAction[] = ["submit", "consolidate", "approve", "finalize", "lock", "return", "clarify"];
@@ -286,17 +296,15 @@ export function ApprovalQueue({
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-muted-foreground text-sm">{chosen.length} baris dipilih</span>
-        {available.map((a) => (
-          <Button
-            key={a}
-            type="button"
-            variant={NEEDS_COMMENT.includes(a) ? "outline" : "default"}
-            disabled={pending}
-            onClick={() => run(a)}
-          >
-            {ACTION_LABEL[a]}
-          </Button>
-        ))}
+        {available.map((a) => {
+          const Icon = ACTION_ICON[a];
+          return (
+            <Button key={a} type="button" variant={NEEDS_COMMENT.includes(a) ? "outline" : "default"} disabled={pending} onClick={() => run(a)}>
+              <Icon aria-hidden />
+              {ACTION_LABEL[a]}
+            </Button>
+          );
+        })}
         {message ? <p className={message.ok ? "text-success text-sm" : "text-destructive text-sm"}>{message.text}</p> : null}
       </div>
     </div>
