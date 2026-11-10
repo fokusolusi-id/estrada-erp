@@ -15,21 +15,34 @@ import {
 import type { Remark, TimelineEvent } from "@/components/erp/approval-timeline";
 import type { GridLine } from "@/components/erp/budget-grid";
 import type { CurrentUser } from "./session";
+import { activeYear } from "./fiscal-year";
 import { approvalConfig, loadOrg } from "./workflow";
 
-export async function openVersion() {
+/** The open version of a fiscal year, by default the year the viewer is looking at. */
+export async function openVersion(fiscalYear?: number | null) {
+  const year = fiscalYear === undefined ? await activeYear() : fiscalYear;
+  if (year === null) return null;
   const [version] = await db
     .select()
     .from(schema.budgetVersion)
-    .where(eq(schema.budgetVersion.status, "open"))
-    .orderBy(asc(schema.budgetVersion.createdAt))
+    .where(and(eq(schema.budgetVersion.status, "open"), eq(schema.budgetVersion.fiscalYear, year)))
+    .orderBy(desc(schema.budgetVersion.createdAt))
     .limit(1);
   return version ?? null;
 }
 
-/** Versions a report may show: the open one first, then locked ones, newest first. Archived versions are history only. */
-export async function reportVersions() {
-  const rows = await db.select().from(schema.budgetVersion).where(inArray(schema.budgetVersion.status, ["open", "locked"])).orderBy(desc(schema.budgetVersion.createdAt));
+/**
+ * Versions a report may show for a fiscal year (by default the viewer's): the open one first, then locked ones,
+ * newest first. Archived versions are history only.
+ */
+export async function reportVersions(fiscalYear?: number | null) {
+  const year = fiscalYear === undefined ? await activeYear() : fiscalYear;
+  if (year === null) return [];
+  const rows = await db
+    .select()
+    .from(schema.budgetVersion)
+    .where(and(inArray(schema.budgetVersion.status, ["open", "locked"]), eq(schema.budgetVersion.fiscalYear, year)))
+    .orderBy(desc(schema.budgetVersion.createdAt));
   return [...rows.filter((v) => v.status === "open"), ...rows.filter((v) => v.status === "locked")];
 }
 
@@ -140,8 +153,8 @@ export async function loadScopedLines(
       commentCount: commentsOf.get(line.id) ?? 0,
       ...(planOf.has(line.id) ? { headcount: planOf.get(line.id)! } : {}),
       history,
-      rka2026: line.rka2026 ? money(line.rka2026) : null,
-      actual2026: line.actual2026 ? money(line.actual2026) : null,
+      priorRka: line.priorRka ? money(line.priorRka) : null,
+      priorActual: line.priorActual ? money(line.priorActual) : null,
       flags: line.reviewFlags,
       ...(open?.comment ? { remark: { by: open.actorName, comment: open.comment } } : {}),
       ...(line.basis ? { basis: line.basis } : {}),

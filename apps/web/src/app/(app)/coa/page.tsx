@@ -11,6 +11,7 @@ import { ProvisionalCoa, type CoaOption } from "@/components/erp/provisional-coa
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { confirmCoa, remapCoa } from "./actions";
 import { CoaForm } from "./coa-form";
+import { rkaLabel } from "@estrada/domain";
 
 export const metadata: Metadata = { title: "COA Master" };
 
@@ -46,7 +47,7 @@ export default async function CoaPage() {
       <div>
         <h1 className="text-2xl font-semibold">COA Master</h1>
         <p className="text-muted-foreground text-sm">
-          {accounts.length} kode · {provisionalCount} sementara · baris dihitung dari {version ? version.name : "—"}
+          {accounts.length} kode · {provisionalCount} sementara · baris dihitung dari {version ? rkaLabel(version) : "—"}
         </p>
       </div>
 

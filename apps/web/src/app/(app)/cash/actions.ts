@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@estrada/db";
-import { canCash } from "@estrada/domain";
+import { canCash, carryCashForward } from "@estrada/domain";
+import { loadCash } from "@/lib/cash";
 import { reportVersions } from "@/lib/rka";
 import { requireUser } from "@/lib/session";
 
@@ -126,4 +127,71 @@ export async function deleteLoan(id: string): Promise<Result> {
   });
   revalidatePath("/cash");
   return { ok: true, message: "Fasilitas dihapus." };
+}
+
+/**
+ * Starts a year's cash plan from the year before: rules as they were, each entity's opening at last December's
+ * closing cash, receivables and payables, and loans at their December outstanding. Finance then checks the figures
+ * against the audited balance sheet and enters last year's PPh 29.
+ */
+export async function carryCashFromPrior(): Promise<Result> {
+  const who = await finance();
+  if ("ok" in who) return who;
+  const user = await requireUser();
+  const [existing] = await db.select().from(schema.cashSetting).where(eq(schema.cashSetting.fiscalYear, who.year));
+  if (existing) return { ok: false, message: `Asumsi arus kas ${who.year} sudah ada.` };
+  const prior = await loadCash(user, who.year - 1);
+  if (!prior?.settings) return { ok: false, message: `Belum ada arus kas ${who.year - 1} untuk dibawa.` };
+
+  const carried = carryCashForward(
+    new Map(
+      prior.entities
+        .filter((e) => prior.forecasts.has(e))
+        .map((e) => [e, { rows: prior.forecasts.get(e)!.rows, minimumCash: prior.openings.get(e)?.minimumCash ?? prior.settings!.minimumCash }]),
+    ),
+    prior.facilities.map((f) => ({ name: f.name, type: f.type, entity: f.entity, rate: f.rate, creditLimit: f.creditLimit, notes: f.notes, outstanding: f.outstanding })),
+  );
+  const s = prior.settings;
+  await db.transaction(async (tx) => {
+    await tx.insert(schema.cashSetting).values({
+      fiscalYear: who.year,
+      collectionLag: s.collectionLag,
+      cogsPaymentLag: s.cogsPaymentLag,
+      taxRate: s.taxRate,
+      minimumCash: s.minimumCash.toFixed(2),
+      interestCoa: [...s.interestCoa],
+      nonCashCoa: [...s.nonCashCoa],
+    });
+    const openings = [...carried.openings].map(([entityCode, o]) => ({
+      fiscalYear: who.year,
+      entityCode,
+      cash: o.cash.toFixed(2),
+      receivables: o.receivables.toFixed(2),
+      payables: o.payables.toFixed(2),
+      priorYearTax: o.priorYearTax.toFixed(2),
+      minimumCash: o.minimumCash.toFixed(2),
+    }));
+    if (openings.length) await tx.insert(schema.cashOpening).values(openings);
+    for (const f of carried.facilities) {
+      await tx.insert(schema.loanFacility).values({
+        fiscalYear: who.year,
+        name: f.name,
+        type: f.type,
+        entityCode: f.entity,
+        rate: f.rate,
+        openingBalance: f.openingBalance.toFixed(2),
+        creditLimit: f.creditLimit?.toFixed(2) ?? null,
+        notes: f.notes,
+      });
+    }
+    await tx.insert(schema.auditLog).values({
+      actorUserId: who.userId,
+      action: "cash.carry_forward",
+      subjectType: "cash",
+      subjectId: String(who.year),
+      after: { from: who.year - 1, entities: openings.length, facilities: carried.facilities.length },
+    });
+  });
+  revalidatePath("/cash");
+  return { ok: true, message: `Arus kas ${who.year} dimulai dari Desember ${who.year - 1}. Periksa saldo awal dan isi PPh 29.` };
 }

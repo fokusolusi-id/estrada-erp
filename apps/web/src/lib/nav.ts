@@ -6,7 +6,7 @@ export interface NavItem {
   roles: readonly Role[] | "all";
   icon: string;
   /** Menu section; items without one sit at the top. */
-  group?: "Anggaran" | "Laporan" | "Data" | "Admin";
+  group?: "Anggaran" | "Laporan" | "Data" | "Admin" | "Bantuan";
   /** Also shown to these roles when the user's unit sits within `unit` (BCD's people for Pipeline). */
   alsoIn?: { unit: string; roles: readonly Role[] };
   phase?: number;
@@ -24,12 +24,13 @@ export const NAV: readonly NavItem[] = [
   { href: "/summary", icon: "chart", label: "Management Summary", roles: ["division_owner", "finance", "director", "auditor"], group: "Laporan" },
   { href: "/pipeline", icon: "pipeline", label: "Pipeline", roles: ["finance", "director", "auditor"], alsoIn: { unit: "BCD", roles: ["requestor", "default_owner", "division_owner"] }, group: "Laporan" },
   { href: "/cash", icon: "wallet", label: "Arus Kas", roles: ["finance", "director", "auditor"], group: "Laporan" },
-  { href: "/rka/actual", icon: "actual", label: "Realisasi 2026", roles: ["finance"], group: "Data" },
+  { href: "/rka/actual", icon: "actual", label: "Realisasi", roles: ["finance"], group: "Data" },
   { href: "/rka/allocation", icon: "split", label: "Biaya Bersama", roles: ["finance"], group: "Data" },
   { href: "/coa", icon: "book", label: "COA Master", roles: ["finance"], group: "Data" },
   { href: "/admin/users", icon: "users", label: "Pengguna", roles: ["admin"], group: "Admin" },
   { href: "/admin/master", icon: "layers", label: "Unit & Entitas", roles: ["admin"], group: "Admin" },
   { href: "/admin/positions", icon: "seat", label: "Posisi & pjs", roles: ["admin"], group: "Admin" },
+  { href: "/panduan", icon: "help", label: "Panduan", roles: "all", group: "Bantuan" },
 ];
 
 /** `within(unit)` says whether the user's unit sits within `unit`; without it, unit-based items stay hidden. */

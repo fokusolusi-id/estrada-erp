@@ -1,7 +1,7 @@
 import { formatAmount, variance, type Money, type Unit } from "@estrada/domain";
 import { cn } from "@/lib/utils";
 
-/** 2027 plan against a 2026 figure: the change in rupiah and percent. A swing of 20% or more is tinted for a closer look. */
+/** The plan against last year's figure: the change in rupiah and percent. A swing of 20% or more is tinted for a closer look. */
 export function VarianceCell({ plan, base, unit = "juta" }: { plan: Money; base: Money | null; unit?: Unit }) {
   if (!base) {
     return (

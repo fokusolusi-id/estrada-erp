@@ -4,7 +4,7 @@ import { ActualEntry, type ActualLine } from "./actual-entry";
 
 // Demo lines from the Project Delivery & Managed Serv sheet; 2026 actuals as Finance would type them.
 const lines: ActualLine[] = [
-  { id: "a", coaCode: "6241", coaName: "Beban internet", entity: "ESTRADA", ownerUnit: "SCM", plan: "237855840", rka2026: "200000000", actual2026: "180000000" },
+  { id: "a", coaCode: "6241", coaName: "Beban internet", entity: "ESTRADA", ownerUnit: "SCM", plan: "237855840", priorRka: "200000000", priorActual: "180000000" },
   { id: "b", coaCode: "5300", coaName: "Biaya jaringan Internet", entity: "ESTRADA", ownerUnit: "SCM", plan: "4688241884.04" },
   { id: "c", coaCode: "6211", coaName: "Beban Gaji", item: "Gaji staf", entity: "ESTRADA", ownerUnit: "HCM", plan: "0" },
 ];
@@ -13,7 +13,7 @@ const input = (n: number) => screen.getByLabelText(`Actual 2026 baris ${n}`) as 
 
 describe("ActualEntry", () => {
   it("shows each line's actual in rupiah and how the 2027 plan compares", () => {
-    render(<ActualEntry lines={lines} onSave={ok()} />);
+    render(<ActualEntry priorYear={2026} lines={lines} onSave={ok()} />);
     expect(input(1).value).toBe("180.000.000");
     expect(input(2).value).toBe("");
     expect(screen.getByTestId("actual-change-1").textContent).toContain("Rp 57.855.840");
@@ -21,7 +21,7 @@ describe("ActualEntry", () => {
 
   it("pastes a column copied from Excel down the rows, and saves only what changed as plain decimals", async () => {
     const onSave = ok();
-    render(<ActualEntry lines={lines} onSave={onSave} />);
+    render(<ActualEntry priorYear={2026} lines={lines} onSave={onSave} />);
     fireEvent.paste(input(2), { clipboardData: { getData: () => "4.100.000.000,50\r\n12.000.000\r\n" } });
     expect([input(2).value, input(3).value]).toEqual(["4.100.000.000,50", "12.000.000"]);
     fireEvent.click(screen.getByRole("button", { name: "Simpan (2)" }));
@@ -36,7 +36,7 @@ describe("ActualEntry", () => {
 
   it("clears an actual when the cell is emptied, and blocks saving text it cannot read", async () => {
     const onSave = ok();
-    render(<ActualEntry lines={lines} onSave={onSave} />);
+    render(<ActualEntry priorYear={2026} lines={lines} onSave={onSave} />);
     fireEvent.change(input(1), { target: { value: "" } });
     fireEvent.change(input(2), { target: { value: "empat miliar" } });
     expect(input(2).getAttribute("aria-invalid")).toBe("true");
@@ -47,7 +47,7 @@ describe("ActualEntry", () => {
   });
 
   it("filters by COA or item text", () => {
-    render(<ActualEntry lines={lines} onSave={ok()} />);
+    render(<ActualEntry priorYear={2026} lines={lines} onSave={ok()} />);
     fireEvent.change(screen.getByLabelText("Cari COA atau uraian"), { target: { value: "gaji" } });
     expect(screen.getAllByRole("textbox", { name: /Actual 2026 baris/ })).toHaveLength(1);
     expect(screen.getByDisplayValue("")).toBeTruthy();

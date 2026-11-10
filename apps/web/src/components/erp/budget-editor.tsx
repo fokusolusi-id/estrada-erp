@@ -22,9 +22,9 @@ export interface EditorLine {
   months: string[];
   /** Why the line came back, while it waits on the requestor. */
   remark?: Remark;
-  /** 2026 figures as plain decimal strings, shown for context. */
-  rka2026?: string;
-  actual2026?: string;
+  /** Last year's figures as plain decimal strings, shown for context. */
+  priorRka?: string;
+  priorActual?: string;
   flags?: string[];
   /** Comments on a saved line; drafts link to their discussion like every other line. */
   commentCount?: number;
@@ -73,8 +73,8 @@ const toRow = (l: EditorLine): Row => ({
   item: l.item,
   basis: l.basis,
   ...(l.remark ? { remark: l.remark } : {}),
-  ...(l.rka2026 ? { rka2026: l.rka2026 } : {}),
-  ...(l.actual2026 ? { actual2026: l.actual2026 } : {}),
+  ...(l.priorRka ? { priorRka: l.priorRka } : {}),
+  ...(l.priorActual ? { priorActual: l.priorActual } : {}),
   ...(l.flags ? { flags: l.flags } : {}),
   ...(l.commentCount ? { commentCount: l.commentCount } : {}),
   ...(l.planned ? { planned: true } : {}),
@@ -92,11 +92,14 @@ export function BudgetEditor({
   lines,
   masters,
   defaultEntity,
+  priorYear,
   onSave,
   onDelete,
   onSubmit,
 }: {
   lines: EditorLine[];
+  /** The comparison year: the year before the one being planned. */
+  priorYear: number;
   masters: EditorMasters;
   defaultEntity: string;
   onSave: (line: EditorLine & { id?: string }) => Promise<Result>;
@@ -248,7 +251,7 @@ export function BudgetEditor({
             const n = i + 1;
             const canSubmit = !!r.id && !r.dirty;
             const locked = !!r.planned;
-            const hasNotes = !!(r.flags?.length || r.rka2026 || r.actual2026);
+            const hasNotes = !!(r.flags?.length || r.priorRka || r.priorActual);
             return (
               <TableRow key={r.key} className={cn(r.dirty && "bg-warning/5")}>
                 <TableCell>
@@ -297,9 +300,9 @@ export function BudgetEditor({
                   {hasNotes ? (
                     notesOpen.has(r.key) ? (
                       <div className="bg-muted/60 grid max-w-64 gap-1 rounded-md p-2 text-xs whitespace-normal">
-                        {r.rka2026 || r.actual2026 ? (
+                        {r.priorRka || r.priorActual ? (
                           <span className="text-muted-foreground">
-                            2026: RKA {r.rka2026 ? formatIdr(money(r.rka2026)) : "—"} · Actual {r.actual2026 ? formatIdr(money(r.actual2026)) : "—"}
+                            {priorYear}: RKA {r.priorRka ? formatIdr(money(r.priorRka)) : "—"} · Actual {r.priorActual ? formatIdr(money(r.priorActual)) : "—"}
                           </span>
                         ) : null}
                         {r.flags?.map((f) => (
@@ -338,7 +341,7 @@ export function BudgetEditor({
                         }
                       >
                         {r.flags?.length ? <TriangleAlert aria-hidden className="size-3.5" /> : <Info aria-hidden className="size-3.5" />}
-                        {r.flags?.length ? `${r.flags.length} catatan` : "2026"}
+                        {r.flags?.length ? `${r.flags.length} catatan` : String(priorYear)}
                       </button>
                     ) : null}
                   </div>

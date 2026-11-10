@@ -15,7 +15,8 @@ function Result({ state }: { state: CycleState }) {
   return state.message ? <p className={state.ok ? "text-success text-sm" : "text-destructive text-sm"}>{state.message}</p> : null;
 }
 
-export function OpenCycleForm({ fiscalYear }: { fiscalYear: number }) {
+/** `previous` names last year's locked RKA, when there is one to start from. */
+export function OpenCycleForm({ fiscalYear, previous }: { fiscalYear: number; previous: string | null }) {
   const [state, action, pending] = useActionState(openCycle, INITIAL);
   const [year, setYear] = useState(String(fiscalYear));
   // Follows the year until Finance picks another date.
@@ -42,6 +43,18 @@ export function OpenCycleForm({ fiscalYear }: { fiscalYear: number }) {
         />
         <p className="text-muted-foreground text-xs">Batas pengajuan usulan oleh requestor; standarnya 31 Desember tahun berjalan.</p>
         {state.errors?.deadline ? <p className="text-destructive text-xs">{state.errors.deadline[0]}</p> : null}
+      </div>
+      <div className="grid gap-2 sm:col-span-3">
+        <Label htmlFor="cycle-start">Mulai dari</Label>
+        <select id="cycle-start" name="start" className={`${SELECT} max-w-xl`} defaultValue={previous ? "previous" : "empty"}>
+          {previous ? <option value="previous">{previous} (terkunci): salin baris sebagai Draft</option> : null}
+          <option value="empty">Kosong</option>
+        </select>
+        <p className="text-muted-foreground text-xs">
+          {previous
+            ? `Baris ${previous} disalin sebagai Draft, termasuk nominal bulanannya, untuk disesuaikan tiap unit. Totalnya menjadi pembanding RKA tahun lalu; realisasinya diisi Finance di menu Realisasi.`
+            : "Belum ada RKA tahun lalu yang terkunci untuk dijadikan titik awal."}
+        </p>
       </div>
       <div className="flex flex-wrap items-center gap-3 sm:col-span-3">
         <Button type="submit" disabled={pending}>

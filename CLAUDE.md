@@ -15,3 +15,4 @@ Budget-first ERP replacing the RKA 2027 workbook. Plan: https://claude.ai/artifa
 - Emails: one per handoff, never one per line, no rupiah figures in the body. Queue through `enqueueEmail`.
 - UI copy in Bahasa Indonesia. Keep RKA, COA, Realisasi, Beban as the team uses them.
 - Next.js 16: middleware is `proxy.ts`; `params`, `searchParams`, `cookies()`, `headers()` are async. Check `node_modules/next/dist/docs/` before using an API you are unsure about.
+- User guide: the in-app Panduan is `apps/web/src/content/panduan.ts` (Markdown, Bahasa Indonesia). Update it in the same change as anything a user can see; `panduan.test.ts` fails when a menu screen, approval state or role is missing from it.

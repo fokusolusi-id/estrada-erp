@@ -8,11 +8,10 @@ import { loadOrg } from "@/lib/workflow";
 import { ApprovalTimeline } from "@/components/erp/approval-timeline";
 import { BudgetGrid } from "@/components/erp/budget-grid";
 import { displayUnit } from "@/lib/display-unit";
-import { UnitSwitch } from "@/components/erp/unit-switch";
-import { setDisplayUnit } from "@/app/(app)/unit-actions";
 import { CommentThread } from "@/components/erp/comment-thread";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { addComment } from "./actions";
+import { rkaLabel } from "@estrada/domain";
 
 export const metadata: Metadata = { title: "Diskusi baris RKA" };
 
@@ -47,16 +46,15 @@ export default async function LinePage({ params }: { params: Promise<{ id: strin
           {line.coaCode} {line.item ?? line.coaName}
         </h1>
         <p className="text-muted-foreground text-sm">
-          {version.name} · {line.requestorUnit}
+          {rkaLabel(version)} · {line.requestorUnit}
           {line.requestorUnit !== line.ownerUnit ? ` → ${line.ownerUnit}` : ""} · {line.entity}
         </p>
       </div>
-        <UnitSwitch value={unit} onChange={setDisplayUnit} />
       </div>
 
       <Card>
         <CardContent>
-          <BudgetGrid lines={[line]} unit={unit} discussion={false} />
+          <BudgetGrid lines={[line]} priorYear={version.fiscalYear - 1} unit={unit} discussion={false} />
           {line.basis || line.flags?.length ? (
             <div className="mt-3 grid gap-1 text-sm">
               {line.basis ? (

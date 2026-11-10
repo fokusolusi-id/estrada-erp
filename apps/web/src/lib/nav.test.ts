@@ -3,7 +3,7 @@ import { navFor } from "./nav";
 
 describe("navFor", () => {
   it("shows a requestor only their own RKA", () => {
-    expect(navFor("requestor").map((n) => n.href)).toEqual(["/", "/rka"]);
+    expect(navFor("requestor").map((n) => n.href)).toEqual(["/", "/rka", "/panduan"]);
   });
 
   it("keeps budget screens away from Admin", () => {
@@ -20,9 +20,15 @@ describe("navFor", () => {
 
   it("shows Pipeline to BCD's people and to Finance, Direktur and Auditor, not to other divisions", () => {
     const bcd = (unit: string) => unit === "BCD";
-    expect(navFor("requestor", bcd).map((n) => n.href)).toEqual(["/", "/rka", "/pipeline"]);
+    expect(navFor("requestor", bcd).map((n) => n.href)).toEqual(["/", "/rka", "/pipeline", "/panduan"]);
     expect(navFor("division_owner", () => false).map((n) => n.href)).not.toContain("/pipeline");
     for (const role of ["finance", "director", "auditor"] as const) expect(navFor(role).map((n) => n.href)).toContain("/pipeline");
+  });
+
+  it("gives every role the Panduan", () => {
+    for (const role of ["requestor", "default_owner", "division_owner", "finance", "director", "auditor", "admin"] as const) {
+      expect(navFor(role).at(-1)?.href).toBe("/panduan");
+    }
   });
 
   it("gives each approver their live queue", () => {

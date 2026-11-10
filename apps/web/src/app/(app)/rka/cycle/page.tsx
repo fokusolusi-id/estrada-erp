@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { count, desc } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
-import { can, reviseProblem, type ApprovalState } from "@estrada/domain";
+import { can, newYearProblem, reviseProblem, type ApprovalState } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
 import { VersionTable, type VersionRow } from "@/components/erp/version-table";
@@ -10,6 +10,7 @@ import { CheckCircle2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeadlineForm, OpenCycleForm, ReviseForm } from "./cycle-forms";
+import { rkaLabel } from "@estrada/domain";
 
 export const metadata: Metadata = { title: "Siklus RKA" };
 
@@ -45,8 +46,16 @@ export default async function CyclePage({ searchParams }: { searchParams: Promis
       : doneVersion && done === "opened"
         ? `${doneVersion.name} dibuka; email dikirim ke semua requestor.`
         : null;
-  const nextYear = Math.max(new Date().getFullYear() + 1, ...versions.map((v) => v.fiscalYear));
-  const yearOpen = versions.some((v) => v.fiscalYear === nextYear && v.status === "open");
+  // The year to open next: after the newest year once it is locked, or next calendar year before the first cycle.
+  const live = versions.filter((v) => v.status !== "archived");
+  const latest = live.length ? Math.max(...live.map((v) => v.fiscalYear)) : null;
+  // A year still on its first version is unfinished; one whose open version is only a revision is done.
+  const unfinished = live.some((v) => v.fiscalYear === latest && v.status === "open" && !v.copiedFromId);
+  const nextYear = latest === null ? new Date().getFullYear() + 1 : unfinished ? latest : latest + 1;
+  const openProblem = newYearProblem(nextYear, versions);
+  const previous = versions
+    .filter((v) => v.fiscalYear === nextYear - 1 && v.status === "locked")
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
 
   return (
     <div className="grid max-w-6xl gap-6">
@@ -85,14 +94,21 @@ export default async function CyclePage({ searchParams }: { searchParams: Promis
         </CardContent>
       </Card>
 
-      {manage && !yearOpen ? (
+      {manage && openProblem === "other_year_open" ? (
+        <p className="text-muted-foreground rounded-lg border p-4 text-sm">
+          RKA {nextYear - 1} masih terbuka. Tahun berikutnya dapat dibuka setelah versi itu dikunci; revisi tahun yang terkunci tetap bisa dibuka kapan saja.
+        </p>
+      ) : null}
+      {manage && !openProblem ? (
         <Card>
           <CardHeader>
             <CardTitle>Buka siklus baru</CardTitle>
-            <CardDescription>Membuat versi kosong dan mengirim email ke semua requestor dengan batas waktunya.</CardDescription>
+            <CardDescription>
+              Membuka tahun anggaran berikutnya, kosong atau mulai dari RKA tahun lalu yang terkunci, lalu mengirim email ke semua requestor dengan batas waktunya.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <OpenCycleForm fiscalYear={nextYear} />
+            <OpenCycleForm fiscalYear={nextYear} previous={previous ? rkaLabel(previous) : null} />
           </CardContent>
         </Card>
       ) : null}

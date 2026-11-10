@@ -23,6 +23,13 @@ async function as(role: E2eRole, page: Page, path: string) {
 const lineRow = (page: Page, text: string) => page.getByRole("row").filter({ hasText: text });
 const comments = (page: Page) => page.getByRole("list", { name: "Daftar komentar" }).getByRole("listitem");
 
+/** Opens the header's Tampilan panel, picks one setting and closes it again. */
+async function pickView(page: Page, label: string, value: string) {
+  await page.getByRole("button", { name: /^Tampilan/ }).click();
+  await page.getByLabel(label, { exact: true }).selectOption(value);
+  await page.keyboard.press("Escape");
+}
+
 test("1. Requestor drafts a line like in Excel and submits to the Default Owner", async ({ page }) => {
   await as("requestor", page, "/rka");
   await page.getByRole("button", { name: "Tambah baris" }).click();
@@ -321,23 +328,31 @@ test("5. Head Finance locks the version; the Director reads the Management Summa
   await expect(page.getByText("Rp 4.944,1 jt").first()).toBeVisible();
 
   // The viewer picks the unit; the choice holds on the next screen too.
-  await page.getByLabel("Satuan").selectOption("miliar");
+  await pickView(page, "Satuan", "miliar");
   await expect(page.getByText("Rp 4,94 M").first()).toBeVisible();
   await page.goto("/rka/lock");
-  await expect(page.getByLabel("Satuan")).toHaveValue("miliar");
+  await expect(page.getByRole("button", { name: /^Tampilan/ })).toContainText("Miliar");
+  await expect(page.getByLabel("Satuan", { exact: true })).toHaveValue("miliar");
   await page.goto("/summary");
-  await page.getByLabel("Satuan").selectOption("juta");
+  await pickView(page, "Satuan", "juta");
   await expect(page.getByText("Rp 4.944,1 jt").first()).toBeVisible();
 
-  await page.getByLabel("Divisi").selectOption("PDMS");
-  await expect(page).toHaveURL(/division=PDMS/);
+  // Divisi in the header narrows every screen and says so on each one.
+  await pickView(page, "Divisi", "PDMS");
+  await expect(page.getByTestId("view-note")).toContainText("Divisi PDMS");
   await expect(page.getByTestId("contribution-PDMS").first()).toBeVisible();
+  await page.goto("/rka/lock");
+  await expect(page.getByTestId("view-note")).toContainText("Divisi PDMS");
+  await page.getByRole("button", { name: "Tampilkan semua" }).click();
+  await expect(page.getByTestId("view-note")).toHaveCount(0);
 });
 
 test("Director downloads the filtered summary as Excel, in the workbook's layout", async ({ page }) => {
-  await as("director", page, "/summary?division=PDMS");
+  await as("director", page, "/summary");
+  await pickView(page, "Divisi", "PDMS");
+  await expect(page.getByTestId("view-note")).toContainText("Divisi PDMS");
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: "Unduh Excel" }).click()]);
-  expect(download.suggestedFilename()).toBe("RKA 2027 (demo).xlsx");
+  expect(download.suggestedFilename()).toBe("RKA 2027.xlsx");
 
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(await download.path());
@@ -378,7 +393,7 @@ test("Finance opens a revision of the locked version and adjusts it alone", asyn
 
   // The locked version is untouched; the copy waits in Finance's queue.
   await page.goto("/rka/review");
-  await expect(page.getByText("RKA 2027 (demo) v2", { exact: true })).toBeVisible();
+  await expect(page.getByRole("main").getByText("RKA 2027", { exact: true })).toBeVisible();
   await expect(page.getByText("SCM · 3 baris")).toBeVisible();
 
   // The copy keeps what reports and the plan need: positions, shared-cost bases and head counts per entity.

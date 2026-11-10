@@ -68,13 +68,14 @@ describe("KpiCard", () => {
     expect(screen.getByText("Rencana invoice")).toBeTruthy();
   });
 
-  it("shows the change against 2026, green when it is good news and red when not", () => {
-    const { unmount } = render(<KpiCard label="Pendapatan" value={money("12000000")} unit="rp" change={{ pct: money("20"), goodWhenUp: true }} />);
+  it("shows the change against 2026, green for an increase and red for a decrease", () => {
+    const { unmount } = render(<KpiCard label="Pendapatan" value={money("12000000")} unit="rp" change={{ pct: money("20"), goodWhenUp: true, against: 2026 }} />);
     const up = screen.getByTestId("kpi-change");
-    expect(up.textContent).toBe("▲ 20,0% vs 2026");
+    expect(up.textContent).toBe("+20,0%");
+    expect(screen.getByText("vs 2026")).toBeTruthy();
     expect(up.className).toContain("text-success");
     unmount();
-    render(<KpiCard label="Total Biaya" value={money("12000000")} unit="rp" change={{ pct: money("20"), goodWhenUp: false }} />);
+    render(<KpiCard label="Total Biaya" value={money("12000000")} unit="rp" change={{ pct: money("-20"), goodWhenUp: false, against: 2026 }} />);
     expect(screen.getByTestId("kpi-change").className).toContain("text-destructive");
   });
 

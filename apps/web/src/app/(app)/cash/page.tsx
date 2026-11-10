@@ -7,15 +7,18 @@ import { requireUser } from "@/lib/session";
 import { CashAssumptions } from "@/components/erp/cash-assumptions";
 import { CashTable, type CashRow } from "@/components/erp/cash-table";
 import { CashBalanceChart, WaterfallChart } from "@/components/erp/charts";
-import { KpiCard } from "@/components/erp/kpi-card";
+import { KpiCard, KpiStrip } from "@/components/erp/kpi-card";
 import { PageHeader } from "@/components/erp/page-header";
 import { LoanEditor } from "@/components/erp/loan-editor";
 import { MONTHS } from "@/components/erp/budget-grid";
-import { ScopeBar } from "@/components/erp/scope-bar";
-import { UnitSwitch } from "@/components/erp/unit-switch";
+import { activeView } from "@/lib/view-filter";
+import { ViewNote } from "@/components/erp/view-note";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { setDisplayUnit } from "../unit-actions";
-import { deleteLoan, saveCashAssumptions, saveLoan } from "./actions";
+import { carryCashFromPrior, deleteLoan, saveCashAssumptions, saveLoan } from "./actions";
+import { ActionButton } from "@/components/erp/action-button";
+import { CalendarArrowUp } from "lucide-react";
+import { eq } from "drizzle-orm";
+import { db, schema } from "@estrada/db";
 
 export const metadata: Metadata = { title: "Arus Kas" };
 
@@ -69,10 +72,11 @@ function pnlRows(f: CashForecast): CashRow[] {
   ];
 }
 
-export default async function CashPage({ searchParams }: { searchParams: Promise<{ entity?: string }> }) {
+export default async function CashPage() {
   const user = await requireUser();
   if (!canCash(user.actor, "view")) notFound();
-  const [view, unit, params] = await Promise.all([loadCash(user), displayUnit(), searchParams]);
+  const [view, unit, header] = await Promise.all([loadCash(user), displayUnit(), activeView()]);
+  const priorHasCash = view ? (await db.select({ y: schema.cashSetting.fiscalYear }).from(schema.cashSetting).where(eq(schema.cashSetting.fiscalYear, view.year - 1))).length > 0 : false;
   if (!view) {
     return (
       <div className="grid gap-2">
@@ -82,7 +86,8 @@ export default async function CashPage({ searchParams }: { searchParams: Promise
     );
   }
   const editable = canCash(user.actor, "manage");
-  const scope = params.entity && view.entities.includes(params.entity) ? params.entity : CONSOLIDATED;
+  // The header's Entitas picks the entity; Semua entitas is the consolidation.
+  const scope = header.entity && view.entities.includes(header.entity) ? header.entity : CONSOLIDATED;
   const f = view.forecasts.get(scope);
   const s = view.settings;
   const lowest = f ? f.rows.closing.reduce((a, b) => (b.lt(a) ? b : a)) : ZERO;
@@ -102,22 +107,17 @@ export default async function CashPage({ searchParams }: { searchParams: Promise
             {scope === CONSOLIDATED ? "Konsolidasi = jumlah keempat entitas." : `Entitas ${scope}.`}
           </>
         }
-        filters={
-          <>
-            <UnitSwitch value={unit} onChange={setDisplayUnit} />
-            <ScopeBar filters={[{ name: "entity", label: "Entitas", options: [{ value: "", label: "Konsolidasi" }, ...view.entities.map((e) => ({ value: e, label: e }))] }]} />
-          </>
-        }
+        note={<ViewNote ignores={["division"]} />}
       />
 
       {f ? (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <KpiStrip>
             <KpiCard label="Saldo kas akhir Des" value={f.rows.closing[11]!} unit={unit} signal trend={f.rows.closing.map(n)} />
             <KpiCard label="Saldo terendah" value={lowest} unit={unit} signal note={lowestMonth} />
             <KpiCard label="Kebutuhan pendanaan tertinggi" value={peakNeed} unit={unit} note="Di bawah saldo kas minimum" />
             <KpiCard label="Arus kas operasi setahun" value={total(f.rows.operating)} unit={unit} signal trend={f.rows.operating.map(n)} />
-          </div>
+          </KpiStrip>
           <div className="grid gap-6 xl:grid-cols-2">
             <Card>
               <CardHeader>
@@ -163,9 +163,20 @@ export default async function CashPage({ searchParams }: { searchParams: Promise
           </Card>
         </>
       ) : (
-        <p className="text-muted-foreground rounded-lg border p-6 text-sm">
-          Asumsi arus kas {view.year} belum diisi. {editable ? "Isi asumsi di bawah untuk melihat proyeksi." : "Finance mengisinya di halaman ini."}
-        </p>
+        <div className="grid gap-3 rounded-lg border p-6 text-sm">
+          <p className="text-muted-foreground">
+            Asumsi arus kas {view.year} belum diisi. {editable ? "Isi asumsi di bawah untuk melihat proyeksi." : "Finance mengisinya di halaman ini."}
+          </p>
+          {editable && priorHasCash ? (
+            <div className="grid gap-2">
+              <p>
+                Atau mulai dari Desember {view.year - 1}: aturan yang sama, saldo awal setiap entitas dari saldo kas, piutang dan utang usaha
+                akhir {view.year - 1}, dan pinjaman pada outstanding Desember. Periksa angkanya terhadap neraca yang diaudit, lalu isi PPh 29.
+              </p>
+              <ActionButton label={`Bawa saldo dari Arus Kas ${view.year - 1}`} icon={<CalendarArrowUp aria-hidden />} onRun={carryCashFromPrior} />
+            </div>
+          ) : null}
+        </div>
       )}
 
       <Card>

@@ -12,14 +12,23 @@ import { env } from "./env";
 /** One line with its thread, if this position may see it; null otherwise (the page answers 404). */
 export async function loadLineDetail(user: CurrentUser, lineId: string) {
   const [row] = await db
-    .select({ versionId: schema.budgetLine.versionId, versionName: schema.budgetVersion.name, versionStatus: schema.budgetVersion.status })
+    .select({
+      versionId: schema.budgetLine.versionId,
+      versionName: schema.budgetVersion.name,
+      versionStatus: schema.budgetVersion.status,
+      fiscalYear: schema.budgetVersion.fiscalYear,
+    })
     .from(schema.budgetLine)
     .innerJoin(schema.budgetVersion, eq(schema.budgetVersion.id, schema.budgetLine.versionId))
     .where(eq(schema.budgetLine.id, lineId));
   if (!row) return null;
   const [line] = await loadScopedLines(user, undefined, row.versionId, lineId);
   if (!line) return null;
-  return { line, version: { id: row.versionId, name: row.versionName, status: row.versionStatus }, comments: await loadThread(lineId) };
+  return {
+    line,
+    version: { id: row.versionId, name: row.versionName, status: row.versionStatus, fiscalYear: row.fiscalYear },
+    comments: await loadThread(lineId),
+  };
 }
 
 export async function loadThread(lineId: string): Promise<ThreadComment[]> {

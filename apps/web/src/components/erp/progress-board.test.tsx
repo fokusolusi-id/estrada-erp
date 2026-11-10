@@ -14,13 +14,21 @@ const rows = cycleProgress(
 );
 
 describe("ProgressBoard", () => {
-  it("shows each division's lines per state, a dash where there are none, and how much is final", () => {
+  it("walks the six stages in order with who holds each and how many lines sit there", () => {
     render(<ProgressBoard rows={rows} />);
-    const pdms = within(screen.getByTestId("progress-PDMS"));
-    expect(pdms.getByTestId("state-draft").textContent).toBe("1");
-    expect(pdms.getByTestId("state-consolidation").textContent).toBe("–");
-    expect(pdms.getByTestId("final").textContent).toBe("33%");
-    expect(within(screen.getByTestId("progress-total")).getByTestId("state-locked").textContent).toBe("2");
+    const steps = within(screen.getByTestId("progress-total"));
+    expect(steps.getAllByRole("listitem").map((li) => li.dataset.state)).toEqual(["draft", "consolidation", "division_approval", "finance_review", "awaiting_lock", "locked"]);
+    expect(steps.getByTestId("state-locked").textContent).toBe("2");
+    expect(steps.getByTestId("state-consolidation").textContent).toBe("–");
+    expect(steps.getByText("Default Owner")).toBeTruthy();
+    expect(screen.getByTestId("final-all").textContent).toBe("50%");
+  });
+
+  it("draws each division as one bar split by stage, with how much is final", () => {
+    render(<ProgressBoard rows={rows} />);
+    const pdms = screen.getByTestId("progress-PDMS");
+    expect(within(pdms).getByRole("img").getAttribute("aria-label")).toBe("PDMS: Draft 1, Review Finance 1, Terkunci 1");
+    expect(within(pdms).getByTestId("final").textContent).toBe("33%");
   });
 
   it("says so when the cycle has no lines", () => {

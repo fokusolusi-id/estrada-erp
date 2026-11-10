@@ -4,6 +4,8 @@ import { can, formatIdr, sum, ZERO } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { loadAllocation } from "@/lib/allocation";
 import { loadScopedLines, openVersion } from "@/lib/rka";
+import { hiddenColumns, viewLines } from "@/lib/view-filter";
+import { ViewNote } from "@/components/erp/view-note";
 import { loadOrg } from "@/lib/workflow";
 import { EntityBases } from "@/components/erp/entity-bases";
 import { SharedCostEditor, type SharedCostLine } from "@/components/erp/shared-cost-editor";
@@ -11,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { saveEntityHeadcount, saveSharedCosts } from "./actions";
 import { Split } from "lucide-react";
 import { EmptyState } from "@/components/erp/empty-state";
+import { rkaLabel } from "@estrada/domain";
 
 export const metadata: Metadata = { title: "Biaya Bersama" };
 
@@ -26,7 +29,8 @@ export default async function AllocationPage() {
       </div>
     );
   }
-  const [scoped, org, { ctx, rules }] = await Promise.all([loadScopedLines(user, undefined, version.id), loadOrg(), loadAllocation(version.id)]);
+  const [all, org, { ctx, rules }] = await Promise.all([loadScopedLines(user, undefined, version.id), loadOrg(), loadAllocation(version.id)]);
+  const scoped = await viewLines(all);
 
   const lines: SharedCostLine[] = scoped
     .filter((l) => l.category !== "Revenue")
@@ -53,9 +57,10 @@ export default async function AllocationPage() {
       <div>
         <h1 className="text-2xl font-semibold">Biaya Bersama</h1>
         <p className="text-muted-foreground text-sm">
-          {version.name} · {shared.length} baris biaya bersama
+          {rkaLabel(version)} · {shared.length} baris biaya bersama
           {shared.length ? ` senilai ${formatIdr(sharedTotal, { unit: "rp" })}` : ""}
         </p>
+        <ViewNote />
       </div>
       <Card>
         <CardHeader>
@@ -83,7 +88,7 @@ export default async function AllocationPage() {
         </CardHeader>
         <CardContent>
           {lines.length ? (
-            <SharedCostEditor lines={lines} entities={ctx.entities} onSave={saveSharedCosts} />
+            <SharedCostEditor lines={lines} entities={ctx.entities} onSave={saveSharedCosts} hide={await hiddenColumns(lines)} />
           ) : (
             <EmptyState icon={Split} title="Belum ada baris biaya di versi ini." description="Baris biaya muncul setelah unit mengisi RKA atau workbook diimpor." />
           )}

@@ -52,8 +52,8 @@ describe("parseRkaData", () => {
     const l = lines[0]!;
     expect(l).toMatchObject({ ref: { no: 1, sheet: "Project Delivery & Managed Serv", row: 20 }, coaCode: "5300", category: "COGS", requestorUnit: "SCM", ownerUnit: "SCM", crossDivision: false, entity: "ESTRADA", item: "Bandwidth pelanggan", basis: "Tarif berjalan", flags: [] });
     expect(l.months.map((m) => m.toString())).toEqual(months(390686823.67).map(String));
-    expect(l.rka2026?.toString()).toBe("4000000");
-    expect(l.actual2026?.toString()).toBe("3500000.5");
+    expect(l.priorRka?.toString()).toBe("4000000");
+    expect(l.priorActual?.toString()).toBe("3500000.5");
   });
 
   it("maps old unit names, the upper-case category and Lintas Divisi", () => {
@@ -64,7 +64,7 @@ describe("parseRkaData", () => {
   it("keeps the workbook's cleaning flags and blank 2026 figures as null", () => {
     const { lines } = parseRkaData(DATA([dataRow({ "Flag Cleaning": "Cek potensi double counting dengan RKA HCM; Nilai bulanan mengandung desimal", "RKA 2026": null, "Actual 2026": null })]), UNITS);
     expect(lines[0]!.flags).toEqual(["Cek potensi double counting dengan RKA HCM", "Nilai bulanan mengandung desimal"]);
-    expect(lines[0]!.rka2026).toBeNull();
+    expect(lines[0]!.priorRka).toBeNull();
   });
 
   it("keeps headcount in the notes instead of a cost column", () => {
@@ -94,6 +94,14 @@ describe("parseRkaData", () => {
       { no: 7, message: "Unit pengusul tidak dikenal: XYZ" },
       { no: 8, message: "Entitas kosong" },
     ]);
+  });
+
+  it("reads next year's workbook: the year comes from its Total RKA column, the comparison from the year before", () => {
+    const rename = (c: Cell) => (c === "RKA 2026" ? "RKA 2027" : c === "Actual 2026" ? "Actual 2027" : c === "Total RKA 2027" ? "Total RKA 2028" : c);
+    const rows = DATA([dataRow({})]).map((r) => r.map(rename));
+    const { lines, problems } = parseRkaData(rows, UNITS);
+    expect(problems).toEqual([]);
+    expect([lines[0]!.priorRka?.toString(), lines[0]!.priorActual?.toString()]).toEqual(["4000000", "3500000.5"]);
   });
 
   it("flags a typed total that the months do not add up to", () => {

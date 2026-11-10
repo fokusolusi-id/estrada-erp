@@ -9,9 +9,10 @@ import { ApprovalQueue, type QueueLine } from "@/components/erp/approval-queue";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { actOnLines } from "./actions";
 import { displayUnit } from "@/lib/display-unit";
-import { UnitSwitch } from "@/components/erp/unit-switch";
+import { hiddenColumns, viewLines } from "@/lib/view-filter";
+import { ViewNote } from "@/components/erp/view-note";
 import { PageHeader } from "@/components/erp/page-header";
-import { setDisplayUnit } from "@/app/(app)/unit-actions";
+import { rkaLabel } from "@estrada/domain";
 
 /** Shared body of the approver screens: lines in the given states that this position may see. */
 export async function QueueScreen({
@@ -39,7 +40,7 @@ export async function QueueScreen({
     board ? loadScopedLines(user) : Promise.resolve([]),
     loadOrg(),
   ]);
-  const lines: QueueLine[] = scoped.map((l) => ({
+  const lines: QueueLine[] = (await viewLines(scoped)).map((l) => ({
     id: l.id,
     coaCode: l.coaCode,
     coaName: l.coaName,
@@ -51,8 +52,8 @@ export async function QueueScreen({
     actions: l.actions,
     history: l.history,
     commentCount: l.commentCount,
-    ...(l.rka2026 ? { rka2026: l.rka2026.toFixed() } : {}),
-    ...(l.actual2026 ? { actual2026: l.actual2026.toFixed() } : {}),
+    ...(l.priorRka ? { priorRka: l.priorRka.toFixed() } : {}),
+    ...(l.priorActual ? { priorActual: l.priorActual.toFixed() } : {}),
     ...(l.flags?.length ? { flags: l.flags } : {}),
     ...(l.remark ? { remark: l.remark } : {}),
     ...(l.item ? { item: l.item } : {}),
@@ -63,8 +64,8 @@ export async function QueueScreen({
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <PageHeader
         title={title}
-        description={version ? version.name : "Belum ada siklus RKA yang dibuka"}
-        filters={<UnitSwitch value={unit} onChange={setDisplayUnit} />}
+        description={version ? rkaLabel(version) : "Belum ada siklus RKA yang dibuka"}
+        note={<ViewNote />}
       />
       {board ? (
         <Card>
@@ -73,7 +74,7 @@ export async function QueueScreen({
             <CardDescription>Jumlah baris di setiap tahap, dan porsi yang sudah difinalisasi atau dikunci.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ProgressBoard rows={cycleProgress(everyLine, (u) => org.divisionOf(u))} />
+            <ProgressBoard rows={cycleProgress(await viewLines(everyLine), (u) => org.divisionOf(u))} />
           </CardContent>
         </Card>
       ) : null}
@@ -83,7 +84,7 @@ export async function QueueScreen({
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <ApprovalQueue lines={lines} coa={coa} unit={unit} onAction={actOnLines} />
+          <ApprovalQueue lines={lines} coa={coa} unit={unit} priorYear={(version?.fiscalYear ?? new Date().getFullYear()) - 1} onAction={actOnLines} hide={await hiddenColumns(lines)} />
         </CardContent>
       </Card>
     </div>

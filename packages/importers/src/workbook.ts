@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs";
 import type { Money } from "@estrada/domain";
-import { amount, header, type Cell } from "./cells";
+import { amount, header, text, type Cell } from "./cells";
 import { parseCoaMaster, type CoaReference, type ImportedCoa } from "./coa-master";
 import { parseCash, type ImportedCash } from "./cash";
 import { parsePipeline, type ImportedDeal } from "./pipeline";
@@ -41,7 +41,7 @@ export interface RkaWorkbook {
   cash: ImportedCash | null;
 }
 
-/** Reads a division sheet's own "Total RKA 2027" by sheet name and 1-based row, as "Baris Sumber" counts them. */
+/** Reads a division sheet's own "Total RKA YYYY" by sheet name and 1-based row, as "Baris Sumber" counts them. */
 function sourceTotals(wb: ExcelJS.Workbook): SourceTotal {
   const cache = new Map<string, { rows: Cell[][]; col: number } | null>();
   return (sheet, row) => {
@@ -51,7 +51,9 @@ function sourceTotals(wb: ExcelJS.Workbook): SourceTotal {
       else {
         const rows = sheetRows(wb, sheet);
         try {
-          cache.set(sheet, { rows, col: header(rows, ["COA Code", "Total RKA 2027"]).col("Total RKA 2027") });
+          const head = rows.find((r) => r.some((c) => text(c) === "COA Code")) ?? [];
+          const name = head.map(text).find((c) => /^Total RKA \d{4}$/.test(c));
+          cache.set(sheet, name ? { rows, col: header(rows, ["COA Code", name]).col(name) } : null);
         } catch {
           cache.set(sheet, null);
         }

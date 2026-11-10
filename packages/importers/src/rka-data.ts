@@ -14,8 +14,8 @@ export interface ImportedLine {
   crossDivision: boolean;
   entity: string;
   item: string | null;
-  rka2026: Money | null;
-  actual2026: Money | null;
+  priorRka: Money | null;
+  priorActual: Money | null;
   months: Money[];
   basis: string | null;
   notes: string | null;
@@ -32,9 +32,26 @@ export interface ImportProblem {
 
 export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
 /** The full header of "RKA 2027 Data", in the workbook's order; the export writes exactly these. */
-export const RKA_DATA_COLUMNS = ["No", "Sumber Sheet", "Baris Sumber", "COA Code", "COA Name", "Category", "Requestor (Unit)", "Divisi Requestor", "Budget Owner (Unit)", "Divisi Budget Owner", "Lintas Divisi", "Entitas", "Dasar Entitas", "Keterangan / Item", "Qty (Org)", "RKA 2026", "Actual 2026", ...MONTHS, "Total RKA 2027", "Basis / Assumption", "Notes", "Flag Cleaning"] as const;
+/** The data sheet's columns for a budget year: the comparison columns are the year before, the total is the year itself. */
+export const rkaDataColumns = (year: number) =>
+  [
+    "No", "Sumber Sheet", "Baris Sumber", "COA Code", "COA Name", "Category", "Requestor (Unit)", "Divisi Requestor", "Budget Owner (Unit)",
+    "Divisi Budget Owner", "Lintas Divisi", "Entitas", "Dasar Entitas", "Keterangan / Item", "Qty (Org)",
+    `RKA ${year - 1}`, `Actual ${year - 1}`, ...MONTHS, `Total RKA ${year}`, "Basis / Assumption", "Notes", "Flag Cleaning",
+  ] as const;
+/** The workbook this importer was built on. */
+export const RKA_DATA_COLUMNS = rkaDataColumns(2027);
 /** Columns the importer needs; the derived Divisi and Dasar Entitas columns are optional. */
-const COLS = RKA_DATA_COLUMNS.filter((c) => !["Divisi Requestor", "Divisi Budget Owner", "Dasar Entitas"].includes(c));
+const required = (year: number) => rkaDataColumns(year).filter((c) => !["Divisi Requestor", "Divisi Budget Owner", "Dasar Entitas"].includes(c));
+
+/** The budget year a data sheet is for, read from its "Total RKA YYYY" header. */
+function sheetYear(rows: Cell[][]): number {
+  for (const r of rows) for (const c of r) {
+    const m = /^Total RKA (\d{4})$/.exec(text(c));
+    if (m) return Number(m[1]);
+  }
+  return 2027;
+}
 
 /** Sheet "RKA 2027 Data": the workbook's own clean list of every budget line. Rows it cannot place are reported, never guessed. */
 /** The "Total RKA 2027" a source sheet row holds; the data sheet only sums that row's months, so a total typed without them is lost there. */
@@ -45,7 +62,8 @@ export function parseRkaData(
   units: readonly UnitAlias[],
   sourceTotal: SourceTotal = () => null,
 ): { lines: ImportedLine[]; problems: ImportProblem[] } {
-  const h = header(rows, COLS);
+  const year = sheetYear(rows);
+  const h = header(rows, required(year));
   const unit = unitResolver(units);
   const lines: ImportedLine[] = [];
   const problems: ImportProblem[] = [];
@@ -71,7 +89,7 @@ export function parseRkaData(
     const flags = text(r[h.col("Flag Cleaning")]).split(";").map((f) => f.trim()).filter(Boolean);
     const sourceRow = Number(text(r[h.col("Baris Sumber")]));
     const sheet = text(r[h.col("Sumber Sheet")]);
-    let typed = amount(r[h.col("Total RKA 2027")]);
+    let typed = amount(r[h.col(`Total RKA ${year}`)]);
     if (sum(months).isZero() && (!typed || typed.isZero()) && sheet && sourceRow > 0) typed = sourceTotal(sheet, sourceRow);
     if (typed && !typed.isZero() && sum(months).isZero()) {
       // A total typed without months is spread evenly; the owner can still change any month (client decision).
@@ -96,8 +114,8 @@ export function parseRkaData(
       crossDivision: text(r[h.col("Lintas Divisi")]).toLowerCase() === "ya",
       entity,
       item,
-      rka2026: amount(r[h.col("RKA 2026")]),
-      actual2026: amount(r[h.col("Actual 2026")]),
+      priorRka: amount(r[h.col(`RKA ${year - 1}`)]),
+      priorActual: amount(r[h.col(`Actual ${year - 1}`)]),
       months,
       basis: text(r[h.col("Basis / Assumption")]) || null,
       notes: notes || null,

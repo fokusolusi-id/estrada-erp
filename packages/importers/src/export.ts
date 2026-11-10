@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs";
 import { contribution, pnl, sum, type Category, type EntityAllocationRow, type Money, type PnlKey } from "@estrada/domain";
-import { MONTHS, RKA_DATA_COLUMNS } from "./rka-data";
+import { MONTHS, rkaDataColumns } from "./rka-data";
 
 export interface ExportLine {
   coaCode: string;
@@ -11,8 +11,8 @@ export interface ExportLine {
   entity: string;
   item: string | null;
   months: Money[];
-  rka2026: Money | null;
-  actual2026: Money | null;
+  priorRka: Money | null;
+  priorActual: Money | null;
   basis: string | null;
   notes: string | null;
   flags: string[];
@@ -69,7 +69,9 @@ export async function writeRkaWorkbook(input: ExportInput): Promise<ExcelJS.Buff
 
   // Lines, in the importer's layout plus the approval status and where each line came from.
   const data = titled(`RKA ${input.year} Data`, `RKA ${input.year} – Data`);
-  const cols = [...RKA_DATA_COLUMNS, "Status", "Sumber"];
+  const prior = input.year - 1;
+  const totalColumn = `Total RKA ${input.year}`;
+  const cols = [...rkaDataColumns(input.year), "Status", "Sumber"];
   headerRow(data, cols);
   const at = (name: string) => cols.indexOf(name) + 1;
   const first = data.getColumn(at(MONTHS[0])).letter;
@@ -88,8 +90,8 @@ export async function writeRkaWorkbook(input: ExportInput): Promise<ExcelJS.Buff
       "Lintas Divisi": divisionOf(l.requestorUnit) === divisionOf(l.ownerUnit) ? "Tidak" : "Ya",
       Entitas: l.entity,
       "Keterangan / Item": l.item,
-      "RKA 2026": num(l.rka2026),
-      "Actual 2026": num(l.actual2026),
+      [`RKA ${prior}`]: num(l.priorRka),
+      [`Actual ${prior}`]: num(l.priorActual),
       ...Object.fromEntries(MONTHS.map((m, k) => [m, num(l.months[k] ?? null) ?? 0])),
       "Basis / Assumption": l.basis,
       Notes: l.notes,
@@ -98,10 +100,10 @@ export async function writeRkaWorkbook(input: ExportInput): Promise<ExcelJS.Buff
       Sumber: l.sourceRef,
     };
     const row = data.addRow(cols.map((c) => values[c] ?? null));
-    row.getCell(at("Total RKA 2027")).value = { formula: `SUM(${first}${row.number}:${last}${row.number})`, result: num(sum(l.months)) ?? 0 };
+    row.getCell(at(totalColumn)).value = { formula: `SUM(${first}${row.number}:${last}${row.number})`, result: num(sum(l.months)) ?? 0 };
   });
-  for (const name of ["RKA 2026", "Actual 2026", ...MONTHS, "Total RKA 2027"]) data.getColumn(at(name)).numFmt = IDR;
-  data.columns.forEach((c, i) => (c.width = i + 1 >= at(MONTHS[0]) && i + 1 <= at("Total RKA 2027") ? 18 : 14));
+  for (const name of [`RKA ${prior}`, `Actual ${prior}`, ...MONTHS, totalColumn]) data.getColumn(at(name)).numFmt = IDR;
+  data.columns.forEach((c, i) => (c.width = i + 1 >= at(MONTHS[0]) && i + 1 <= at(totalColumn) ? 18 : 14));
   data.getColumn(at("Keterangan / Item")).width = 36;
 
   // Rekap: the Management Summary's P&L by month.

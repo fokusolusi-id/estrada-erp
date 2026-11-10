@@ -1,5 +1,6 @@
 "use client";
 
+import type { HiddenColumns } from "@estrada/domain";
 import { BadgeCheck, CheckCheck, CircleCheck, Lock, MessageCircleQuestion, Send, Undo2, type LucideIcon } from "lucide-react";
 import { Fragment, useState, useTransition } from "react";
 import { coaSubtree, coaTree, money, sum, type ApprovalAction, type ApprovalState, type Unit } from "@estrada/domain";
@@ -26,8 +27,8 @@ export interface QueueLine {
   item?: string;
   basis?: string;
   actions: ApprovalAction[];
-  rka2026?: string;
-  actual2026?: string;
+  priorRka?: string;
+  priorActual?: string;
   /** Notes for reviewers, e.g. the workbook's cleaning flags. */
   flags?: string[];
   history?: TimelineEvent[];
@@ -88,13 +89,19 @@ export function ApprovalQueue({
   lines: all,
   coa = [],
   unit = "juta",
+  priorYear,
   onAction,
+  hide = {},
 }: {
   lines: QueueLine[];
+  /** The comparison year: the year before the one being planned. */
+  priorYear: number;
   /** COA Master as a tree, for the filter. */
   coa?: readonly CoaBranch[];
   unit?: Unit;
   onAction: (ids: string[], action: ApprovalAction, comment: string | undefined) => Promise<Result>;
+  /** Columns the header has narrowed to one value. */
+  hide?: Partial<HiddenColumns>;
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState<string | null>(null);
@@ -181,12 +188,12 @@ export function ApprovalQueue({
           <TableRow>
             <TableHead className="w-8" />
             <TableHead>COA</TableHead>
-            <TableHead>Entitas</TableHead>
+            {hide.entity ? null : <TableHead>Entitas</TableHead>}
             <TableHead>Pengusul</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Dasar perhitungan</TableHead>
             <TableHead className="text-right">Total RKA</TableHead>
-            <TableHead className="text-right">Actual 2026</TableHead>
+            <TableHead className="text-right">Actual {priorYear}</TableHead>
             <TableHead className="text-right">Perubahan</TableHead>
             <TableHead />
           </TableRow>
@@ -207,7 +214,7 @@ export function ApprovalQueue({
                       onChange={(e) => toggle(actionable, e.target.checked)}
                     />
                   </TableCell>
-                  <TableCell colSpan={5}>
+                  <TableCell colSpan={hide.entity ? 4 : 5}>
                     {owner} · {group.length} baris
                   </TableCell>
                   <TableCell className="text-right" data-testid={`subtotal-${owner}`}>
@@ -232,7 +239,7 @@ export function ApprovalQueue({
                       <div className="text-muted-foreground text-xs">{l.item || l.coaName}</div>
                       <DiscussionLink id={l.id} count={l.commentCount} />
                     </TableCell>
-                    <TableCell>{l.entity}</TableCell>
+                    {hide.entity ? null : <TableCell>{l.entity}</TableCell>}
                     <TableCell>
                       {l.requestorUnit}
                       {l.requestorUnit !== l.ownerUnit ? <span className="text-muted-foreground text-xs"> (lintas unit)</span> : null}
@@ -258,9 +265,9 @@ export function ApprovalQueue({
                     <TableCell className="text-right">
                       <MoneyCell value={totals.get(l.id)!} unit={unit} />
                     </TableCell>
-                    <TableCell className="text-right">{l.actual2026 ? <MoneyCell value={money(l.actual2026)} unit={unit} /> : "—"}</TableCell>
+                    <TableCell className="text-right">{l.priorActual ? <MoneyCell value={money(l.priorActual)} unit={unit} /> : "—"}</TableCell>
                     <TableCell className="text-right">
-                      <VarianceCell plan={totals.get(l.id)!} base={l.actual2026 ? money(l.actual2026) : null} unit={unit} />
+                      <VarianceCell plan={totals.get(l.id)!} base={l.priorActual ? money(l.priorActual) : null} unit={unit} />
                     </TableCell>
                     <TableCell>
                       <Button type="button" size="sm" variant="ghost" aria-expanded={open === l.id} onClick={() => setOpen(open === l.id ? null : l.id)}>
@@ -271,7 +278,7 @@ export function ApprovalQueue({
                   {open === l.id ? (
                     <TableRow>
                       <TableCell />
-                      <TableCell colSpan={9} className="whitespace-normal">
+                      <TableCell colSpan={hide.entity ? 8 : 9} className="whitespace-normal">
                         <ApprovalTimeline events={l.history ?? []} />
                       </TableCell>
                     </TableRow>

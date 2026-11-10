@@ -60,16 +60,18 @@ export function PipelineRegister({
   canAdd,
   onSave,
   onDelete,
+  entity = null,
 }: {
   deals: RegisterDeal[];
   options: Options;
   canAdd: boolean;
   onSave: (deal: DealSave) => Promise<Result>;
   onDelete: (id: string) => Promise<Result>;
+  /** The header's Entitas: deals arrive already narrowed to it, and a new deal starts in it. */
+  entity?: string | null;
 }) {
   const [segment, setSegment] = useState("");
   const [status, setStatus] = useState("");
-  const [entity, setEntity] = useState("");
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<DealSave | null>(null);
   const [message, setMessage] = useState<Result | null>(null);
@@ -79,14 +81,12 @@ export function PipelineRegister({
     (d) =>
       (!segment || d.segment === segment) &&
       (!status || d.status === status) &&
-      (!entity || d.entity === entity) &&
       (!q || `${d.customer} ${d.endCustomer ?? ""} ${d.project}`.toLowerCase().includes(q)),
   );
   const totals = pipelineTotals(list);
-  const entities = [...new Set(deals.map((d) => d.entity))].sort();
   const blank = (): DealSave => ({
     id: null,
-    entity: options.entities[0] ?? "",
+    entity: entity && options.entities.includes(entity) ? entity : (options.entities[0] ?? ""),
     customer: "",
     endCustomer: "",
     segment: SEGMENTS[0],
@@ -106,7 +106,6 @@ export function PipelineRegister({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-wrap items-end gap-3">
           <Input aria-label="Cari customer atau project" placeholder="Cari customer atau project" className="h-9 w-56" value={query} onChange={(e) => setQuery(e.target.value)} />
-          <Filter label="Entitas" value={entity} onChange={setEntity} options={entities} all="Semua entitas" />
           <Filter label="Segmen" value={segment} onChange={setSegment} options={SEGMENTS} all="Semua segmen" />
           <Filter label="Status" value={status} onChange={setStatus} options={DEAL_STATUSES} all="Semua status" />
         </div>
@@ -149,7 +148,7 @@ export function PipelineRegister({
         <TableHeader>
           <TableRow>
             <TableHead>Project</TableHead>
-            <TableHead>Entitas</TableHead>
+            {entity ? null : <TableHead>Entitas</TableHead>}
             <TableHead>Segmen</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Prob.</TableHead>
@@ -169,7 +168,7 @@ export function PipelineRegister({
                   {d.endCustomer ? ` · ${d.endCustomer}` : ""} · {DEAL_TYPE_LABEL[d.type]}
                 </div>
               </TableCell>
-              <TableCell>{d.entity}</TableCell>
+              {entity ? null : <TableCell>{d.entity}</TableCell>}
               <TableCell>{d.segment}</TableCell>
               <TableCell>{d.status}</TableCell>
               <TableCell className="tabular text-right">{d.probability.replace(".", ",")}%</TableCell>
@@ -194,7 +193,7 @@ export function PipelineRegister({
         </TableBody>
         <TableFooter>
           <TableRow data-testid="register-total">
-            <TableCell colSpan={5}>{list.length} deal</TableCell>
+            <TableCell colSpan={entity ? 4 : 5}>{list.length} deal</TableCell>
             <TableCell className="text-right">
               <MoneyCell value={totals.value} />
             </TableCell>

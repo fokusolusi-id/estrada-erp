@@ -3,6 +3,7 @@ import { allocateShared, contribution, entityAllocation, type ApprovalState, typ
 import { loadAllocation } from "./allocation";
 import { loadScopedLines, reportVersions } from "./rka";
 import type { CurrentUser } from "./session";
+import { activeView } from "./view-filter";
 import { loadOrg } from "./workflow";
 
 /** Who reads the Management Summary and may download it. */
@@ -14,10 +15,9 @@ export const SUMMARY_STATUS: Record<string, { label: string; states: readonly Ap
   locked: { label: "Terkunci", states: ["locked"] },
 };
 
+/** Versi and Status stay in the URL; Entitas and Divisi come from the header, as on every screen. */
 export interface SummaryParams {
   version?: string;
-  entity?: string;
-  division?: string;
   status?: string;
 }
 
@@ -25,7 +25,9 @@ export interface SummaryParams {
  * The lines behind the Management Summary and its Excel export, so the download always matches the screen.
  * Shows the open version, else the latest locked one: the final RKA must stay readable after the lock.
  */
-export async function loadSummary(user: CurrentUser, params: SummaryParams) {
+export async function loadSummary(user: CurrentUser, { version: versionId, status: statusKey }: SummaryParams) {
+  const view = await activeView();
+  const params = { version: versionId, status: statusKey, entity: view.entity, division: view.division };
   const status = SUMMARY_STATUS[params.status ?? "all"] ?? SUMMARY_STATUS.all!;
   const versions = await reportVersions();
   const version = versions.find((v) => v.id === params.version) ?? versions[0] ?? null;

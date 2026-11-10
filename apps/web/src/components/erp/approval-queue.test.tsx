@@ -6,13 +6,13 @@ const flat = (a: string) => Array.from({ length: 12 }, () => a);
 const lines: QueueLine[] = [
   { id: "a", coaCode: "6241", coaName: "Beban internet", entity: "ESTRADA", requestorUnit: "SCM", ownerUnit: "SCM", state: "consolidation", months: flat("19821320"), basis: "Kontrak", actions: ["return", "consolidate"],
     history: [{ action: "submit", fromState: "draft", toState: "consolidation", actorName: "Rina (SCM)", actorRole: "Requestor", comment: null, at: "2026-10-31T02:01:00.000Z" }] },
-  { id: "b", coaCode: "5300", coaName: "Biaya jaringan Internet", entity: "ESTRADA", requestorUnit: "SCM", ownerUnit: "SCM", state: "consolidation", months: flat("1000000"), actions: ["return", "consolidate"], actual2026: "10000000", flags: ["Nilai bulanan mengandung desimal"] },
+  { id: "b", coaCode: "5300", coaName: "Biaya jaringan Internet", entity: "ESTRADA", requestorUnit: "SCM", ownerUnit: "SCM", state: "consolidation", months: flat("1000000"), actions: ["return", "consolidate"], priorActual: "10000000", flags: ["Nilai bulanan mengandung desimal"] },
   { id: "c", coaCode: "6211", coaName: "Beban Gaji", entity: "ESTRADA", requestorUnit: "FRM", ownerUnit: "HCM", state: "consolidation", months: flat("0"), actions: [] },
 ];
 
 const setup = () => {
   const onAction = vi.fn(async () => ({ ok: true, message: "2 baris diproses." }));
-  render(<ApprovalQueue lines={lines} unit="rp" onAction={onAction} />);
+  render(<ApprovalQueue priorYear={2026} lines={lines} unit="rp" onAction={onAction} />);
   return onAction;
 };
 
@@ -53,11 +53,11 @@ describe("ApprovalQueue", () => {
 
   it("keeps the result visible after the queue empties", async () => {
     const onAction = vi.fn(async () => ({ ok: true, message: "2 baris diproses." }));
-    const { rerender } = render(<ApprovalQueue lines={lines} unit="rp" onAction={onAction} />);
+    const { rerender } = render(<ApprovalQueue priorYear={2026} lines={lines} unit="rp" onAction={onAction} />);
     fireEvent.click(screen.getByLabelText("Pilih semua SCM"));
     fireEvent.click(screen.getByRole("button", { name: "Kirim ke Division Owner" }));
     await screen.findByText("2 baris diproses.");
-    rerender(<ApprovalQueue lines={[]} unit="rp" onAction={onAction} />);
+    rerender(<ApprovalQueue priorYear={2026} lines={[]} unit="rp" onAction={onAction} />);
     expect(screen.getByText("2 baris diproses.")).toBeTruthy();
     expect(screen.getByText("Tidak ada baris yang menunggu Anda.")).toBeTruthy();
   });
@@ -85,7 +85,7 @@ describe("ApprovalQueue", () => {
       { code: "6241", name: "Beban internet", parentCode: "6240" },
       { code: "6221", name: "Beban rekrutmen", parentCode: "6200" },
     ];
-    render(<ApprovalQueue lines={lines} coa={coa} unit="rp" onAction={vi.fn()} />);
+    render(<ApprovalQueue priorYear={2026} lines={lines} coa={coa} unit="rp" onAction={vi.fn()} />);
     const filter = screen.getByLabelText("Filter COA") as HTMLSelectElement;
     expect([...filter.options].map((o) => o.value)).toEqual(["", "5300", "6200", "6210", "6211", "6240", "6241"]);
 
@@ -100,7 +100,7 @@ describe("ApprovalQueue", () => {
   });
 
   it("drops the selection when the filter changes, so hidden lines are never sent", () => {
-    render(<ApprovalQueue lines={lines} coa={[]} unit="rp" onAction={vi.fn()} />);
+    render(<ApprovalQueue priorYear={2026} lines={lines} coa={[]} unit="rp" onAction={vi.fn()} />);
     fireEvent.click(screen.getByLabelText("Pilih semua SCM"));
     fireEvent.change(screen.getByLabelText("Filter COA"), { target: { value: "6241" } });
     expect((screen.getByLabelText("Pilih 6241 SCM") as HTMLInputElement).checked).toBe(false);

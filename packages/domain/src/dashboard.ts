@@ -10,14 +10,14 @@ type Headline = "Revenue" | "TotalCost" | "ProfitBeforeTax" | "CAPEX";
  * a 2026 figure, so a line new in 2027 does not read as growth. Total cost and profit follow the workbook
  * (CAPEX counts in cost, not in profit).
  */
-export function headline2026(lines: readonly { category: Category; rka2026?: Money | null; months: readonly Money[] }[]) {
-  const covered = lines.filter((l) => l.rka2026);
+export function headlinePrior(lines: readonly { category: Category; priorRka?: Money | null; months: readonly Money[] }[]) {
+  const covered = lines.filter((l) => l.priorRka);
   const totals = (value: (l: (typeof covered)[number]) => Money): Record<Headline, Money> => {
     const by = (c: Category) => sum(covered.filter((l) => l.category === c).map(value));
     const opCost = by("COGS").plus(by("OPEX")).plus(by("OTHERS"));
     return { Revenue: by("Revenue"), TotalCost: opCost.plus(by("CAPEX")), ProfitBeforeTax: by("Revenue").minus(opCost), CAPEX: by("CAPEX") };
   };
-  const base = totals((l) => l.rka2026!);
+  const base = totals((l) => l.priorRka!);
   const plan = totals((l) => sum([...l.months]));
   return {
     base,

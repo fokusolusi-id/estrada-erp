@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/session";
 import { editorMasters, loadScopedLines, openVersion } from "@/lib/rka";
+import { activeYear } from "@/lib/fiscal-year";
 import { BudgetGrid } from "@/components/erp/budget-grid";
 import { displayUnit } from "@/lib/display-unit";
-import { UnitSwitch } from "@/components/erp/unit-switch";
-import { setDisplayUnit } from "@/app/(app)/unit-actions";
+import { activeView, hiddenColumns, viewLines } from "@/lib/view-filter";
+import { ViewNote } from "@/components/erp/view-note";
 import { BudgetEditor, type EditorLine } from "@/components/erp/budget-editor";
 import { HeadcountPlan, type PlanPosition } from "@/components/erp/headcount-plan";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { deleteLine, saveHeadcount, saveLine, submitLines } from "./actions";
 import { FileText } from "lucide-react";
 import { EmptyState } from "@/components/erp/empty-state";
+import { rkaLabel } from "@estrada/domain";
 
 /** The workbook budgets new hires on Beban rekrutmen, owned by HCM. */
 const HEADCOUNT_COA = "6221";
@@ -19,11 +21,13 @@ export const metadata: Metadata = { title: "RKA Saya" };
 
 export default async function RkaPage() {
   const user = await requireUser();
-  const [version, lines, unit] = await Promise.all([openVersion(), loadScopedLines(user), displayUnit()]);
+  const [version, lines, unit, year, view] = await Promise.all([openVersion(), loadScopedLines(user), displayUnit(), activeYear(), activeView()]);
+  const prior = (version?.fiscalYear ?? year ?? new Date().getFullYear()) - 1;
 
   const isRequestor = user.actor.role === "requestor";
   const drafts = isRequestor ? lines.filter((l) => l.state === "draft" && l.canEdit) : [];
-  const others = lines.filter((l) => !drafts.includes(l));
+  // The editor keeps every draft so nothing is hidden while editing; the header narrows the read-only list.
+  const others = await viewLines(lines.filter((l) => !drafts.includes(l)));
   const masters = isRequestor && version ? await editorMasters(user) : null;
 
   const editorLines: EditorLine[] = drafts.map((l) => ({
@@ -35,8 +39,8 @@ export default async function RkaPage() {
     basis: l.basis ?? "",
     months: l.months.map((m) => m.toFixed()),
     ...(l.remark ? { remark: l.remark } : {}),
-    ...(l.rka2026 ? { rka2026: l.rka2026.toFixed() } : {}),
-    ...(l.actual2026 ? { actual2026: l.actual2026.toFixed() } : {}),
+    ...(l.priorRka ? { priorRka: l.priorRka.toFixed() } : {}),
+    ...(l.priorActual ? { priorActual: l.priorActual.toFixed() } : {}),
     ...(l.flags?.length ? { flags: l.flags } : {}),
     commentCount: l.commentCount,
     ...(l.headcount ? { planned: true } : {}),
@@ -51,7 +55,8 @@ export default async function RkaPage() {
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <div>
         <h1 className="text-2xl font-semibold">RKA Saya</h1>
-        <p className="text-muted-foreground text-sm">{version ? version.name : "Belum ada siklus RKA yang dibuka"}</p>
+        <p className="text-muted-foreground text-sm">{version ? rkaLabel(version) : "Belum ada siklus RKA yang dibuka"}</p>
+        <ViewNote />
       </div>
 
       {masters ? (
@@ -65,9 +70,10 @@ export default async function RkaPage() {
           </CardHeader>
           <CardContent>
             <BudgetEditor
+              priorYear={prior}
               lines={editorLines}
               masters={masters}
-              defaultEntity={masters.entities[0] ?? "ESTRADA"}
+              defaultEntity={view.entity && masters.entities.includes(view.entity) ? view.entity : (masters.entities[0] ?? "ESTRADA")}
               onSave={saveLine}
               onDelete={deleteLine}
               onSubmit={submitLines}
@@ -90,7 +96,7 @@ export default async function RkaPage() {
               positions={positions}
               masters={{ coa: masters.coa.filter((c) => c.category === "OPEX" || c.category === "COGS"), entities: masters.entities }}
               defaultCoa={masters.coa.some((c) => c.code === HEADCOUNT_COA) ? HEADCOUNT_COA : (masters.coa[0]?.code ?? "")}
-              defaultEntity={masters.entities[0] ?? "ESTRADA"}
+              defaultEntity={view.entity && masters.entities.includes(view.entity) ? view.entity : (masters.entities[0] ?? "ESTRADA")}
               onSave={saveHeadcount}
               onDelete={deleteLine}
             />
@@ -105,12 +111,11 @@ export default async function RkaPage() {
               <CardTitle>{isRequestor ? "Sudah dikirim" : "Baris anggaran"}</CardTitle>
               <CardDescription>Total dihitung otomatis dari Jan–Des.</CardDescription>
             </div>
-            <UnitSwitch value={unit} onChange={setDisplayUnit} />
           </div>
         </CardHeader>
         <CardContent>
           {others.length ? (
-            <BudgetGrid lines={others} unit={unit} />
+            <BudgetGrid lines={others} priorYear={prior} unit={unit} hide={await hiddenColumns(others)} />
           ) : (
             <EmptyState icon={FileText} title="Belum ada baris anggaran di tahap ini." description="Baris yang sudah Anda kirim tampil di sini beserta tahapnya." />
           )}

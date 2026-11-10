@@ -16,6 +16,7 @@ import {
 import { loadAllocation } from "./allocation";
 import { loadScopedLines, reportVersions } from "./rka";
 import type { CurrentUser } from "./session";
+import { rkaLabel } from "@estrada/domain";
 
 export interface Facility {
   id: string;
@@ -51,8 +52,8 @@ export const CONSOLIDATED = "KONSOLIDASI";
  * Biaya Bersama, so each entity carries its share of shared costs (client decision), plus the year's
  * assumptions and Obligo.
  */
-export async function loadCash(user: CurrentUser): Promise<CashView | null> {
-  const [version] = await reportVersions();
+export async function loadCash(user: CurrentUser, fiscalYear?: number): Promise<CashView | null> {
+  const [version] = await reportVersions(fiscalYear);
   if (!version) return null;
   const year = version.fiscalYear;
 
@@ -130,5 +131,5 @@ export async function loadCash(user: CurrentUser): Promise<CashView | null> {
     forecasts.set(CONSOLIDATED, consolidateCash([...forecasts.values()], settings.minimumCash));
   }
 
-  return { year, versionName: version.name, settings, entities, openings, facilities, forecasts };
+  return { year, versionName: rkaLabel(version), settings, entities, openings, facilities, forecasts };
 }

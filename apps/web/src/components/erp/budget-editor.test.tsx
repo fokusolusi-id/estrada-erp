@@ -16,14 +16,14 @@ const masters = {
 
 const zero = Array.from({ length: 12 }, () => "0");
 const lines: EditorLine[] = [
-  { id: "11111111-1111-4111-8111-111111111111", coaCode: "6241", entityCode: "ESTRADA", ownerUnit: "SCM", item: "Internet kantor", basis: "Kontrak 2027", months: zero, rka2026: "200000000", actual2026: "180000000", flags: ["Cek potensi double counting dengan RKA HCM"] },
+  { id: "11111111-1111-4111-8111-111111111111", coaCode: "6241", entityCode: "ESTRADA", ownerUnit: "SCM", item: "Internet kantor", basis: "Kontrak 2027", months: zero, priorRka: "200000000", priorActual: "180000000", flags: ["Cek potensi double counting dengan RKA HCM"] },
   { id: "22222222-2222-4222-8222-222222222222", coaCode: "6241", entityCode: "ESTRADA", ownerUnit: "SCM", item: "Internet gudang", basis: "", months: zero, remark: { by: "Bayu (Head SCM)", comment: "Basis kontrak belum dilampirkan" } },
 ];
 
 const ok = () => vi.fn(async () => ({ ok: true, message: "ok", id: "33333333-3333-4333-8333-333333333333" }));
 const setup = () => {
   const props = { lines, masters, defaultEntity: "ESTRADA", onSave: ok(), onDelete: ok(), onSubmit: ok() };
-  render(<BudgetEditor {...props} />);
+  render(<BudgetEditor priorYear={2026} {...props} />);
   return props;
 };
 const cell = (row: number, month: number) => screen.getByLabelText(`Baris ${row} bulan ${month}`) as HTMLInputElement;
@@ -121,7 +121,7 @@ describe("BudgetEditor", () => {
   });
 
   it("links each saved draft to its discussion, so questions reach the requestor while they edit", () => {
-    render(<BudgetEditor lines={[{ ...lines[0]!, commentCount: 1 }, lines[1]!]} masters={masters} defaultEntity="ESTRADA" onSave={ok()} onDelete={ok()} onSubmit={ok()} />);
+    render(<BudgetEditor priorYear={2026} lines={[{ ...lines[0]!, commentCount: 1 }, lines[1]!]} masters={masters} defaultEntity="ESTRADA" onSave={ok()} onDelete={ok()} onSubmit={ok()} />);
     expect(screen.getAllByRole("link").map((a) => [a.textContent, a.getAttribute("href")])).toEqual([
       ["Diskusi (1)", `/rka/line/${lines[0]!.id}`],
       ["Diskusi", `/rka/line/${lines[1]!.id}`],
@@ -131,7 +131,7 @@ describe("BudgetEditor", () => {
   it("shows a line from the headcount plan read-only, but still lets it be sent", () => {
     const planned: EditorLine = { id: "44444444-4444-4444-8444-444444444444", coaCode: "6221", entityCode: "ESTRADA", ownerUnit: "HCM", item: "Account Manager", basis: "Rencana headcount: 6 orang", months: Array.from({ length: 12 }, () => "100500000"), planned: true };
     const props = { lines: [lines[0]!, planned], masters, defaultEntity: "ESTRADA", onSave: ok(), onDelete: ok(), onSubmit: ok() };
-    const { rerender } = render(<BudgetEditor {...props} />);
+    const { rerender } = render(<BudgetEditor priorYear={2026} {...props} />);
     expect(cell(2, 1).disabled).toBe(true);
     expect((screen.getByLabelText("Uraian baris 2") as HTMLInputElement).disabled).toBe(true);
     expect(screen.getAllByRole("button", { name: "Hapus baris" })[1]!.hasAttribute("disabled")).toBe(true);
@@ -140,7 +140,7 @@ describe("BudgetEditor", () => {
 
     // Saving the plan re-renders the page; the editor shows the new months without losing unsaved edits elsewhere.
     fireEvent.change(cell(1, 1), { target: { value: "5.000" } });
-    rerender(<BudgetEditor {...props} lines={[lines[0]!, { ...planned, months: Array.from({ length: 12 }, () => "117250000") }]} />);
+    rerender(<BudgetEditor priorYear={2026} {...props} lines={[lines[0]!, { ...planned, months: Array.from({ length: 12 }, () => "117250000") }]} />);
     expect(cell(1, 1).value).toBe("5.000");
     expect(cell(2, 1).value).toBe("117.250.000");
   });

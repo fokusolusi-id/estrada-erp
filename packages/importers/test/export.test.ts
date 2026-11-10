@@ -14,10 +14,10 @@ const PNL_LABEL = { Revenue: "Pendapatan", COGS: "COGS", GrossProfit: "Laba Koto
 
 const months = (...v: string[]) => Array.from({ length: 12 }, (_, i) => money(v[i % v.length]!));
 const LINES: ExportLine[] = [
-  { coaCode: "4100", coaName: "Pendapatan Sewa CPE", category: "Revenue", requestorUnit: "BCD", ownerUnit: "BCD", entity: "ESTRADA", item: "Sewa router", months: months("1000000000.50"), rka2026: money("9000000000"), actual2026: null, basis: "Kontrak berjalan", notes: null, flags: [], status: "Terkunci", sourceRef: "RKA 2027 Data #1" },
-  { coaCode: "4100", coaName: "Pendapatan Sewa CPE", category: "Revenue", requestorUnit: "BCD", ownerUnit: "BCD", entity: "MATRIK", item: null, months: months("250000000"), rka2026: null, actual2026: null, basis: null, notes: null, flags: [], status: "Terkunci", sourceRef: null },
-  { coaCode: "5300", coaName: "Biaya jaringan Internet", category: "COGS", requestorUnit: "SCM", ownerUnit: "SCM", entity: "ESTRADA", item: "Bandwidth", months: months("300000000.33", "0"), rka2026: money("3500000000"), actual2026: money("2999999999.99"), basis: null, notes: "Qty 3 org", flags: ["Nominal Q4 diasumsikan", "Cek tarif"], status: "Review Finance", sourceRef: null },
-  { coaCode: "6222", coaName: "Biaya pelatihan", category: "OPEX", requestorUnit: "FRM", ownerUnit: "HCM", entity: "ESTRADA", item: "Sertifikasi", months: months("15000000"), rka2026: null, actual2026: null, basis: null, notes: null, flags: [], status: "Draft", sourceRef: null },
+  { coaCode: "4100", coaName: "Pendapatan Sewa CPE", category: "Revenue", requestorUnit: "BCD", ownerUnit: "BCD", entity: "ESTRADA", item: "Sewa router", months: months("1000000000.50"), priorRka: money("9000000000"), priorActual: null, basis: "Kontrak berjalan", notes: null, flags: [], status: "Terkunci", sourceRef: "RKA 2027 Data #1" },
+  { coaCode: "4100", coaName: "Pendapatan Sewa CPE", category: "Revenue", requestorUnit: "BCD", ownerUnit: "BCD", entity: "MATRIK", item: null, months: months("250000000"), priorRka: null, priorActual: null, basis: null, notes: null, flags: [], status: "Terkunci", sourceRef: null },
+  { coaCode: "5300", coaName: "Biaya jaringan Internet", category: "COGS", requestorUnit: "SCM", ownerUnit: "SCM", entity: "ESTRADA", item: "Bandwidth", months: months("300000000.33", "0"), priorRka: money("3500000000"), priorActual: money("2999999999.99"), basis: null, notes: "Qty 3 org", flags: ["Nominal Q4 diasumsikan", "Cek tarif"], status: "Review Finance", sourceRef: null },
+  { coaCode: "6222", coaName: "Biaya pelatihan", category: "OPEX", requestorUnit: "FRM", ownerUnit: "HCM", entity: "ESTRADA", item: "Sertifikasi", months: months("15000000"), priorRka: null, priorActual: null, basis: null, notes: null, flags: [], status: "Draft", sourceRef: null },
 ];
 
 async function exported(lines = LINES) {
@@ -37,7 +37,7 @@ describe("writeRkaWorkbook", () => {
       LINES.map((l) => [l.coaCode, l.requestorUnit, l.ownerUnit, l.entity, l.category, l.item, totalOf(l)]),
     );
     expect(lines[2]!.months.map((m) => m.toFixed(2))).toEqual(LINES[2]!.months.map((m) => m.toFixed(2)));
-    expect([lines[2]!.rka2026?.toFixed(2), lines[2]!.actual2026?.toFixed(2), lines[1]!.rka2026]).toEqual(["3500000000.00", "2999999999.99", null]);
+    expect([lines[2]!.priorRka?.toFixed(2), lines[2]!.priorActual?.toFixed(2), lines[1]!.priorRka]).toEqual(["3500000000.00", "2999999999.99", null]);
     expect(lines[2]!.flags).toEqual(["Nominal Q4 diasumsikan", "Cek tarif"]);
     expect(lines.map((l) => l.crossDivision)).toEqual([false, false, false, true]);
   });
@@ -89,6 +89,15 @@ describe("writeRkaWorkbook", () => {
       ["MATRIK", 30, 0, 40, 40, -10],
       ["Total", 150, 100, 0, 100, 50],
     ]);
+  });
+
+  it("names the comparison and total columns after the year it exports", async () => {
+    const buf = await writeRkaWorkbook({ year: 2028, title: "RKA 2028", lines: LINES, divisionOf: (u) => DIVISION[u]!, pnlLabel: PNL_LABEL });
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(buf);
+    const header = sheetRows(wb, "RKA 2028 Data").find((r) => r.includes("No"))!;
+    expect(["RKA 2027", "Actual 2027", "Total RKA 2028"].every((h) => header.includes(h))).toBe(true);
+    expect(parseRkaData(sheetRows(wb, "RKA 2028 Data"), UNITS).lines).toHaveLength(LINES.length);
   });
 
   it("names the version on every sheet and states the unit is full rupiah", async () => {

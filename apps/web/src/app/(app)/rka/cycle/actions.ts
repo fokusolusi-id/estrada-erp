@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@estrada/db";
-import { can, nextVersionName, openCycleProblem, reviseProblem } from "@estrada/domain";
+import { can, carryLinesForward, money, newYearProblem, nextVersionName, reviseProblem, ZERO } from "@estrada/domain";
 import { enqueueEmail } from "@/lib/email/outbox";
 import { env } from "@/lib/env";
 import { requireUser } from "@/lib/session";
@@ -49,9 +49,13 @@ const OpenSchema = z.object({
   fiscalYear: z.coerce.number().int().min(2020).max(2100),
   name: z.string().trim().min(3, "Nama versi wajib diisi"),
   deadline: DEADLINE,
+  start: z.enum(["empty", "previous"]).default("empty"),
 });
 
-/** Finance opens the RKA cycle: an empty open version, and an email to every requestor. */
+/**
+ * Finance opens the RKA cycle and emails every requestor. The version starts empty, or from last year's locked RKA:
+ * its lines copied as Draft for each unit to adjust, last year's totals kept as the comparison.
+ */
 export async function openCycle(_prev: CycleState, form: FormData): Promise<CycleState> {
   const user = await requireFinance();
   if (!user) return DENIED;
@@ -60,14 +64,73 @@ export async function openCycle(_prev: CycleState, form: FormData): Promise<Cycl
   const v = parsed.data;
 
   const versions = await db.select().from(schema.budgetVersion);
-  if (openCycleProblem(v.fiscalYear, versions)) return { ok: false, message: `Sudah ada versi terbuka untuk ${v.fiscalYear}.` };
+  const problem = newYearProblem(v.fiscalYear, versions);
+  if (problem === "already_open") return { ok: false, message: `Sudah ada versi terbuka untuk ${v.fiscalYear}.` };
+  if (problem === "other_year_open") return { ok: false, message: "Tahun lain masih terbuka. Kunci versi itu dulu sebelum membuka tahun baru." };
+  const base =
+    v.start === "previous"
+      ? versions.filter((x) => x.fiscalYear === v.fiscalYear - 1 && x.status === "locked").sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
+      : null;
+  if (v.start === "previous" && !base) return { ok: false, message: `Belum ada RKA ${v.fiscalYear - 1} yang terkunci untuk dijadikan titik awal.` };
   if (versions.some((x) => x.name === v.name)) return { ok: false, message: `Nama versi "${v.name}" sudah dipakai.` };
 
-  const [version] = await db
-    .insert(schema.budgetVersion)
-    .values({ fiscalYear: v.fiscalYear, name: v.name, submissionDeadline: v.deadline })
-    .returning({ id: schema.budgetVersion.id });
-  await db.insert(schema.auditLog).values({ actorUserId: user.id, action: "cycle.open", subjectType: "budget_version", subjectId: version!.id, after: v });
+  const version = await db.transaction(async (tx) => {
+    const [created] = await tx
+      .insert(schema.budgetVersion)
+      .values({ fiscalYear: v.fiscalYear, name: v.name, submissionDeadline: v.deadline })
+      .returning({ id: schema.budgetVersion.id });
+    let carried = 0;
+    if (base) {
+      const lines = await tx.select().from(schema.budgetLine).where(eq(schema.budgetLine.versionId, base.id));
+      const amounts = lines.length ? await tx.select().from(schema.budgetLineAmount).where(inArray(schema.budgetLineAmount.lineId, lines.map((l) => l.id))) : [];
+      const monthsOf = (id: string) => {
+        const m = Array.from({ length: 12 }, () => ZERO);
+        for (const a of amounts.filter((x) => x.lineId === id)) m[a.month - 1] = money(a.amount);
+        return m;
+      };
+      const next = carryLinesForward(lines.map((l) => ({ ...l, months: monthsOf(l.id) })));
+      if (next.length) {
+        const inserted = await tx
+          .insert(schema.budgetLine)
+          .values(
+            next.map((l, i) => ({
+              versionId: created!.id,
+              coaCode: l.coaCode,
+              entityCode: l.entityCode,
+              requestorUnit: l.requestorUnit,
+              ownerUnit: l.ownerUnit,
+              item: l.item,
+              project: lines[i]!.project,
+              basis: l.basis,
+              notes: l.notes,
+              crossDivision: l.crossDivision,
+              priorRka: l.priorRka.toFixed(2),
+              priorActual: null,
+              sharedBasis: l.sharedBasis,
+              sharedFixed: l.sharedFixed,
+              sourceRef: `Dari ${base.name}`,
+              createdBy: lines[i]!.createdBy,
+              state: l.state,
+            })),
+          )
+          .returning({ id: schema.budgetLine.id });
+        await tx.insert(schema.budgetLineAmount).values(
+          inserted.flatMap((row, i) => next[i]!.months.map((m, k) => ({ lineId: row.id, month: k + 1, amount: m.toFixed(2) }))),
+        );
+        carried = inserted.length;
+      }
+      const heads = await tx.select().from(schema.entityHeadcount).where(eq(schema.entityHeadcount.versionId, base.id));
+      if (heads.length) await tx.insert(schema.entityHeadcount).values(heads.map((h) => ({ ...h, versionId: created!.id })));
+    }
+    await tx.insert(schema.auditLog).values({
+      actorUserId: user.id,
+      action: "cycle.open",
+      subjectType: "budget_version",
+      subjectId: created!.id,
+      after: { ...v, from: base?.name ?? null, lines: carried },
+    });
+    return created!;
+  });
   await emailRequestors(v.deadline);
 
   // The form goes away once the year has an open version, so the page itself confirms.
@@ -144,8 +207,8 @@ export async function reviseVersion(_prev: CycleState, form: FormData): Promise<
             basis: l.basis,
             notes: l.notes,
             crossDivision: l.crossDivision,
-            rka2026: l.rka2026,
-            actual2026: l.actual2026,
+            priorRka: l.priorRka,
+            priorActual: l.priorActual,
             reviewFlags: l.reviewFlags,
             sourceRef: l.sourceRef,
             sharedBasis: l.sharedBasis,

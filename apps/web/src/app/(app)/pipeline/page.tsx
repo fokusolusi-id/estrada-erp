@@ -7,14 +7,14 @@ import { displayUnit } from "@/lib/display-unit";
 import { loadPipeline, pipelineYear } from "@/lib/pipeline";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
-import { KpiCard } from "@/components/erp/kpi-card";
+import { KpiCard, KpiStrip } from "@/components/erp/kpi-card";
 import { PageHeader } from "@/components/erp/page-header";
 import { FigureCell } from "@/components/erp/money-cell";
 import { PipelineRegister } from "@/components/erp/pipeline-register";
-import { UnitSwitch } from "@/components/erp/unit-switch";
+import { activeView } from "@/lib/view-filter";
+import { ViewNote } from "@/components/erp/view-note";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { setDisplayUnit } from "../unit-actions";
 import { deleteDeal, saveDeal } from "./actions";
 
 export const metadata: Metadata = { title: "Pipeline" };
@@ -25,7 +25,7 @@ export default async function PipelinePage() {
   const user = await requireUser();
   const org = await loadOrg();
   if (!canPipeline(user.actor, "view", null, org)) notFound();
-  const [year, unit] = await Promise.all([pipelineYear(), displayUnit()]);
+  const [year, unit, view] = await Promise.all([pipelineYear(), displayUnit(), activeView()]);
   if (!year) {
     return (
       <div className="grid gap-2">
@@ -34,7 +34,7 @@ export default async function PipelinePage() {
       </div>
     );
   }
-  const [{ deals, targets }, entities, coa] = await Promise.all([
+  const [{ deals: allDeals, targets }, entities, coa] = await Promise.all([
     loadPipeline(year),
     db.select({ code: schema.companyEntity.code }).from(schema.companyEntity).where(eq(schema.companyEntity.active, true)),
     db
@@ -43,6 +43,7 @@ export default async function PipelinePage() {
       .where(and(eq(schema.coaAccount.category, "Revenue"), eq(schema.coaAccount.active, true)))
       .orderBy(asc(schema.coaAccount.code)),
   ]);
+  const deals = allDeals.filter((d) => !view.entity || d.entity === view.entity);
   const editableEntities = entities.map((e) => e.code).filter((e) => canPipeline(user.actor, "edit", e, org));
   const totals = pipelineTotals(deals);
   const segments = pipelineBySegment(deals, targets);
@@ -53,15 +54,15 @@ export default async function PipelinePage() {
       <PageHeader
         title={`Pipeline ${year}`}
         description="Dikelola BCD. Nilai tertimbang = nilai (exclude PPN) × probabilitas; tidak dijumlahkan ke pendapatan RKA."
-        filters={<UnitSwitch value={unit} onChange={setDisplayUnit} />}
+        note={<ViewNote ignores={["division"]} />}
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <KpiStrip>
         <KpiCard label="Nilai pipeline" value={totals.value} unit={unit} note={`${deals.length} deal`} />
         <KpiCard label="Pipeline tertimbang" value={totals.weighted} unit={unit} note="Nilai × probabilitas" />
         <KpiCard label="Target pendapatan" value={targetTotal} unit={unit} note="Target BCD per segmen" />
         <KpiCard label="Selisih ke target" value={totals.weighted.minus(targetTotal)} unit={unit} note={`${pct(totals.weighted, targetTotal)} dari target`} />
-      </div>
+      </KpiStrip>
 
       <Card>
         <CardHeader>
@@ -132,6 +133,7 @@ export default async function PipelinePage() {
             canAdd={editableEntities.length > 0}
             onSave={saveDeal}
             onDelete={deleteDeal}
+            entity={view.entity}
           />
         </CardContent>
       </Card>

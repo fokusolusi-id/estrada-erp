@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { HiddenColumns } from "@estrada/domain";
 import { lineTotal, summarize, type ApprovalState, type BudgetLine, type Money, type Unit } from "@estrada/domain";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MoneyCell } from "./money-cell";
@@ -10,8 +11,8 @@ export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "
 export interface GridLine extends BudgetLine {
   coaName: string;
   state: ApprovalState;
-  rka2026?: Money | null;
-  actual2026?: Money | null;
+  priorRka?: Money | null;
+  priorActual?: Money | null;
   /** Notes for reviewers, e.g. the workbook's cleaning flags. */
   flags?: string[];
   /** Comments on the line; the link to its discussion shows the count. */
@@ -20,7 +21,7 @@ export interface GridLine extends BudgetLine {
 
 /**
  * 12-month budget grid. Totals always come from the domain (never typed by hand).
- * Read-only; drafts are edited in BudgetEditor. Actual 2026 and the change sit beside each line, as in the division sheets.
+ * Read-only; drafts are edited in BudgetEditor. Last year's actual and the change sit beside each line, as in the division sheets.
  */
 /** Link to a line's page with its discussion and history. */
 export function DiscussionLink({ id, count = 0 }: { id: string; count?: number | undefined }) {
@@ -31,14 +32,27 @@ export function DiscussionLink({ id, count = 0 }: { id: string; count?: number |
   );
 }
 
-export function BudgetGrid({ lines, unit = "juta", discussion = true }: { lines: GridLine[]; unit?: Unit; discussion?: boolean }) {
+export function BudgetGrid({
+  lines,
+  priorYear,
+  unit = "juta",
+  discussion = true,
+  hide = {},
+}: {
+  lines: GridLine[];
+  priorYear: number;
+  unit?: Unit;
+  discussion?: boolean;
+  /** Columns the header has narrowed to one value. */
+  hide?: Partial<HiddenColumns>;
+}) {
   const total = summarize(lines, () => "all").get("all");
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead className="sticky left-0 bg-background">COA</TableHead>
-          <TableHead>Entitas</TableHead>
+          {hide.entity ? null : <TableHead>Entitas</TableHead>}
           <TableHead>Status</TableHead>
           {MONTHS.map((m) => (
             <TableHead key={m} className="text-right">
@@ -46,7 +60,7 @@ export function BudgetGrid({ lines, unit = "juta", discussion = true }: { lines:
             </TableHead>
           ))}
           <TableHead className="text-right">Total RKA</TableHead>
-          <TableHead className="text-right">Actual 2026</TableHead>
+          <TableHead className="text-right">Actual {priorYear}</TableHead>
           <TableHead className="text-right">Perubahan</TableHead>
         </TableRow>
       </TableHeader>
@@ -63,7 +77,7 @@ export function BudgetGrid({ lines, unit = "juta", discussion = true }: { lines:
                 </span>
               ) : null}
             </TableCell>
-            <TableCell>{l.entity}</TableCell>
+            {hide.entity ? null : <TableCell>{l.entity}</TableCell>}
             <TableCell>
               <StatusBadge state={l.state} />
             </TableCell>
@@ -76,10 +90,10 @@ export function BudgetGrid({ lines, unit = "juta", discussion = true }: { lines:
               <MoneyCell value={lineTotal(l)} unit={unit} />
             </TableCell>
             <TableCell className="text-right" data-testid={`actual-${l.id}`}>
-              {l.actual2026 ? <MoneyCell value={l.actual2026} unit={unit} /> : "—"}
+              {l.priorActual ? <MoneyCell value={l.priorActual} unit={unit} /> : "—"}
             </TableCell>
             <TableCell className="text-right">
-              <VarianceCell plan={lineTotal(l)} base={l.actual2026 ?? null} unit={unit} />
+              <VarianceCell plan={lineTotal(l)} base={l.priorActual ?? null} unit={unit} />
             </TableCell>
           </TableRow>
         ))}
@@ -87,7 +101,7 @@ export function BudgetGrid({ lines, unit = "juta", discussion = true }: { lines:
       {total ? (
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={3}>Total</TableCell>
+            <TableCell colSpan={hide.entity ? 2 : 3}>Total</TableCell>
             {total.months.map((m, i) => (
               <TableCell key={i} className="text-right">
                 <MoneyCell value={m} unit={unit} />

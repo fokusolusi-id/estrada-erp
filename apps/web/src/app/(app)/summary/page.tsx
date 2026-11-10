@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Download } from "lucide-react";
 import Link from "next/link";
-import { ALLOCATION_PROBLEM_LABEL, canPipeline, contribution, formatAmount, headline2026, pipelineTotals, pnl, scaleTo, unitDecimals, unitLabel, type Money } from "@estrada/domain";
+import { ALLOCATION_PROBLEM_LABEL, canPipeline, contribution, formatAmount, headlinePrior, pipelineTotals, pnl, scaleTo, unitDecimals, unitLabel, type Money } from "@estrada/domain";
 import { loadPipeline } from "@/lib/pipeline";
 import { requireUser } from "@/lib/session";
 import { loadSummary, SUMMARY_ROLES, SUMMARY_STATUS, type SummaryParams } from "@/lib/summary";
@@ -11,15 +11,16 @@ import { PnlChart, RankedBars } from "@/components/erp/charts";
 import { ContributionTable } from "@/components/erp/contribution-table";
 import { EntityAllocationTable } from "@/components/erp/entity-allocation-table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { KpiCard } from "@/components/erp/kpi-card";
+import { KpiCard, KpiStrip } from "@/components/erp/kpi-card";
 import { PageHeader } from "@/components/erp/page-header";
 import { PnlTable } from "@/components/erp/pnl-table";
 import { ScopeBar } from "@/components/erp/scope-bar";
 import { displayUnit } from "@/lib/display-unit";
-import { UnitSwitch } from "@/components/erp/unit-switch";
-import { setDisplayUnit } from "@/app/(app)/unit-actions";
+import { activeView } from "@/lib/view-filter";
+import { ViewNote } from "@/components/erp/view-note";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { rkaLabel } from "@estrada/domain";
 
 export const metadata: Metadata = { title: "Management Summary" };
 
@@ -30,18 +31,18 @@ export default async function SummaryPage({
 }) {
   const user = await requireUser();
   if (!SUMMARY_ROLES.includes(user.actor.role)) notFound();
-  const params = await searchParams;
-  const [{ versions, version, scoped, lines, reportLines, org, entityRows, allocationProblems, sharedLines }, unit] = await Promise.all([
+  const { version: versionParam, status } = await searchParams;
+  const params: SummaryParams = { version: versionParam, status };
+  const [{ versions, version, lines, reportLines, org, entityRows, allocationProblems, sharedLines }, unit] = await Promise.all([
     loadSummary(user, params),
     displayUnit(),
   ]);
+  const view = await activeView();
   // Weighted pipeline sits beside revenue, never inside it (plan); only those who may read the register see it.
   const pipeline =
     version && canPipeline(user.actor, "view", null, org)
-      ? pipelineTotals((await loadPipeline(version.fiscalYear)).deals.filter((d) => !params.entity || d.entity === params.entity))
+      ? pipelineTotals((await loadPipeline(version.fiscalYear)).deals.filter((d) => !view.entity || d.entity === view.entity))
       : null;
-  const entities = [...new Set(scoped.map((l) => l.entity))].sort();
-  const divisions = [...new Set(scoped.map((l) => org.divisionOf(l.ownerUnit)))].sort();
   const rows = pnl(reportLines);
   const row = (key: string) => rows.find((r) => r.key === key)!;
   const total = (key: string) => row(key).total;
@@ -49,11 +50,12 @@ export default async function SummaryPage({
   const n = (m: Money) => scaleTo(m, unit).toNumber();
   const chart = { decimals: unitDecimals(unit), unitLabel: unitLabel(unit) };
   const trend = (key: string) => row(key).months.map(n);
-  // Like for like against RKA 2026, over the lines that carry a 2026 figure; hidden when too few do to mean much.
-  const vs2026 = headline2026(lines);
-  const enough = vs2026.of > 0 && vs2026.covered / vs2026.of >= 0.5;
+  // Like for like against last year's RKA, over the lines that carry it; hidden when too few do to mean much.
+  const vsPrior = headlinePrior(lines);
+  const enough = vsPrior.of > 0 && vsPrior.covered / vsPrior.of >= 0.5;
+  const against = (version?.fiscalYear ?? new Date().getFullYear()) - 1;
   const change = (key: "Revenue" | "TotalCost" | "ProfitBeforeTax" | "CAPEX", goodWhenUp: boolean) =>
-    enough && vs2026.change(key) ? { pct: vs2026.change(key), goodWhenUp } : undefined;
+    enough && vsPrior.change(key) ? { pct: vsPrior.change(key), goodWhenUp, against } : undefined;
   const byDivision = contribution(reportLines, (l) => org.divisionOf(l.requestorUnit));
   const locked = lines.filter((l) => l.state === "locked").length;
   const exportQuery = new URLSearchParams(Object.entries({ ...params, version: version?.id }).filter((e): e is [string, string] => !!e[1])).toString();
@@ -62,7 +64,8 @@ export default async function SummaryPage({
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <PageHeader
         title="Management Summary"
-        description={<>{version ? version.name : "Belum ada siklus RKA yang dibuka"} · {lines.length} baris, {locked} terkunci</>}
+        description={<>{version ? rkaLabel(version) : "Belum ada siklus RKA yang dibuka"} · {lines.length} baris, {locked} terkunci</>}
+        note={<ViewNote />}
         actions={
           version ? (
             <Button asChild variant="outline">
@@ -75,14 +78,11 @@ export default async function SummaryPage({
         }
         filters={
           <>
-            <UnitSwitch value={unit} onChange={setDisplayUnit} />
             <ScopeBar
               filters={[
                 ...(versions.length > 1
-                  ? [{ name: "version", label: "Versi", options: versions.map((v) => ({ value: v.id, label: `${v.name}${v.status === "locked" ? " (terkunci)" : ""}` })) }]
+                  ? [{ name: "version", label: "Versi", options: versions.map((v) => ({ value: v.id, label: `${rkaLabel(v)}${v.copiedFromId ? " revisi" : ""}${v.status === "locked" ? " (terkunci)" : ""}` })) }]
                   : []),
-                { name: "entity", label: "Entitas", options: [{ value: "", label: "Semua entitas" }, ...entities.map((e) => ({ value: e, label: e }))] },
-                { name: "division", label: "Divisi", options: [{ value: "", label: "Semua divisi" }, ...divisions.map((d) => ({ value: d, label: d }))] },
                 { name: "status", label: "Status", options: Object.entries(SUMMARY_STATUS).map(([value, s]) => ({ value, label: s.label })) },
               ]}
             />
@@ -90,12 +90,12 @@ export default async function SummaryPage({
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <KpiStrip>
         <KpiCard label="Pendapatan" value={total("Revenue")} unit={unit} note="Rencana invoice" change={change("Revenue", true)} trend={trend("Revenue")} />
         <KpiCard label="Total Biaya" value={total("TotalCost")} unit={unit} note="COGS + OPEX + OTHERS + CAPEX" change={change("TotalCost", false)} trend={trend("TotalCost")} />
         <KpiCard label="Laba Sebelum Pajak" value={total("ProfitBeforeTax")} unit={unit} signal change={change("ProfitBeforeTax", true)} trend={trend("ProfitBeforeTax")} />
         <KpiCard label="CAPEX" value={total("CAPEX")} unit={unit} change={change("CAPEX", false)} trend={trend("CAPEX")} />
-      </div>
+      </KpiStrip>
       {pipeline ? (
         <p className="text-muted-foreground -mt-3 text-sm" data-testid="summary-pipeline">
           Di luar RKA: pipeline tertimbang {formatAmount(pipeline.weighted, unit)} dari nilai {formatAmount(pipeline.value, unit)}.{" "}

@@ -1,10 +1,10 @@
 import {
-  BookOpen, ChartColumn, CircleDot, FileText, Gauge, House, Inbox, Layers, Lock, RefreshCw, Split, Users, Wallet, Kanban, Armchair, ShieldCheck, type LucideIcon,
+  BookOpen, ChartColumn, CircleDot, CircleHelp, FileText, Gauge, House, Inbox, Layers, Lock, RefreshCw, Split, Users, Wallet, Kanban, Armchair, ShieldCheck, type LucideIcon,
 } from "lucide-react";
 
 const ICONS: Record<string, LucideIcon> = {
   home: House, file: FileText, inbox: Inbox, layers: Layers, kanban: Kanban, lock: Lock, cycle: RefreshCw, actual: Gauge,
-  split: Split, book: BookOpen, chart: ChartColumn, pipeline: CircleDot, wallet: Wallet, users: Users, seat: Armchair, shield: ShieldCheck,
+  split: Split, book: BookOpen, chart: ChartColumn, pipeline: CircleDot, wallet: Wallet, users: Users, seat: Armchair, shield: ShieldCheck, help: CircleHelp,
 };
 
 export function NavIcon({ name, className }: { name: string; className?: string }) {

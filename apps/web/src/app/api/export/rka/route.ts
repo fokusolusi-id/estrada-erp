@@ -4,6 +4,7 @@ import { PNL_LABEL } from "@/components/erp/pnl-table";
 import { STATE_LABEL } from "@/components/erp/status-badge";
 import { requireUser } from "@/lib/session";
 import { loadSummary, SUMMARY_ROLES, type SummaryParams } from "@/lib/summary";
+import { rkaLabel } from "@estrada/domain";
 
 /** The Management Summary as an Excel workbook, with the same version, filters and scope as the screen. */
 export async function GET(request: Request) {
@@ -29,8 +30,8 @@ export async function GET(request: Request) {
     entity: l.entity,
     item: l.item,
     months: l.months,
-    rka2026: l.rka2026 ?? null,
-    actual2026: l.actual2026 ?? null,
+    priorRka: l.priorRka ?? null,
+    priorActual: l.priorActual ?? null,
     basis: l.basis ?? null,
     notes: l.notes ?? null,
     flags: l.flags ?? [],
@@ -40,7 +41,7 @@ export async function GET(request: Request) {
 
   const body = await writeRkaWorkbook({
     year: version.fiscalYear,
-    title: version.name,
+    title: rkaLabel(version),
     lines: lines.map(toExport),
     reportLines: reportLines.map(toExport),
     divisionOf,
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
     ...(sharedLines ? { entityAllocation: entityRows } : {}),
   });
 
-  const filename = `${version.name.replace(/[^\w .()-]+/g, "_")}.xlsx`;
+  const filename = `${rkaLabel(version)}.xlsx`;
   return new Response(new Uint8Array(body), {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

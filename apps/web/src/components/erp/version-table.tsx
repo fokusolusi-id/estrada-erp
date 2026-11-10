@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { STATE_LABEL } from "./status-badge";
+import { rkaLabel } from "@estrada/domain";
 
 export interface VersionRow {
   id: string;
@@ -50,9 +51,9 @@ export function VersionTable({ rows, now = new Date(), actions }: { rows: Versio
           return (
             <TableRow key={r.id} data-testid={`version-${r.id}`}>
               <TableCell>
-                <div className="font-medium">{r.name}</div>
+                <div className="font-medium">{rkaLabel(r)}</div>
                 <div className="text-muted-foreground text-xs">
-                  {r.fiscalYear}
+                  {r.name}
                   {r.copiedFrom ? <> · <span>Revisi dari {r.copiedFrom}</span></> : null}
                 </div>
               </TableCell>

@@ -29,6 +29,11 @@ export class OrgTree {
     return code;
   }
 
+  /** Every unit marked as a division, by code. */
+  divisions(): string[] {
+    return [...this.typeOf].filter(([, t]) => t === "division").map(([c]) => c).sort();
+  }
+
   has(code: string): boolean {
     return this.parentOf.has(code);
   }

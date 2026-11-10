@@ -1,9 +1,9 @@
+import { Check } from "lucide-react";
 import { APPROVAL_STATES, type ApprovalState, type DivisionProgress } from "@estrada/domain";
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { STATE_LABEL } from "./status-badge";
 
-const DOT: Record<ApprovalState, string> = {
+const FILL: Record<ApprovalState, string> = {
   draft: "bg-state-draft",
   consolidation: "bg-state-consolidation",
   division_approval: "bg-state-division",
@@ -11,80 +11,122 @@ const DOT: Record<ApprovalState, string> = {
   awaiting_lock: "bg-state-awaiting",
   locked: "bg-state-locked",
 };
-const TINT: Record<ApprovalState, string> = {
-  draft: "bg-state-draft/12",
-  consolidation: "bg-state-consolidation/12",
-  division_approval: "bg-state-division/12",
-  finance_review: "bg-state-finance/15",
-  awaiting_lock: "bg-state-awaiting/12",
-  locked: "bg-state-locked/12",
+const RING: Record<ApprovalState, string> = {
+  draft: "ring-state-draft/25",
+  consolidation: "ring-state-consolidation/25",
+  division_approval: "ring-state-division/25",
+  finance_review: "ring-state-finance/30",
+  awaiting_lock: "ring-state-awaiting/25",
+  locked: "ring-state-locked/25",
+};
+/** Who holds the lines at each stage. */
+const HOLDER: Record<ApprovalState, string> = {
+  draft: "Requestor",
+  consolidation: "Default Owner",
+  division_approval: "Division Owner",
+  finance_review: "Finance",
+  awaiting_lock: "Finance",
+  locked: "Selesai",
 };
 
-function Count({ state, n }: { state: ApprovalState; n: number }) {
-  return (
-    <span data-testid={`state-${state}`} className={cn("tabular inline-flex min-w-8 justify-center rounded-md px-1.5 py-0.5 font-medium", n ? TINT[state] : "text-muted-foreground")}>
-      {n || "–"}
-    </span>
-  );
-}
-
-/** Where every division's lines stand in the cycle: a count per state and the share already final. */
+/**
+ * Where the cycle stands: a stepper of the six stages with the lines sitting at each, then one bar per division
+ * split by stage, so a stuck division shows at a glance.
+ */
 export function ProgressBoard({ rows }: { rows: DivisionProgress[] }) {
   if (!rows.length) return <p className="text-muted-foreground py-6 text-center text-sm">Belum ada baris RKA di siklus ini.</p>;
   const sum = (state: ApprovalState) => rows.reduce((n, r) => n + r.counts[state], 0);
   const all = rows.reduce((n, r) => n + r.total, 0);
   const final = all ? Math.round(((sum("awaiting_lock") + sum("locked")) / all) * 100) : 0;
-  const bar = (share: number) => (
-    <div className="flex items-center justify-end gap-2">
-      <div className="bg-muted h-1.5 w-12 overflow-hidden rounded-full" aria-hidden>
-        <div className="bg-state-locked h-full rounded-full" style={{ width: `${share}%` }} />
-      </div>
-      <span data-testid="final" className="tabular w-10 text-right">
-        {share}%
-      </span>
-    </div>
-  );
+  // A stage is behind the cycle once no line sits there or before it.
+  const firstBusy = APPROVAL_STATES.findIndex((s) => sum(s) > 0);
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Divisi</TableHead>
-          {APPROVAL_STATES.map((s) => (
-            <TableHead key={s} className="h-auto py-2 text-center leading-tight whitespace-normal">
-              <span aria-hidden className={cn("mr-1.5 inline-block size-1.5 rounded-full align-middle", DOT[s])} />
-              {STATE_LABEL[s]}
-            </TableHead>
-          ))}
-          <TableHead className="text-right">Baris</TableHead>
-          <TableHead className="text-right">Final</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
+    <div className="grid gap-6">
+      <div className="bg-muted/40 grid gap-4 rounded-xl border p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+          <span className="font-medium">{all} baris</span>
+          <span className="text-muted-foreground flex items-center gap-2">
+            <span className="bg-muted h-1.5 w-24 overflow-hidden rounded-full" aria-hidden>
+              <span className="bg-state-locked block h-full rounded-full" style={{ width: `${final}%` }} />
+            </span>
+            <span>
+              <span data-testid="final-all" className="tabular text-foreground font-medium">
+                {final}%
+              </span>{" "}
+              final
+            </span>
+          </span>
+        </div>
+        <ol data-testid="progress-total" aria-label="Tahap RKA" className="grid gap-y-3 lg:grid-cols-6 lg:gap-x-3">
+          {APPROVAL_STATES.map((s, i) => {
+            const n = sum(s);
+            const passed = i < firstBusy;
+            const line = passed || n ? "bg-state-locked/40" : "bg-border";
+            return (
+              <li
+                key={s}
+                data-state={s}
+                className="relative grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-x-3 lg:grid-cols-1 lg:content-start lg:items-start lg:justify-items-center lg:gap-1 lg:text-center"
+              >
+                {i > 0 ? (
+                  <>
+                    {/* Vertical on phones, horizontal from desktop. */}
+                    <span aria-hidden className={cn("absolute -top-3 left-[0.9375rem] h-3 w-0.5 lg:hidden", line)} />
+                    <span aria-hidden className={cn("absolute top-4 right-[calc(50%+1.25rem)] hidden h-0.5 w-[calc(100%-1.75rem)] rounded-full lg:block", line)} />
+                  </>
+                ) : null}
+                <span
+                  aria-hidden
+                  className={cn(
+                    "tabular relative row-span-2 grid size-8 place-items-center rounded-full text-xs font-semibold lg:row-span-1",
+                    n ? cn(FILL[s], "text-white ring-4", RING[s]) : passed ? "bg-state-locked/15 text-state-locked" : "bg-background text-muted-foreground border",
+                  )}
+                >
+                  {passed ? <Check className="size-4" /> : i + 1}
+                </span>
+                <span className="col-start-2 row-start-1 text-sm leading-tight font-medium lg:col-start-1 lg:row-start-auto lg:flex lg:min-h-9 lg:items-center">
+                  {STATE_LABEL[s]}
+                </span>
+                <span
+                  data-testid={`state-${s}`}
+                  className={cn(
+                    "tabular col-start-3 row-span-2 row-start-1 text-lg leading-none font-semibold lg:col-start-1 lg:row-span-1 lg:row-start-auto",
+                    !n && "text-muted-foreground font-normal",
+                  )}
+                >
+                  {n || "–"}
+                </span>
+                <span className="text-muted-foreground col-start-2 row-start-2 text-xs lg:col-start-1 lg:row-start-auto">{HOLDER[s]}</span>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+
+      <div className="grid gap-3" aria-label="Per divisi">
         {rows.map((r) => (
-          <TableRow key={r.division} data-testid={`progress-${r.division}`}>
-            <TableCell className="font-medium">{r.division}</TableCell>
-            {APPROVAL_STATES.map((s) => (
-              <TableCell key={s} className="text-center">
-                <Count state={s} n={r.counts[s]} />
-              </TableCell>
-            ))}
-            <TableCell className="tabular text-right">{r.total}</TableCell>
-            <TableCell>{bar(r.finalShare)}</TableCell>
-          </TableRow>
+          <div key={r.division} data-testid={`progress-${r.division}`} className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-3 text-sm">
+            <span className="truncate font-medium">{r.division}</span>
+            <div
+              role="img"
+              aria-label={`${r.division}: ${APPROVAL_STATES.filter((s) => r.counts[s]).map((s) => `${STATE_LABEL[s]} ${r.counts[s]}`).join(", ")}`}
+              className="bg-muted flex h-2.5 gap-px overflow-hidden rounded-full"
+            >
+              {APPROVAL_STATES.filter((s) => r.counts[s]).map((s) => (
+                <span key={s} title={`${STATE_LABEL[s]}: ${r.counts[s]} baris`} className={cn("h-full", FILL[s])} style={{ width: `${(r.counts[s] / r.total) * 100}%` }} />
+              ))}
+            </div>
+            <span className="text-muted-foreground tabular w-28 text-right text-xs">
+              {r.total} baris ·{" "}
+              <span data-testid="final" className="text-foreground font-medium">
+                {r.finalShare}%
+              </span>{" "}
+              final
+            </span>
+          </div>
         ))}
-      </TableBody>
-      <TableFooter>
-        <TableRow data-testid="progress-total">
-          <TableCell>Total</TableCell>
-          {APPROVAL_STATES.map((s) => (
-            <TableCell key={s} className="text-center">
-              <Count state={s} n={sum(s)} />
-            </TableCell>
-          ))}
-          <TableCell className="tabular text-right">{all}</TableCell>
-          <TableCell>{bar(final)}</TableCell>
-        </TableRow>
-      </TableFooter>
-    </Table>
+      </div>
+    </div>
   );
 }

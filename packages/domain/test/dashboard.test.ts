@@ -1,29 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { cashWaterfall, cycleProgress, headline2026 } from "../src/dashboard";
+import { cashWaterfall, cycleProgress, headlinePrior } from "../src/dashboard";
 import { money, ZERO } from "../src/money";
 
-describe("headline2026: the change badges compare like for like", () => {
+describe("headlinePrior: the change badges compare like for like", () => {
   const twelve = (v: number) => Array.from({ length: 12 }, () => money(v));
   const lines = [
-    { category: "Revenue" as const, rka2026: money(1000), months: twelve(100) },
-    { category: "COGS" as const, rka2026: money(400), months: twelve(50) },
-    { category: "OPEX" as const, rka2026: money(150), months: twelve(10) },
+    { category: "Revenue" as const, priorRka: money(1000), months: twelve(100) },
+    { category: "COGS" as const, priorRka: money(400), months: twelve(50) },
+    { category: "OPEX" as const, priorRka: money(150), months: twelve(10) },
     // No 2026 figure: left out of both sides, so a new line does not show as growth.
-    { category: "OPEX" as const, rka2026: null, months: twelve(500) },
-    { category: "CAPEX" as const, rka2026: money(50), months: twelve(5) },
+    { category: "OPEX" as const, priorRka: null, months: twelve(500) },
+    { category: "CAPEX" as const, priorRka: money(50), months: twelve(5) },
   ];
 
   it("adds RKA 2026 and the 2027 plan over the same lines, with total cost and profit as the workbook computes them", () => {
-    const h = headline2026(lines);
+    const h = headlinePrior(lines);
     expect([h.base.Revenue, h.base.TotalCost, h.base.ProfitBeforeTax, h.base.CAPEX].map((m) => m.toFixed(0))).toEqual(["1000", "600", "450", "50"]);
     expect([h.plan.Revenue, h.plan.TotalCost, h.plan.ProfitBeforeTax, h.plan.CAPEX].map((m) => m.toFixed(0))).toEqual(["1200", "780", "480", "60"]);
     expect([h.covered, h.of]).toEqual([4, 5]);
   });
 
   it("gives a percent change only when there is a positive base", () => {
-    const h = headline2026(lines);
+    const h = headlinePrior(lines);
     expect(h.change("Revenue")?.toFixed(1)).toBe("20.0");
-    expect(headline2026([{ category: "Revenue", rka2026: null, months: twelve(1) }]).change("Revenue")).toBeNull();
+    expect(headlinePrior([{ category: "Revenue", priorRka: null, months: twelve(1) }]).change("Revenue")).toBeNull();
   });
 });
 

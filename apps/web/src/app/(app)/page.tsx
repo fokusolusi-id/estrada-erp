@@ -2,12 +2,15 @@ import Link from "next/link";
 import { ArrowRight, CalendarClock, CircleCheck, Inbox } from "lucide-react";
 import { ROLE_LABEL, cycleProgress, daysLeft, type ApprovalAction, type Role } from "@estrada/domain";
 import { loadScopedLines, openVersion } from "@/lib/rka";
+import { viewLines } from "@/lib/view-filter";
+import { ViewNote } from "@/components/erp/view-note";
 import { loadOrg } from "@/lib/workflow";
 import { PageHeader } from "@/components/erp/page-header";
 import { ProgressBoard } from "@/components/erp/progress-board";
 import { requireUser } from "@/lib/session";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { rkaLabel } from "@estrada/domain";
 
 /** One home page per role: what is waiting for this person, and where to act. */
 const HOME: Record<Role, { title: string; body: string; cta?: { href: string; label: string } }> = {
@@ -64,7 +67,7 @@ export default async function HomePage() {
   const user = await requireUser();
   const home = HOME[user.actor.role];
   const header = (
-    <PageHeader title={`Halo, ${user.name}`} description={`${ROLE_LABEL[user.actor.role]} · ${user.actor.orgUnit} · Entitas: ${user.actor.entities.join(", ")}`} />
+    <PageHeader title={`Halo, ${user.name}`} description={`${ROLE_LABEL[user.actor.role]} · ${user.actor.orgUnit} · Entitas: ${user.actor.entities.join(", ")}`} note={<ViewNote />} />
   );
   const action = (
     <Card>
@@ -93,7 +96,8 @@ export default async function HomePage() {
     );
   }
 
-  const [version, lines, org] = await Promise.all([openVersion(), loadScopedLines(user), loadOrg()]);
+  const [version, scoped, org] = await Promise.all([openVersion(), loadScopedLines(user), loadOrg()]);
+  const lines = await viewLines(scoped);
   const waiting = lines.filter((l) => l.actions.length).length;
   const final = lines.filter((l) => l.state === "awaiting_lock" || l.state === "locked").length;
   const left = version?.submissionDeadline ? daysLeft(version.submissionDeadline, new Date()) : null;
@@ -133,7 +137,7 @@ export default async function HomePage() {
           {action}
           <Card>
             <CardHeader>
-              <CardTitle>Posisi {version ? version.name : "RKA"}</CardTitle>
+              <CardTitle>Posisi {version ? rkaLabel(version) : "RKA"}</CardTitle>
               <CardDescription>Baris dalam cakupan Anda per divisi dan tahap.</CardDescription>
             </CardHeader>
             <CardContent>

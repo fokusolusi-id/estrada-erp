@@ -1,5 +1,6 @@
 "use client";
 
+import type { HiddenColumns } from "@estrada/domain";
 import { Save } from "lucide-react";
 import { useState, useTransition } from "react";
 import { ALLOCATION_BASES, ALLOCATION_PROBLEM_LABEL, BASIS_LABEL, fixedProblem, money, type AllocationBasis } from "@estrada/domain";
@@ -41,7 +42,18 @@ const key = (r: Rule) => (r.basis === "fixed" ? `fixed:${JSON.stringify(r.fixed)
 const typed = (fixed: Record<string, string>) => Object.fromEntries(Object.entries(fixed).filter(([, v]) => v.trim()));
 
 /** Finance marks which cost lines are shared and how each splits across the entities; reports do the split. */
-export function SharedCostEditor({ lines, entities, onSave }: { lines: SharedCostLine[]; entities: readonly string[]; onSave: (changes: SharedCostChange[]) => Promise<Result> }) {
+export function SharedCostEditor({
+  lines,
+  entities,
+  onSave,
+  hide = {},
+}: {
+  lines: SharedCostLine[];
+  entities: readonly string[];
+  onSave: (changes: SharedCostChange[]) => Promise<Result>;
+  /** Columns the header has narrowed to one value. */
+  hide?: Partial<HiddenColumns>;
+}) {
   const initial = () => Object.fromEntries(lines.map((l) => [l.id, { basis: l.basis ?? "", fixed: l.fixed ?? {} } as Rule]));
   const [rules, setRules] = useState<Record<string, Rule>>(initial);
   const [saved, setSaved] = useState<Record<string, Rule>>(rules);
@@ -94,8 +106,8 @@ export function SharedCostEditor({ lines, entities, onSave }: { lines: SharedCos
         <TableHeader>
           <TableRow>
             <TableHead>COA</TableHead>
-            <TableHead>Entitas</TableHead>
-            <TableHead>Pemilik</TableHead>
+            {hide.entity ? null : <TableHead>Entitas</TableHead>}
+            {hide.owner ? null : <TableHead>Pemilik</TableHead>}
             <TableHead className="text-right">Total RKA</TableHead>
             <TableHead className="min-w-56">Dasar alokasi</TableHead>
           </TableRow>
@@ -111,8 +123,8 @@ export function SharedCostEditor({ lines, entities, onSave }: { lines: SharedCos
                   <div className="font-medium">{l.coaCode}</div>
                   <div className="text-muted-foreground text-xs">{l.item || l.coaName}</div>
                 </TableCell>
-                <TableCell>{l.entity}</TableCell>
-                <TableCell>{l.ownerUnit}</TableCell>
+                {hide.entity ? null : <TableCell>{l.entity}</TableCell>}
+                {hide.owner ? null : <TableCell>{l.ownerUnit}</TableCell>}
                 <TableCell className="text-right">
                   <MoneyCell value={money(l.total)} unit="rp" />
                 </TableCell>

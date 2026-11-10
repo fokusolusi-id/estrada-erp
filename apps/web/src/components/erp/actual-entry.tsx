@@ -1,5 +1,6 @@
 "use client";
 
+import type { HiddenColumns } from "@estrada/domain";
 import { Save } from "lucide-react";
 import { useState, useTransition } from "react";
 import { formatIdr, money, parseIdr, parsePaste, type Money } from "@estrada/domain";
@@ -10,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { MoneyCell } from "./money-cell";
 import { VarianceCell } from "./variance-cell";
 
-/** A line whose 2026 actual Finance types in; amounts as plain decimal strings. */
+/** A line whose prior-year actual Finance types in; amounts as plain decimal strings. */
 export interface ActualLine {
   id: string;
   coaCode: string;
@@ -20,8 +21,8 @@ export interface ActualLine {
   ownerUnit: string;
   /** Total RKA 2027. */
   plan: string;
-  rka2026?: string;
-  actual2026?: string;
+  priorRka?: string;
+  priorActual?: string;
 }
 
 type Result = { ok: boolean; message: string };
@@ -38,11 +39,23 @@ function read(text: string): { ok: true; value: Money | null } | { ok: false } {
 }
 
 /**
- * Realisasi 2026, typed in by Finance until it comes from Realisasi Anggaran (client answer 1).
+ * Last year's actual for each line of the year being planned, typed or pasted by Finance once a year.
  * A column copied from Excel pastes down the rows; only changed rows are saved, in one go.
  */
-export function ActualEntry({ lines, onSave }: { lines: ActualLine[]; onSave: (changes: { id: string; actual: string | null }[]) => Promise<Result> }) {
-  const initial = (l: ActualLine) => (l.actual2026 ? plain(money(l.actual2026)) : "");
+export function ActualEntry({
+  lines,
+  priorYear,
+  onSave,
+  hide = {},
+}: {
+  lines: ActualLine[];
+  /** The year the actuals belong to: the year before the one being planned. */
+  priorYear: number;
+  onSave: (changes: { id: string; actual: string | null }[]) => Promise<Result>;
+  /** Columns the header has narrowed to one value. */
+  hide?: Partial<HiddenColumns>;
+}) {
+  const initial = (l: ActualLine) => (l.priorActual ? plain(money(l.priorActual)) : "");
   const [text, setText] = useState<Record<string, string>>(() => Object.fromEntries(lines.map((l) => [l.id, initial(l)])));
   const [saved, setSaved] = useState<Record<string, string>>(text);
   const [query, setQuery] = useState("");
@@ -96,11 +109,11 @@ export function ActualEntry({ lines, onSave }: { lines: ActualLine[]; onSave: (c
         <TableHeader>
           <TableRow>
             <TableHead>COA</TableHead>
-            <TableHead>Entitas</TableHead>
-            <TableHead>Pemilik</TableHead>
-            <TableHead className="text-right">RKA 2026</TableHead>
-            <TableHead className="min-w-44 text-right">Actual 2026</TableHead>
-            <TableHead className="text-right">RKA 2027</TableHead>
+            {hide.entity ? null : <TableHead>Entitas</TableHead>}
+            {hide.owner ? null : <TableHead>Pemilik</TableHead>}
+            <TableHead className="text-right">RKA {priorYear}</TableHead>
+            <TableHead className="min-w-44 text-right">Actual {priorYear}</TableHead>
+            <TableHead className="text-right">RKA {priorYear + 1}</TableHead>
             <TableHead className="text-right">Perubahan</TableHead>
           </TableRow>
         </TableHeader>
@@ -115,12 +128,12 @@ export function ActualEntry({ lines, onSave }: { lines: ActualLine[]; onSave: (c
                   <div className="font-medium">{l.coaCode}</div>
                   <div className="text-muted-foreground text-xs">{l.item || l.coaName}</div>
                 </TableCell>
-                <TableCell>{l.entity}</TableCell>
-                <TableCell>{l.ownerUnit}</TableCell>
-                <TableCell className="text-right">{l.rka2026 ? <MoneyCell value={money(l.rka2026)} unit="rp" /> : "—"}</TableCell>
+                {hide.entity ? null : <TableCell>{l.entity}</TableCell>}
+                {hide.owner ? null : <TableCell>{l.ownerUnit}</TableCell>}
+                <TableCell className="text-right">{l.priorRka ? <MoneyCell value={money(l.priorRka)} unit="rp" /> : "—"}</TableCell>
                 <TableCell>
                   <Input
-                    aria-label={`Actual 2026 baris ${n}`}
+                    aria-label={`Actual ${priorYear} baris ${n}`}
                     inputMode="decimal"
                     className="tabular h-8 text-right"
                     value={value}
