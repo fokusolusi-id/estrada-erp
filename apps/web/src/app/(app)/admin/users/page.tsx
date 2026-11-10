@@ -7,6 +7,7 @@ import { requireUser } from "@/lib/session";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { InviteForm } from "./invite-form";
 
 export const metadata: Metadata = { title: "Pengguna" };
@@ -41,16 +42,16 @@ export default async function UsersPage() {
                 <TableHead>Nama</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-16" />
+                <TableHead className="w-16 text-right" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((u) => (
                 <TableRow key={u.id}>
                   <TableCell>{u.name}</TableCell>
-                  <TableCell>{u.email}</TableCell>
-                  <TableCell>{u.active ? "Aktif" : "Nonaktif"}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                  <TableCell><Badge variant={u.active ? "default" : "outline"}>{u.active ? "Aktif" : "Nonaktif"}</Badge></TableCell>
+                  <TableCell className="text-right">
                     <Link href={`/admin/users/${u.id}`} className="text-primary text-sm underline-offset-4 hover:underline">
                       Edit
                     </Link>

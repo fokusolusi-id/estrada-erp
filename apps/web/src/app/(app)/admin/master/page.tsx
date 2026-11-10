@@ -7,7 +7,8 @@ import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { EntityForm, UnitForm } from "./master-forms";
+import { ColumnHead, EntityForm, UnitForm } from "./master-forms";
+import { ENTITY_GRID, UNIT_GRID } from "./grid";
 
 export const metadata: Metadata = { title: "Unit & Entitas" };
 
@@ -35,10 +36,11 @@ export default async function MasterPage() {
           <CardDescription>Tabel org_unit (FRM, HCM, SCM, dst).</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
+          <ColumnHead cols={UNIT_GRID} labels={["Kode", "Nama", "Tipe", "Induk", ""]} />
           {units.map((u) => (
             <UnitForm key={u.code} unit={{ code: u.code, name: u.name, type: u.type, parentCode: u.parentCode }} parents={parents} />
           ))}
-          <div className="border-t pt-3">
+          <div className="bg-muted/40 -mx-2 mt-1 rounded-lg border border-dashed p-3"><p className="text-muted-foreground mb-2 text-xs font-medium uppercase tracking-wide">Tambah baru</p>
             <UnitForm parents={parents} />
           </div>
         </CardContent>
@@ -49,10 +51,11 @@ export default async function MasterPage() {
           <CardDescription>Tabel company_entity (ESTRADA, MATRIK, DJALU, PAS).</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
+          <ColumnHead cols={ENTITY_GRID} labels={["Kode", "Nama", "Jenis biaya", "Status", ""]} />
           {entities.map((e) => (
             <EntityForm key={e.code} entity={{ code: e.code, name: e.name, costType: e.costType, active: e.active }} />
           ))}
-          <div className="border-t pt-3">
+          <div className="bg-muted/40 -mx-2 mt-1 rounded-lg border border-dashed p-3"><p className="text-muted-foreground mb-2 text-xs font-medium uppercase tracking-wide">Tambah baru</p>
             <EntityForm />
           </div>
         </CardContent>

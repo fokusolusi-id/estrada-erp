@@ -30,12 +30,18 @@ export const requireUser = cache(async (): Promise<CurrentUser> => {
   if (!session) redirect("/login");
 
   // Admin needs every seat too; fetch both at once and keep the second only for admins (one round trip, not two).
-  const [rows, allSeats] = await Promise.all([
+  const [rows, allSeats, ownScopes] = await Promise.all([
     db
       .select()
       .from(schema.position)
       .where(or(eq(schema.position.holderUserId, session.user.id), eq(schema.position.actingUserId, session.user.id))),
     db.select().from(schema.position),
+    // Entity scopes of the user's own seats, fetched in the same round trip as the seats themselves.
+    db
+      .select({ positionId: schema.positionEntityScope.positionId, entity: schema.positionEntityScope.entityCode })
+      .from(schema.positionEntityScope)
+      .innerJoin(schema.position, eq(schema.position.id, schema.positionEntityScope.positionId))
+      .where(or(eq(schema.position.holderUserId, session.user.id), eq(schema.position.actingUserId, session.user.id))),
   ]);
 
   const positions = rows.map((p) => ({
@@ -62,10 +68,14 @@ export const requireUser = cache(async (): Promise<CurrentUser> => {
     viewAs = { options, activeId: target?.id ?? null };
   }
 
-  const scopes = await db
-    .select({ entity: schema.positionEntityScope.entityCode })
-    .from(schema.positionEntityScope)
-    .where(eq(schema.positionEntityScope.positionId, acting.id));
+  // Only an Admin viewing as another seat needs a second lookup; everyone else already has their scopes.
+  const scopes =
+    acting.id === active.id
+      ? ownScopes.filter((s) => s.positionId === acting.id)
+      : await db
+          .select({ entity: schema.positionEntityScope.entityCode })
+          .from(schema.positionEntityScope)
+          .where(eq(schema.positionEntityScope.positionId, acting.id));
 
   return {
     id: session.user.id,
