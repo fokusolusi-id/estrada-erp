@@ -64,6 +64,13 @@
       "when": 1793936317123,
       "tag": "0008_elite_maestro",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794362530595,
+      "tag": "0009_enable_rls",
+      "breakpoints": true
     }
   ]
 }
