@@ -88,6 +88,21 @@ export default async function PositionsPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Buat posisi</CardTitle>
+          <CardDescription>Posisi baru dibuat kosong. Pilih pjs bila kepalanya belum ada.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CreatePositionForm
+            units={unitOptions}
+            roles={roleOptions}
+            users={userOptions}
+            entities={entityOptions}
+            {...(missing ? { defaults: { orgUnit: missing.unit, role: missing.role } } : {})}
+          />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
           <CardTitle>Posisi</CardTitle>
         </CardHeader>
         <CardContent>
@@ -130,21 +145,6 @@ export default async function PositionsPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Buat posisi</CardTitle>
-          <CardDescription>Posisi baru dibuat kosong. Pilih pjs bila kepalanya belum ada.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <CreatePositionForm
-            units={unitOptions}
-            roles={roleOptions}
-            users={userOptions}
-            entities={entityOptions}
-            {...(missing ? { defaults: { orgUnit: missing.unit, role: missing.role } } : {})}
-          />
-        </CardContent>
-      </Card>
     </div>
   );
 }
