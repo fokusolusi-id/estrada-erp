@@ -31,7 +31,7 @@ export default async function EditPositionPage({ params }: { params: Promise<{ i
     <div className="grid max-w-3xl gap-6">
       <div>
         <Link href="/admin/positions" className="text-muted-foreground text-sm hover:underline">
-          ← Posisi & pjs
+          ← Struktur Organisasi
         </Link>
         <h1 className="text-2xl font-semibold">Edit posisi</h1>
       </div>
@@ -48,6 +48,7 @@ export default async function EditPositionPage({ params }: { params: Promise<{ i
               role: pos.role,
               entities: scope.map((s) => s.e),
               holderUserId: pos.holderUserId,
+              holderName: pos.holderName,
             }}
             units={units.map((u) => ({ value: u.code, label: `${u.code} · ${u.name}` }))}
             roles={ROLES.map((r) => ({ value: r, label: ROLE_LABEL[r] }))}

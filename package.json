@@ -13,7 +13,8 @@
     "db:migrate": "pnpm --filter @estrada/db migrate",
     "db:seed": "pnpm --filter @estrada/db seed",
     "e2e": "pnpm --filter web e2e",
-    "db:import": "pnpm --filter @estrada/importers load"
+    "db:import": "pnpm --filter @estrada/importers load",
+    "db:struktur": "pnpm --filter @estrada/importers struktur"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

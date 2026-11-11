@@ -21,3 +21,9 @@ test-results/
 # Client workbooks: budget data stays off GitHub
 fixtures/*.xlsx
 .vercel
+
+# Client org chart with people's names (Struktur Organisasi)
+fixtures/*.json
+
+# Supabase CLI cache (linked project ref)
+supabase/.temp/

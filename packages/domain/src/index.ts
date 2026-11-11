@@ -3,6 +3,8 @@ export * from "./budget";
 export * from "./roles";
 export * from "./approval";
 export * from "./org";
+export * from "./org-chart";
+export * from "./structure";
 export * from "./policy";
 export * from "./notifications";
 export * from "./entry";

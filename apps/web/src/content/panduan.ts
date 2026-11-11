@@ -35,14 +35,14 @@ Setiap pengguna memegang posisi: peran, unit organisasi, dan entitas yang boleh 
 | Finance Reviewer | Beranda, Status Board Finance, Kunci RKA, Siklus RKA, Management Summary, Pipeline, Arus Kas, Realisasi, Biaya Bersama, COA Master | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
 | Direktur | Beranda, Kunci RKA, Siklus RKA, Management Summary, Pipeline, Arus Kas | Tidak | Tidak ada, hanya membaca |
 | Auditor | Beranda, Management Summary, Pipeline, Arus Kas | Tidak | Tidak ada, membaca semua termasuk jejak audit |
-| Admin | Beranda, Pengguna, Unit & Entitas, Posisi & pjs | Tidak | Tidak ada; tidak melihat angka anggaran |
+| Admin | Beranda, Pengguna, Unit & Entitas, Struktur Organisasi | Tidak | Tidak ada; tidak melihat angka anggaran |
 
 Orang BCD dengan peran Requestor, Default Owner atau Division Owner juga melihat menu Pipeline. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
 
 ## Memulai
 
 - **Masuk**: gunakan email kantor dan kata sandi. Akun dibuat oleh Admin lewat undangan email; tidak ada pendaftaran mandiri. *Lupa kata sandi?* mengirim tautan untuk membuat kata sandi baru.
-- **Beranda**: ringkasan untuk peran Anda. Tiga kartu di atas menunjukkan *Menunggu tindakan Anda* (baris di antrean Anda), *Batas pengajuan* (sisa hari) dan *Sudah final* (porsi baris yang sudah difinalisasi atau dikunci). Di bawahnya ada tombol ke layar kerja Anda, *Posisi RKA*, serta *Aktivitas terbaru*. *Posisi RKA* menampilkan enam tahap berurutan (Draft sampai Terkunci) dengan jumlah baris dan pemegang setiap tahap; tahap yang sudah dilewati semua baris bertanda centang. Di bawahnya satu batang per divisi, diwarnai menurut tahap, dengan porsi yang sudah final; arahkan kursor ke warna untuk melihat jumlahnya.
+- **Beranda**: ringkasan untuk peran Anda. Tiga kartu di atas menunjukkan *Menunggu tindakan Anda* (baris di antrean Anda), *Batas pengajuan* (sisa hari) dan *Sudah final* (porsi baris yang sudah difinalisasi atau dikunci). Di bawahnya ada tombol ke layar kerja Anda, *Posisi RKA*, serta *Aktivitas terbaru*. *Posisi RKA* berupa tabel: satu baris per divisi, satu kolom per tahap (Draft sampai Terkunci) berisi jumlah baris, lalu total baris dan porsi yang sudah final.
 - **Menu**: dikelompokkan menjadi Anggaran, Laporan, Data dan Admin. Tombol panah di samping logo melipat menu menjadi ikon; pilihan ini diingat.
 - **Posisi aktif**: pengguna yang memegang lebih dari satu posisi, atau menjadi pjs, berganti posisi di kepala halaman. Menu, cakupan dan antrean mengikuti posisi yang aktif.
 - **Tampilan** (tombol di kepala halaman, misalnya *RKA 2027 · MATRIK · Juta*): klik untuk mengatur *Tahun anggaran*, *Entitas*, *Divisi* dan *Satuan*. Pengaturan berlaku untuk semua layar dan diingat per pengguna; tombol diberi warna saat entitas atau divisi dipersempit. Tahun standarnya tahun yang sedang terbuka; tahun yang sudah dikunci bertanda *(terkunci)* dan tetap dapat dibaca. Angka pembanding selalu dari tahun sebelumnya: membuka RKA 2028 menampilkan RKA 2027 dan Actual 2027. Entitas dan Divisi hanya mempersempit baris yang memang boleh Anda lihat; bila cakupan Anda hanya satu entitas atau satu divisi, namanya tampil tanpa pilihan. Divisi mengikuti unit Default Owner baris. Di ponsel tombol hanya menampilkan tahun dan jumlah filter yang aktif.
@@ -57,7 +57,7 @@ Orang BCD dengan peran Requestor, Default Owner atau Division Owner juga melihat
 Siklus dapat dibuka setelah pengguna, posisi, COA dan (bila ada) baris dari workbook siap. Lakukan berurutan.
 
 1. **Admin mengundang pengguna** (Pengguna, *Undang pengguna*): nama, email, peran, unit, jabatan dan entitas (centang satu per satu, atau *Semua entitas*). Pengguna menerima email untuk membuat kata sandi.
-2. **Admin menyiapkan posisi** (Posisi & pjs): jabatan, peran, unit dan entitas. Bila pemegangnya berhalangan, Admin menetapkan Pejabat sementara (pjs). Unit dan entitas sendiri dikelola di Unit & Entitas.
+2. **Admin menyiapkan posisi** (Struktur Organisasi): jabatan, peran, unit dan entitas. Bila pemegangnya berhalangan, Admin menetapkan Pejabat sementara (pjs). Unit dan entitas sendiri dikelola di Unit & Entitas.
 3. **Finance merawat COA Master**: kode, nama, kategori, default owner, induk dan status aktif.
 4. **Workbook diimpor** oleh tim teknis. Semua baris, nominal Jan sampai Des, dasar perhitungan dan catatannya masuk, termasuk baris rekrutmen sebagai rencana headcount, Pipeline, asumsi arus kas dan pinjaman. Kode yang belum ada di COA Master masuk sebagai kode sementara untuk diputuskan Finance.
 5. **Finance membuka siklus** (Siklus RKA, *Buka siklus baru*): tahun anggaran, nama versi dan Batas pengajuan (pukul 17.00 WIB; standarnya 31 Desember tahun berjalan). *Mulai dari* memilih titik awal: **Kosong**, atau RKA tahun lalu yang terkunci (*salin baris sebagai Draft*). Bila disalin, setiap baris tahun lalu menjadi Draft di unitnya dengan nominal bulan yang sama untuk disesuaikan, total tahun lalu menjadi pembanding RKA, dan rencana headcount serta dasar biaya bersama ikut. *Buka siklus dan kirim email ke requestor* membuka versi di Draft dan mengirim email ke semua Requestor.
@@ -114,7 +114,7 @@ Finance Reviewer memeriksa RKA semua divisi, meminta klarifikasi atau memfinalis
 
 ### Status Board Finance
 
-Di atas, *Posisi RKA per divisi* menampilkan enam tahap dengan jumlah baris di setiap tahap, lalu satu batang per divisi yang diwarnai menurut tahap dan porsi yang sudah final. Di bawahnya antrean baris di Review Finance.
+Di atas, *Posisi RKA per divisi* berupa tabel dengan jumlah baris per tahap untuk setiap divisi, total baris dan porsi yang sudah final. Di bawahnya antrean baris di Review Finance.
 
 1. Periksa konsistensi; Finance masih boleh mengoreksi nominal baris di Review Finance.
 2. Centang baris lalu pilih *Minta klarifikasi* (kembali ke Persetujuan Divisi, catatan wajib) atau *Finalisasi* (pindah ke Menunggu Kunci).
@@ -168,7 +168,12 @@ Admin mengelola orang dan data master, tidak pernah isi anggaran; baris anggaran
 
 - **Pengguna**: undang pengguna dan lihat statusnya. Buka pengguna (*Edit pengguna*) untuk mengubah nama atau email dan melihat posisi yang dipegangnya; akses selalu mengikuti posisi.
 - **Unit & Entitas**: unit organisasi (kode, nama, jenis dan induk) dan entitas (ESTRADA, MATRIK, DJALU, PAS, masing-masing biaya langsung atau tidak langsung). Posisi, baris dan laporan memakai daftar ini. Kode tidak bisa diubah setelah dibuat.
-- **Posisi & pjs**: buat posisi (*Buat posisi*) dan buka posisi (*Edit posisi*) untuk mengubahnya, pemegangnya, atau pjs untuk kursi yang kosong atau berhalangan.
+- **Struktur Organisasi**: tempat menyusun posisi dan menetapkan orangnya. Unit dan induknya diatur di Unit & Entitas; pengguna diundang di Pengguna.
+  - *Bagan* menampilkan perusahaan di atas, unit staf yang langsung di bawah Direktur (misalnya Strategic Growth & Ventures) pada garis tengah, lalu divisi berjajar dan departemen di bawah setiap divisi. Setiap kartu unit memuat posisinya: nama pemegang, *pjs …* bila diisi pejabat sementara, atau *Kosong* berwarna kuning. Lencana *N kosong* menghitung posisi kosong di unit itu dan di bawahnya.
+  - Klik orang atau posisi untuk membuka *Edit posisi* dan menetapkan pemegang, entitas atau pjs. *Tambah posisi* di kartu unit membuka *Buat posisi* dengan unit itu terisi.
+  - *Daftar* menampilkan semua posisi dalam tabel, formulir *Buat posisi*, dan pjs untuk kursi yang kosong.
+  - Bagan mengikuti dokumen *Struktur Organisasi* klien: divisi, departemen, dan bagiannya (misalnya Account Mgmt, PreSales, Sales Ops) yang tampil di dalam kartu departemen. Tim teknis memuat dokumen itu dengan \`pnpm db:struktur\`; nama orang di dalamnya tidak disimpan di GitHub.
+  - Nama dari dokumen yang belum punya akun tampil dengan ikon orang bertanda plus (arahkan kursor untuk keterangannya) dan tidak dihitung kosong. Setelah orangnya diundang di Pengguna, buka posisinya dan pilih akunnya di *Pemegang*; nama dari dokumen lalu diganti nama akun. Kolom *Nama di struktur* di *Edit posisi* dapat dipakai untuk mengubah nama itu.
 - **RKA tertahan karena posisi kosong**: kursi yang ditunggu baris tetapi tidak ada pemegangnya. Tetapkan pemegang atau pjs untuk melepaskannya. Saat baris diserahkan ke kursi kosong, Admin menerima email.
 - **Bertindak sebagai** (kepala halaman): Admin dapat bertindak sebagai kursi mana pun untuk melihat aplikasi persis seperti peran itu, misalnya untuk memeriksa laporan masalah. Setiap pergantian tercatat di jejak audit; *Admin (saya sendiri)* kembali.
 

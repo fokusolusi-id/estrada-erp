@@ -46,6 +46,8 @@ export const position = pgTable("position", {
   holderUserId: text("holder_user_id").references(() => user.id),
   /** pjs */
   actingUserId: text("acting_user_id").references(() => user.id),
+  /** The person the org chart document names for this seat, until they have an account. */
+  holderName: text("holder_name"),
 });
 
 /** Entities a position may see; '*' for all. */

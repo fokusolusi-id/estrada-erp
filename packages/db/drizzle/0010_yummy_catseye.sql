@@ -1,0 +1,1 @@
+ALTER TABLE "position" ADD COLUMN "holder_name" text;

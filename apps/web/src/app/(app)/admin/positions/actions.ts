@@ -103,6 +103,7 @@ const UpdateSchema = z.object({
   title: z.string().trim().min(2, "Jabatan wajib diisi"),
   role: z.enum(ROLES),
   holderUserId: z.string().optional(),
+  holderName: z.string().trim().max(120).optional(),
 });
 
 /** Edits a position's unit, title, role, entities and (optionally) holder. */
@@ -141,6 +142,8 @@ export async function updatePosition(_prev: PositionState, form: FormData): Prom
         title: input.title,
         role: input.role,
         holderUserId: nextHolder,
+        // The document's name only stands in until an account holds the seat.
+        holderName: nextHolder ? null : form.has("holderName") ? input.holderName || null : pos.holderName,
         // A held position has no pjs.
         actingUserId: nextHolder ? null : pos.actingUserId,
       })
@@ -152,8 +155,8 @@ export async function updatePosition(_prev: PositionState, form: FormData): Prom
       action: "position.update",
       subjectType: "position",
       subjectId: pos.id,
-      before: { orgUnit: pos.orgUnitCode, title: pos.title, role: pos.role, holderUserId: pos.holderUserId, entities: before.map((b) => b.e) },
-      after: { orgUnit: input.orgUnit, title: input.title, role: input.role, holderUserId: hasHolderField ? holderUserId : pos.holderUserId, entities },
+      before: { orgUnit: pos.orgUnitCode, title: pos.title, role: pos.role, holderUserId: pos.holderUserId, holderName: pos.holderName, entities: before.map((b) => b.e) },
+      after: { orgUnit: input.orgUnit, title: input.title, role: input.role, holderUserId: hasHolderField ? holderUserId : pos.holderUserId, holderName: input.holderName ?? null, entities },
     });
   });
 

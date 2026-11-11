@@ -71,6 +71,13 @@
       "when": 1794362530595,
       "tag": "0009_enable_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794363737659,
+      "tag": "0010_yummy_catseye",
+      "breakpoints": true
     }
   ]
 }

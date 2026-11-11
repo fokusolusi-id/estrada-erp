@@ -29,7 +29,7 @@ export const NAV: readonly NavItem[] = [
   { href: "/coa", icon: "book", label: "COA Master", roles: ["finance"], group: "Data" },
   { href: "/admin/users", icon: "users", label: "Pengguna", roles: ["admin"], group: "Admin" },
   { href: "/admin/master", icon: "layers", label: "Unit & Entitas", roles: ["admin"], group: "Admin" },
-  { href: "/admin/positions", icon: "seat", label: "Posisi & pjs", roles: ["admin"], group: "Admin" },
+  { href: "/admin/positions", icon: "seat", label: "Struktur Organisasi", roles: ["admin"], group: "Admin" },
   { href: "/panduan", icon: "help", label: "Panduan", roles: "all", group: "Bantuan" },
 ];
 

@@ -110,7 +110,7 @@ export function EditPositionForm({
   entities,
   holders,
 }: {
-  position: { id: string; orgUnit: string; title: string; role: string; entities: string[]; holderUserId: string | null };
+  position: { id: string; orgUnit: string; title: string; role: string; entities: string[]; holderUserId: string | null; holderName?: string | null };
   units: Option[];
   roles: Option[];
   entities: EntityOption[];
@@ -157,6 +157,13 @@ export function EditPositionForm({
               </option>
             ))}
           </select>
+        </div>
+      ) : null}
+      {holders ? (
+        <div className="grid gap-2">
+          <Label htmlFor={`${id}-holder-name`}>Nama di struktur</Label>
+          <Input id={`${id}-holder-name`} name="holderName" defaultValue={position.holderName ?? ""} placeholder="mis. Arya" />
+          <p className="text-muted-foreground text-xs">Nama dari dokumen struktur organisasi, tampil di bagan sampai orangnya punya akun dan dipilih sebagai Pemegang.</p>
         </div>
       ) : null}
       <div className="grid gap-2 sm:col-span-2">
