@@ -258,8 +258,17 @@ Aplikasi mengirim satu email per serah terima, bukan per baris. Email tidak pern
 | 7, 3 dan 1 hari sebelum batas | Requestor dengan baris belum dikirim | Batas pengajuan dekat |
 | Baris menunggu 3 hari atau lebih | Pemegangnya | Pengingat baris tertunda |
 | Undangan atau lupa kata sandi | Pengguna itu | Buat atau atur ulang kata sandi |
+| Permintaan Pembayaran dikirim | Atasan terdekat pemohon | Menunggu persetujuan, dengan nomor dan entitas |
+| Atasan menyetujui | Business Finance (BFP) entitas itu | Perlu diperiksa |
+| BFP meneruskan | Head Divisi pemohon (atau Direktur) | Menunggu persetujuan Head Divisi |
+| Head Divisi menyetujui | Cash Management entitas itu | Siap dijadwalkan |
+| Cash Management menjadwalkan | Pemohon | Dijadwalkan, dengan tanggal jadwal |
+| Cash Management membayar | Pemohon | Sudah dibayar, dengan tanggal bayar |
+| Permintaan dikembalikan | Pemohon | Dikembalikan, dengan alasan |
 
 Dua pengingat terakhir berjalan setiap hari pukul 08.00 WIB.
+
+Email Permintaan Pembayaran juga tanpa nominal: hanya nomor permintaan, entitas, nama pemohon dan tautannya. Bila kursi tahap berikutnya kosong (misalnya belum ada BFP atau Cash Management untuk entitas itu), tidak ada email yang terkirim dan tidak ada pemberitahuan ke Admin; permintaan tetap menunggu di tab *Perlu tindakan* dan langsung terlihat oleh orang yang kemudian ditetapkan di kursi itu, termasuk pjs.
 
 ## Permintaan Pembayaran
 

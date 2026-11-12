@@ -37,12 +37,12 @@ const HOME: Record<Role, { title: string; body: string; cta?: { href: string; la
   bfp: {
     title: "Pemeriksaan pembayaran",
     body: "Periksa kelengkapan dokumen dan sisa anggaran Permintaan Pembayaran sebelum diteruskan ke Head Divisi.",
-    cta: { href: "/panduan#permintaan-pembayaran", label: "Baca alur pembayaran" },
+    cta: { href: "/pembayaran?tab=antrian", label: "Buka yang perlu diperiksa" },
   },
   cash_manager: {
     title: "Jadwal pembayaran",
     body: "Jadwalkan Permintaan Pembayaran yang sudah disetujui, pilih bank asal, lalu unggah bukti bayar.",
-    cta: { href: "/panduan#permintaan-pembayaran", label: "Baca alur pembayaran" },
+    cta: { href: "/pembayaran?tab=antrian", label: "Buka jadwal pembayaran" },
   },
   director: {
     title: "Ringkasan RKA",
