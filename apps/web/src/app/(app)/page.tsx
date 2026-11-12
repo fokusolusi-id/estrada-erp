@@ -34,6 +34,16 @@ const HOME: Record<Role, { title: string; body: string; cta?: { href: string; la
     body: "Review konsistensi, minta klarifikasi, finalisasi RKA konsolidasi, lalu kunci versi final.",
     cta: { href: "/rka/review", label: "Buka status board" },
   },
+  bfp: {
+    title: "Pemeriksaan pembayaran",
+    body: "Periksa kelengkapan dokumen dan sisa anggaran Permintaan Pembayaran sebelum diteruskan ke Head Divisi.",
+    cta: { href: "/panduan#permintaan-pembayaran", label: "Baca alur pembayaran" },
+  },
+  cash_manager: {
+    title: "Jadwal pembayaran",
+    body: "Jadwalkan Permintaan Pembayaran yang sudah disetujui, pilih bank asal, lalu unggah bukti bayar.",
+    cta: { href: "/panduan#permintaan-pembayaran", label: "Baca alur pembayaran" },
+  },
   director: {
     title: "Ringkasan RKA",
     body: "Tinjau Management Summary dan status RKA; versi final dikunci oleh Head Finance.",

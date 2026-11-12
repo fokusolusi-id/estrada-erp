@@ -30,7 +30,9 @@ export type Permission =
   | "audit.view"
   | "cycle.manage"
   | "actual.edit"
-  | "allocation.manage";
+  | "allocation.manage"
+  | "bank.manage"
+  | "payment.report";
 
 const COMPANY_WIDE: readonly Role[] = ["finance", "director", "auditor", "admin"];
 
@@ -71,6 +73,12 @@ export function can(actor: Actor, permission: Permission, resource: LineResource
     case "allocation.manage":
       // Which costs are shared, and on what basis, changes reports only; a locked RKA keeps the split it was locked with.
       return !!resource && actor.role === "finance" && resource.state !== "locked" && entityAllowed(actor, resource.entity);
+    case "bank.manage":
+      // Company bank accounts are the "bank asal" Cash Management pays from; Admin may set them up before CM has an account.
+      return actor.role === "cash_manager" || actor.role === "admin";
+    case "payment.report":
+      // Rekap Pembayaran: the paid list per day or month, for the Finance side, the Direktur and the Auditor.
+      return ["finance", "bfp", "cash_manager", "director", "auditor"].includes(actor.role);
     case "line.edit": {
       if (!resource) return false;
       if (!entityAllowed(actor, resource.entity)) return false;

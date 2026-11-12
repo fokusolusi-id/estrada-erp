@@ -159,6 +159,176 @@ test("Finance fills the cash assumptions and a loan; the forecast follows; the D
   await expect(page.getByText("Halaman tidak ditemukan atau tidak dapat diakses")).toBeVisible();
 });
 
+test("Cash Management keeps the bank accounts payments leave from; Finance cannot open them", async ({ page }) => {
+  await as("cash_manager", page, "/pembayaran/rekening");
+  await expect(page.getByRole("heading", { name: "Rekening Bank" })).toBeVisible();
+  const add = page.getByTestId("bank-new");
+  await add.getByLabel("Entitas").selectOption("ESTRADA");
+  await add.getByLabel("Nama bank").fill("BCA");
+  await add.getByLabel("Nomor rekening").fill("123-456-7890");
+  await add.getByLabel("Atas nama").fill("PT Estrada");
+  await add.getByRole("button", { name: "Tambah" }).click();
+  await expect(add.getByText("Rekening ditambahkan.")).toBeVisible();
+  const estrada = page.getByTestId("bank-entity-ESTRADA");
+  await expect(estrada.getByLabel("Nama bank")).toHaveValue("BCA");
+
+  await add.getByLabel("Nama bank").fill("BCA");
+  await add.getByLabel("Nomor rekening").fill("123-456-7890");
+  await add.getByLabel("Atas nama").fill("PT Estrada");
+  await add.getByRole("button", { name: "Tambah" }).click();
+  await expect(add.getByText("Nomor rekening sudah terdaftar.")).toBeVisible();
+
+  await as("finance", page, "/pembayaran/rekening");
+  await expect(page).toHaveURL(/\/$/);
+});
+
+const pdf = (name: string) => ({ name, mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\n% e2e\n") });
+let paymentUrl = "";
+
+test("Requestor drafts a Permintaan Pembayaran; it waits for documents before it can go", async ({ page }) => {
+  await as("requestor", page, "/pembayaran/baru");
+  await page.getByLabel("Baris RKA").selectOption({ index: 1 });
+  await page.getByLabel("Deskripsi pembayaran").fill("Tagihan internet kantor Oktober");
+  await page.getByLabel("Dibayar kepada").fill("PT Vendor Internet");
+  await page.getByLabel("Nominal (DPP)").fill("10.000.000");
+  await page.getByLabel("PPN").fill("1.100.000");
+  await page.getByLabel("PPh dipotong").fill("200.000");
+  await expect(page.getByTestId("payment-nett")).toContainText("Rp 10.900.000");
+  await page.getByRole("button", { name: "Simpan draft" }).click();
+  await page.waitForURL(/\/pembayaran\/[0-9a-f-]{36}$/);
+  paymentUrl = new URL(page.url()).pathname;
+
+  await expect(page.getByLabel("Belum lengkap")).toContainText("Lampirkan minimal satu dokumen");
+  await expect(page.getByRole("button", { name: "Kirim ke atasan" })).toBeDisabled();
+  await page.getByLabel("Jenis dokumen").selectOption("invoice");
+  await page.getByLabel("File dokumen").setInputFiles(pdf("INV-1029.pdf"));
+  await page.getByRole("button", { name: "Lampirkan" }).click();
+  await expect(page.getByRole("link", { name: "INV-1029.pdf" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Kirim ke atasan" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(/PP\/ESTRADA\/\d{4}\/\d{2}\/0001/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Submitted");
+});
+
+test("The atasan approves from the queue; BFP returns it for a missing Faktur Pajak", async ({ page }) => {
+  await as("default_owner", page, "/pembayaran");
+  await page.getByTestId("payment-table").getByRole("link", { name: /PP\/ESTRADA/ }).click();
+  await page.getByRole("button", { name: "Setujui" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Under Review");
+
+  await as("bfp", page, paymentUrl);
+  await expect(page.getByTestId("payment-headroom")).toContainText("Sisa setelah permintaan ini");
+  await page.getByLabel("Kembalikan ke pemohon").fill("Faktur Pajak belum dilampirkan");
+  await page.getByRole("button", { name: "Kembalikan" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Returned");
+});
+
+test("Requestor sees why, adds the Faktur Pajak and sends it again", async ({ page }) => {
+  await as("requestor", page, paymentUrl);
+  await expect(page.getByTestId("payment-returned")).toContainText("Faktur Pajak belum dilampirkan");
+  await page.getByLabel("Jenis dokumen").selectOption("faktur_pajak");
+  await page.getByLabel("File dokumen").setInputFiles(pdf("FP-0102.pdf"));
+  await page.getByRole("button", { name: "Lampirkan" }).click();
+  await expect(page.getByRole("link", { name: "FP-0102.pdf" })).toBeVisible();
+  await page.getByRole("button", { name: "Kirim ke atasan" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Submitted");
+});
+
+test("Atasan, BFP and the Head Divisi pass it on; Cash Management schedules and pays it", async ({ page }) => {
+  await as("default_owner", page, paymentUrl);
+  await page.getByRole("button", { name: "Setujui" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Under Review");
+
+  await as("bfp", page, paymentUrl);
+  await page.getByRole("button", { name: "Teruskan ke Head Divisi" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Pending Approval");
+
+  await as("division_owner", page, paymentUrl);
+  await page.getByRole("button", { name: "Setujui" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Approved");
+
+  await as("cash_manager", page, paymentUrl);
+  await page.getByLabel("Bank asal").selectOption({ label: "BCA 123-456-7890 · PT Estrada" });
+  await page.getByRole("button", { name: "Jadwalkan" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Scheduled");
+  // Paid in the RKA's own year, as it would be: Realisasi books by payment date.
+  await page.getByLabel("Tanggal bayar").fill("2027-01-15");
+  await page.getByLabel("Bukti bayar").setInputFiles(pdf("transfer-bca.pdf"));
+  await page.getByRole("button", { name: "Tandai sudah dibayar" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Paid");
+  await expect(page.getByTestId("payment-stepper").locator('li[data-state="done"]')).toHaveCount(6);
+  await expect(page.getByRole("link", { name: "transfer-bca.pdf" })).toBeVisible();
+
+  // One email per handoff, none with an amount in it.
+  const sql = postgres(E2E_DATABASE_URL, { max: 1 });
+  const mails = await sql<{ template: string; payload: Record<string, string> }[]>`
+    select template, payload from email_outbox where template like 'payment_%' order by created_at`;
+  await sql.end();
+  expect(mails.map((m) => m.template)).toEqual([
+    "payment_submitted",
+    "payment_review",
+    "payment_returned",
+    "payment_submitted",
+    "payment_review",
+    "payment_approval",
+    "payment_approved",
+    "payment_scheduled",
+    "payment_paid",
+  ]);
+  expect(JSON.stringify(mails)).not.toMatch(/10\.900\.000|10900000|10\.000\.000/);
+});
+
+test("The Formulir prints the request with its approvals; the Rekap lists it and downloads as Excel", async ({ page }) => {
+  await as("requestor", page, paymentUrl);
+  const [formulir] = await Promise.all([page.context().waitForEvent("page"), page.getByRole("link", { name: "Formulir Permohonan Pembayaran" }).click()]);
+  await formulir.waitForLoadState();
+  await expect(formulir.getByTestId("formulir-terbilang")).toHaveText("Terbilang: sepuluh juta sembilan ratus ribu rupiah");
+  await expect(formulir.getByRole("region", { name: "Persetujuan" }).getByText(/Disetujui elektronik/)).toHaveCount(5);
+  await expect(formulir.getByText("Invoice, Faktur Pajak")).toBeVisible();
+  await formulir.close();
+
+  await as("requestor", page, "/pembayaran/rekap");
+  await expect(page).toHaveURL(/\/$/);
+
+  await as("cash_manager", page, "/pembayaran/rekap?per=bulan&dari=2027-01-01&sampai=2027-12-31");
+  await expect(page.getByTestId("recap-subtotal-2027-01")).toHaveText("Rp 10.900.000");
+  await expect(page.getByTestId("recap-total")).toHaveText("Rp 10.900.000");
+  await expect(page.getByRole("list", { name: "Total per bank asal" })).toContainText("BCA 123-456-7890");
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: "Unduh Excel" }).click()]);
+  expect(download.suggestedFilename()).toMatch(/^Rekap Pembayaran \d{4}-\d{2}-\d{2} sd \d{4}-\d{2}-\d{2}\.xlsx$/);
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.readFile(await download.path());
+  expect(wb.worksheets.map((w) => w.name)).toEqual(["Rekap Pembayaran", "Per Bank"]);
+  const last = wb.getWorksheet("Rekap Pembayaran")!.lastRow!;
+  expect([last.getCell(1).value, last.getCell(6).value]).toEqual(["Total", 10900000]);
+});
+
+test("Paid books its DPP as Realisasi on the RKA line, for Finance and on the line itself", async ({ page }) => {
+  await as("finance", page, "/rka/actual");
+  await expect(page.getByTestId("realisasi-total")).toHaveText("Rp 10.000.000");
+
+  const sql = postgres(E2E_DATABASE_URL, { max: 1 });
+  const [req] = await sql<{ line: string }[]>`select budget_line_id as line from payment_request where number like 'PP/ESTRADA/%'`;
+  await sql.end();
+  await as("requestor", page, `/rka/line/${req!.line}`);
+  const panel = page.getByTestId("line-realisasi");
+  await expect(panel).toContainText("Rp 10.000.000");
+  await expect(panel.getByRole("link", { name: /PP\/ESTRADA/ })).toBeVisible();
+});
+
+test("Others outside the request cannot open it or its documents", async ({ page }) => {
+  const sql = postgres(E2E_DATABASE_URL, { max: 1 });
+  const [doc] = await sql<{ id: string }[]>`select id from payment_document where file_name = 'INV-1029.pdf'`;
+  await sql.end();
+
+  await as("requestor", page, paymentUrl);
+  expect((await page.request.get(`${paymentUrl}/dokumen/${doc!.id}`)).status()).toBe(200);
+
+  await as("sales", page, paymentUrl);
+  await expect(page.getByText("Halaman tidak ditemukan atau tidak dapat diakses")).toBeVisible();
+  expect((await page.request.get(`${paymentUrl}/dokumen/${doc!.id}`)).status()).toBe(404);
+});
+
 test("Requestor plans new hires; the plan writes the draft line, owned by HCM", async ({ page }) => {
   await as("requestor", page, "/rka");
   await page.getByRole("button", { name: "Tambah posisi" }).click();

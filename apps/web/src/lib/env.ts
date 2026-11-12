@@ -12,6 +12,11 @@ const schema = z.object({
   CRON_SECRET: z.string().min(16).optional(),
   /** Items waiting this many days remind whoever holds them. */
   REMINDER_PENDING_DAYS: z.coerce.number().int().min(1).default(3),
+  /** Payment attachments go to this Supabase Storage bucket when both are set; otherwise to STORAGE_DIR on disk (development). */
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(20).optional(),
+  STORAGE_BUCKET: z.string().default("payment-documents"),
+  STORAGE_DIR: z.string().default(".uploads"),
 });
 
 // Preview deployments get a new URL each time: fall back to Vercel's own when APP_URL is unset.

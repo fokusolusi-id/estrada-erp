@@ -6,7 +6,7 @@ export interface NavItem {
   roles: readonly Role[] | "all";
   icon: string;
   /** Menu section; items without one sit at the top. */
-  group?: "Anggaran" | "Laporan" | "Data" | "Admin" | "Bantuan";
+  group?: "Anggaran" | "Pembayaran" | "Laporan" | "Data" | "Admin" | "Bantuan";
   /** Also shown to these roles when the user's unit sits within `unit` (BCD's people for Pipeline). */
   alsoIn?: { unit: string; roles: readonly Role[] };
   phase?: number;
@@ -21,6 +21,9 @@ export const NAV: readonly NavItem[] = [
   { href: "/rka/review", icon: "kanban", label: "Status Board Finance", roles: ["finance"], group: "Anggaran" },
   { href: "/rka/lock", icon: "lock", label: "Kunci RKA", roles: ["finance", "director"], group: "Anggaran" },
   { href: "/rka/cycle", icon: "cycle", label: "Siklus RKA", roles: ["finance", "director"], group: "Anggaran" },
+  { href: "/pembayaran", icon: "pay", label: "Permintaan Pembayaran", roles: ["requestor", "default_owner", "division_owner", "finance", "bfp", "cash_manager", "director", "auditor"], group: "Pembayaran" },
+  { href: "/pembayaran/rekap", icon: "recap", label: "Rekap Pembayaran", roles: ["finance", "bfp", "cash_manager", "director", "auditor"], group: "Pembayaran" },
+  { href: "/pembayaran/rekening", icon: "bank", label: "Rekening Bank", roles: ["cash_manager", "admin"], group: "Pembayaran" },
   { href: "/summary", icon: "chart", label: "Management Summary", roles: ["division_owner", "finance", "director", "auditor"], group: "Laporan" },
   { href: "/pipeline", icon: "pipeline", label: "Pipeline", roles: ["finance", "director", "auditor"], alsoIn: { unit: "BCD", roles: ["requestor", "default_owner", "division_owner"] }, group: "Laporan" },
   { href: "/cash", icon: "wallet", label: "Arus Kas", roles: ["finance", "director", "auditor"], group: "Laporan" },

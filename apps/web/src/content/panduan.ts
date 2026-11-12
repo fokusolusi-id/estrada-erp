@@ -29,13 +29,15 @@ Setiap pengguna memegang posisi: peran, unit organisasi, dan entitas yang boleh 
 
 | Peran | Menu | Boleh mengubah baris | Tindakan persetujuan |
 | --- | --- | --- | --- |
-| Requestor | Beranda, RKA Saya | Baris unitnya selama Draft | Kirim ke Default Owner |
-| Default Owner | Beranda, RKA Saya, Antrean Konsolidasi | Baris dalam cakupannya selama Konsolidasi | Kirim ke Division Owner, Kembalikan (catatan wajib) |
-| Division Owner | Beranda, RKA Divisi, Management Summary | Tidak | Setujui & kirim ke Finance |
-| Finance Reviewer | Beranda, Status Board Finance, Kunci RKA, Siklus RKA, Management Summary, Pipeline, Arus Kas, Realisasi, Biaya Bersama, COA Master | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
-| Direktur | Beranda, Kunci RKA, Siklus RKA, Management Summary, Pipeline, Arus Kas | Tidak | Tidak ada, hanya membaca |
-| Auditor | Beranda, Management Summary, Pipeline, Arus Kas | Tidak | Tidak ada, membaca semua termasuk jejak audit |
-| Admin | Beranda, Pengguna, Unit & Entitas, Struktur Organisasi | Tidak | Tidak ada; tidak melihat angka anggaran |
+| Requestor | Beranda, RKA Saya, Permintaan Pembayaran | Baris unitnya selama Draft | Kirim ke Default Owner |
+| Default Owner | Beranda, RKA Saya, Antrean Konsolidasi, Permintaan Pembayaran | Baris dalam cakupannya selama Konsolidasi | Kirim ke Division Owner, Kembalikan (catatan wajib) |
+| Division Owner | Beranda, RKA Divisi, Permintaan Pembayaran, Management Summary | Tidak | Setujui & kirim ke Finance |
+| Finance Reviewer | Beranda, Status Board Finance, Kunci RKA, Siklus RKA, Permintaan Pembayaran, Rekap Pembayaran, Management Summary, Pipeline, Arus Kas, Realisasi, Biaya Bersama, COA Master | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
+| Business Finance (BFP) | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Panduan | Tidak | Memeriksa Permintaan Pembayaran (lihat bagian Permintaan Pembayaran) |
+| Cash Management | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Rekening Bank, Panduan | Tidak | Menjadwalkan dan membayar Permintaan Pembayaran |
+| Direktur | Beranda, Kunci RKA, Siklus RKA, Permintaan Pembayaran, Rekap Pembayaran, Management Summary, Pipeline, Arus Kas | Tidak | Tidak ada, hanya membaca |
+| Auditor | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Management Summary, Pipeline, Arus Kas | Tidak | Tidak ada, membaca semua termasuk jejak audit |
+| Admin | Beranda, Pengguna, Unit & Entitas, Struktur Organisasi, Rekening Bank | Tidak | Tidak ada; tidak melihat angka anggaran |
 
 Orang BCD dengan peran Requestor, Default Owner atau Division Owner juga melihat menu Pipeline. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
 
@@ -131,7 +133,11 @@ Daftar baris yang sudah difinalisasi. *Kunci versi* menguncinya: versi tidak dap
 
 ### Realisasi
 
-Finance mengetik atau menempel realisasi tahun lalu di setiap baris tahun yang dipilih (misalnya Actual 2026 untuk RKA 2027). Judul layar dan kolomnya mengikuti tahun anggaran di kepala halaman.
+Layar Realisasi punya dua bagian.
+
+**Realisasi dari pembayaran** terisi sendiri dari Permintaan Pembayaran untuk tahun anggaran yang dipilih di Tampilan: per baris RKA, Rencana, Realisasi (DPP permintaan yang Paid), Sedang berjalan (sudah disetujui atasan, belum dibayar), Sisa dan Serapan. Hanya baris yang punya permintaan yang tampil; Sisa merah bila baris itu terlampaui. Selama RKA belum dikunci, angka rencananya masih bisa berubah. Halaman baris RKA juga menampilkan ringkasan ini beserta daftar permintaannya.
+
+**Actual tahun lalu**: Finance mengetik atau menempel realisasi tahun lalu di setiap baris tahun yang dipilih (misalnya Actual 2026 untuk RKA 2027). Judul layar dan kolomnya mengikuti tahun anggaran di kepala halaman.
 
 1. Cari dengan *Cari COA atau uraian*.
 2. Ketik nominal di kolom Actual, atau tempel satu kolom dari Excel; nilainya mengisi baris ke bawah. Sel kosong menghapus realisasi.
@@ -255,6 +261,64 @@ Aplikasi mengirim satu email per serah terima, bukan per baris. Email tidak pern
 
 Dua pengingat terakhir berjalan setiap hari pukul 08.00 WIB.
 
+## Permintaan Pembayaran
+
+Menu **Permintaan Pembayaran** memuat semua permintaan yang boleh Anda lihat, dalam tiga tab: *Perlu tindakan* (menunggu Anda), *Permintaan saya*, dan *Semua*. Siapa pun selain Admin dapat membuat permintaan dari posisinya; atasan dan Head Divisi ditentukan dari unit posisi itu.
+
+| Status | Arti | Siapa yang bertindak |
+| --- | --- | --- |
+| Draft | Belum dikirim | Pemohon (staf HC, SCM, Sales, PST, dll.) |
+| Submitted | Permohonan dikirim, menunggu persetujuan atasan | Atasan pemohon: Manager, Kepala Divisi atau Direktur |
+| Under Review | Sedang diperiksa BFP | Business Finance (BFP) |
+| Pending Approval | Menunggu persetujuan Head Divisi | Head Divisi pemohon; Direktur bila pemohon sendiri Head Divisi atau berada di luar divisi |
+| Approved | Disetujui, menunggu dijadwalkan | Cash Management |
+| Scheduled | Sudah masuk jadwal pembayaran | Cash Management |
+| Paid | Pembayaran sudah berhasil dilakukan | Selesai |
+| Returned | Dikembalikan untuk perbaikan (alasan wajib) | Pemohon memperbaiki lalu mengirim lagi |
+
+### Membuat dan mengirim
+
+1. Klik *Buat permintaan*. Pilih jenis (Pembayaran atau Cash Advance), entitas, proyek/perusahaan, dan baris RKA. Baris yang tersedia berasal dari RKA tahun yang dipilih di Tampilan, untuk entitas posisi Anda dan unit di divisi Anda; selama RKA belum dikunci, baris dari versi yang sedang berjalan dipakai dan ditandai begitu.
+2. Isi deskripsi, penerima (nama, bank dan nomor rekening tujuan), jatuh tempo, Nominal (DPP), PPN dan PPh dipotong. Angka diketik seperti biasa, misalnya 10.000.000. *Simpan draft*.
+3. Di halaman permintaan, lampirkan dokumen satu per satu: pilih jenisnya (Invoice, PO/WO/PKS, Faktur Pajak, BAST/Kwitansi, Delivery Note, atau Permohonan CA), pilih file PDF atau foto (JPG, PNG, WEBP) maksimal 4 MB, lalu *Lampirkan*. Pembayaran perlu minimal satu dokumen tagihan; Cash Advance perlu Permohonan CA.
+4. Kotak *Tindakan Anda* menyebut apa yang belum lengkap. Setelah lengkap, *Kirim ke atasan*. Permintaan mendapat nomor PP/ENTITAS/TAHUN/BULAN/URUT saat pertama dikirim.
+5. Bila dikembalikan, alasannya tampil di atas halaman. Perbaiki isian atau dokumen, lalu kirim lagi.
+
+### Menyetujui, memeriksa, membayar
+
+- Atasan dan Head Divisi membuka permintaan dari tab *Perlu tindakan*, lalu *Setujui* atau *Kembalikan* dengan alasan. Tidak ada yang bisa menyetujui permintaannya sendiri.
+- BFP memeriksa dokumen dan kotak *Sisa anggaran baris RKA*, lalu *Teruskan ke Head Divisi* atau *Kembalikan*.
+- Cash Management menjadwalkan: pilih *Tanggal jadwal* dan *Bank asal* dari Rekening Bank entitas itu, lalu *Jadwalkan*. Setelah transfer, isi *Tanggal bayar*, lampirkan *Bukti bayar*, lalu *Tandai sudah dibayar*.
+- Dokumen dan bukti bayar hanya dibuka melalui aplikasi oleh orang yang boleh melihat permintaannya.
+- Riwayat di bawah halaman mencatat siapa melakukan apa, kapan, dan alasannya.
+
+### Aturan
+
+- Pemohon memilih entitas/proyek dan baris RKA, mengisi deskripsi, nominal, PPN dan PPh, lalu melampirkan dokumen: Invoice, PO/WO/PKS, Faktur Pajak, BAST/Kwitansi, Delivery Note, atau Permohonan CA untuk Cash Advance.
+- Nominal Pembayaran (nett) = nominal + PPN − PPh yang dipotong.
+- BFP melihat sisa anggaran baris RKA (rencana dikurangi Realisasi dan permintaan lain yang sudah disetujui tetapi belum dibayar). Melebihi anggaran ditandai, tidak diblokir.
+- Cash Management memilih bank asal dan tanggal jadwal, lalu mengunggah bukti bayar dengan tanggal bayar.
+- Pembayaran yang sudah Paid mengurangi sisa anggaran baris RKA-nya sebesar nominal sebelum pajak (DPP).
+- Setiap perpindahan status mengirim satu email ke orang berikutnya, tanpa nominal.
+- Saat Paid, nominal sebelum pajak (DPP) tercatat sebagai Realisasi pada baris RKA yang dipilih, di bulan tanggal bayarnya (lihat Realisasi). Pembayaran yang tanggal bayarnya di luar tahun RKA baris itu tidak dihitung ke tahun tersebut.
+
+### Formulir Permohonan Pembayaran
+
+Setelah permintaan bernomor (sudah pernah dikirim), tautan *Formulir Permohonan Pembayaran* di kanan atas halaman permintaan membuka formulir siap cetak di tab baru: nomor, pemohon, baris RKA, deskripsi, penerima, rincian nominal (DPP, PPN, PPh dan nett) dengan terbilang, dokumen terlampir, bank asal, jadwal dan tanggal bayar. Kotak persetujuan (Pemohon, Atasan, BFP, Head Divisi, Cash Management) terisi nama, peran dan waktu persetujuan dari riwayat; persetujuan sebelum permintaan terakhir dikembalikan tidak dihitung. Klik *Cetak / simpan PDF* untuk mencetak satu lembar A4 atau menyimpannya sebagai PDF. Formulir tidak memerlukan tanda tangan basah.
+
+### Rekap Pembayaran
+
+Menu *Rekap Pembayaran* (Finance Reviewer, BFP, Cash Management, Direktur, Auditor) memuat permintaan berstatus Paid menurut tanggal bayarnya: Tanggal bayar, Nomor, Deskripsi, Entitas, Bank asal dan Nominal (nett), dengan subtotal per hari atau per bulan, total, dan total per bank asal.
+
+- *Rekap per* Hari (bawaan: bulan ini) atau Bulan (bawaan: tahun ini); *Dari* dan *Sampai* mengubah periodenya.
+- *Bank asal* membatasi rekap ke satu rekening.
+- Entitas dan Divisi di Tampilan ikut berlaku.
+- *Unduh Excel* mengunduh rekap yang sama: lembar *Rekap Pembayaran* dan lembar *Per Bank*.
+
+### Rekening Bank
+
+Daftar bank asal pembayaran per entitas: nama bank, nomor rekening dan atas nama. Cash Management merawatnya; Admin boleh mengisinya pertama kali sebelum Cash Management punya akun. Nomor rekening yang sama tidak bisa didaftarkan dua kali. Rekening yang tidak dipakai lagi dinonaktifkan (hilangkan centang *Aktif*), tidak dihapus, supaya pembayaran lama tetap menunjuk rekeningnya. Entitas sebuah rekening tidak bisa diubah setelah dibuat.
+
 ## Setelah dikunci: revisi
 
 Versi yang terkunci tidak pernah diubah; revisi menyalinnya menjadi versi baru yang melewati alur lagi. Finance melakukannya di Siklus RKA, *Buat revisi*.
@@ -287,6 +351,8 @@ export const ROLE_SECTION: Record<Role, string> = {
   default_owner: "default-owner-konsolidasi-atau-kembalikan",
   division_owner: "division-owner-setujui-divisi",
   finance: "finance-review-finalisasi-dan-kunci",
+  bfp: "permintaan-pembayaran",
+  cash_manager: "permintaan-pembayaran",
   director: "direktur-dan-auditor",
   auditor: "direktur-dan-auditor",
   admin: "admin",

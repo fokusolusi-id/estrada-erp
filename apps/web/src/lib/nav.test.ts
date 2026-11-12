@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { navFor } from "./nav";
 
 describe("navFor", () => {
-  it("shows a requestor only their own RKA", () => {
-    expect(navFor("requestor").map((n) => n.href)).toEqual(["/", "/rka", "/panduan"]);
+  it("shows a requestor their own RKA and payment requests", () => {
+    expect(navFor("requestor").map((n) => n.href)).toEqual(["/", "/rka", "/pembayaran", "/panduan"]);
   });
 
   it("keeps budget screens away from Admin", () => {
@@ -20,7 +20,7 @@ describe("navFor", () => {
 
   it("shows Pipeline to BCD's people and to Finance, Direktur and Auditor, not to other divisions", () => {
     const bcd = (unit: string) => unit === "BCD";
-    expect(navFor("requestor", bcd).map((n) => n.href)).toEqual(["/", "/rka", "/pipeline", "/panduan"]);
+    expect(navFor("requestor", bcd).map((n) => n.href)).toEqual(["/", "/rka", "/pembayaran", "/pipeline", "/panduan"]);
     expect(navFor("division_owner", () => false).map((n) => n.href)).not.toContain("/pipeline");
     for (const role of ["finance", "director", "auditor"] as const) expect(navFor(role).map((n) => n.href)).toContain("/pipeline");
   });

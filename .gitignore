@@ -27,3 +27,6 @@ fixtures/*.json
 
 # Supabase CLI cache (linked project ref)
 supabase/.temp/
+
+# Payment attachments stored on disk in development
+.uploads/

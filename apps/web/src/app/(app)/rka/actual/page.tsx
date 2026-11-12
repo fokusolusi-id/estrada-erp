@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { can, priorYear, sum } from "@estrada/domain";
+import { can, chargeableVersion, priorYear, sum } from "@estrada/domain";
+import { db, schema } from "@estrada/db";
+import { paymentRealisasi } from "@/lib/payment";
+import { PaymentRealisasi, type RealisasiRow } from "@/components/erp/payment-realisasi";
 import { requireUser } from "@/lib/session";
 import { loadScopedLines, openVersion } from "@/lib/rka";
 import { hiddenColumns, viewLines } from "@/lib/view-filter";
@@ -37,15 +40,56 @@ export default async function ActualPage() {
     }));
   const filled = lines.filter((l) => l.priorActual).length;
 
+  // This year's Realisasi from Paid payment requests, on the lines of the RKA they were charged to.
+  const versions = await db.select({ id: schema.budgetVersion.id, fiscalYear: schema.budgetVersion.fiscalYear, status: schema.budgetVersion.status }).from(schema.budgetVersion);
+  const charged = year === null ? null : chargeableVersion(versions, year);
+  const chargedLines = charged ? await viewLines(await loadScopedLines(user, undefined, charged.id)) : [];
+  const used = await paymentRealisasi(chargedLines.map((l) => l.id), year ?? 0);
+  const realisasi: RealisasiRow[] = chargedLines
+    .filter((l) => {
+      const u = used.get(l.id);
+      return !!u && !(u.paid.isZero() && u.committed.isZero());
+    })
+    .map((l) => ({
+      id: l.id,
+      coaCode: l.coaCode,
+      coaName: l.coaName,
+      item: l.item ?? null,
+      entity: l.entity,
+      ownerUnit: l.ownerUnit,
+      plan: sum(l.months),
+      paid: used.get(l.id)!.paid,
+      committed: used.get(l.id)!.committed,
+    }));
+
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Realisasi {prior}</h1>
+        <h1 className="text-2xl font-semibold">Realisasi</h1>
         <p className="text-muted-foreground text-sm">
           {version ? rkaLabel(version) : "Belum ada siklus RKA yang dibuka"} · {filled} dari {lines.length} baris sudah berisi realisasi
         </p>
         <ViewNote />
       </div>
+      {year !== null ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Realisasi {year} dari pembayaran</CardTitle>
+            <CardDescription>
+              Terisi otomatis: setiap Permintaan Pembayaran yang Paid tercatat sebesar nominal sebelum pajak (DPP) pada baris RKA-nya, di bulan
+              tanggal bayarnya. Sedang berjalan adalah permintaan yang sudah disetujui atasan tetapi belum dibayar.
+              {charged && !charged.locked ? ` RKA ${year} belum dikunci; angka rencana masih bisa berubah.` : ""}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {realisasi.length ? (
+              <PaymentRealisasi rows={realisasi} year={year} />
+            ) : (
+              <EmptyState icon={Gauge} title={`Belum ada pembayaran untuk RKA ${year}.`} description="Baris muncul di sini setelah Permintaan Pembayaran untuk baris itu disetujui atasan." />
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
       <Card>
         <CardHeader>
           <CardTitle>Actual {prior} per baris</CardTitle>

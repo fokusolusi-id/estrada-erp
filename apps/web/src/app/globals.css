@@ -170,3 +170,14 @@ select:not([multiple]) {
   background-size: 1rem;
   padding-right: 2.25rem;
 }
+
+/* Printed forms (Formulir Permohonan Pembayaran): one A4 sheet, light colours whatever the theme. */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  html {
+    color-scheme: light;
+  }
+}

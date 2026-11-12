@@ -139,4 +139,21 @@ describe("allocation.manage: Finance marks shared costs and their basis (client 
     }
     expect(can(fin, "allocation.manage", null, org)).toBe(false);
   });
+
+  it("lets Cash Management keep the company bank accounts, with Admin for the first setup", () => {
+    expect(can(actor({ role: "cash_manager", orgUnit: "FRM" }), "bank.manage", null, org)).toBe(true);
+    expect(can(actor({ role: "admin", orgUnit: "DIR" }), "bank.manage", null, org)).toBe(true);
+    for (const role of ["requestor", "default_owner", "division_owner", "finance", "bfp", "director", "auditor"] as const) {
+      expect(can(actor({ role }), "bank.manage", null, org)).toBe(false);
+    }
+  });
+
+  it("opens the Rekap Pembayaran to Finance, BFP, Cash Management, the Direktur and the Auditor", () => {
+    for (const role of ["finance", "bfp", "cash_manager", "director", "auditor"] as const) {
+      expect(can(actor({ role, orgUnit: "FRM", entities: ["*"] }), "payment.report", null, org)).toBe(true);
+    }
+    for (const role of ["requestor", "default_owner", "division_owner", "admin"] as const) {
+      expect(can(actor({ role }), "payment.report", null, org)).toBe(false);
+    }
+  });
 });

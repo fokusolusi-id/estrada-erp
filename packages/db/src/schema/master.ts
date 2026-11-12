@@ -10,6 +10,8 @@ export const roleEnum = pgEnum("role", [
   "default_owner",
   "division_owner",
   "finance",
+  "bfp",
+  "cash_manager",
   "director",
   "auditor",
   "admin",

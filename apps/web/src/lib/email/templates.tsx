@@ -90,6 +90,48 @@ export const COPY: Record<EmailTemplate, Copy> = {
     body: (p) => `${p.count ?? "Beberapa"} baris RKA ${p.unit ?? ""} sudah menunggu tindakan Anda ${p.days ?? "beberapa"} hari atau lebih.`,
     cta: "Buka item",
   },
+  payment_submitted: {
+    subject: "Permintaan Pembayaran menunggu persetujuan Anda",
+    heading: "Permintaan Pembayaran baru",
+    body: (p) => `${p.requester ?? "Staf"} mengirim Permintaan Pembayaran ${p.number ?? ""} (${p.entity ?? ""}) untuk Anda setujui.`,
+    cta: "Buka permintaan",
+  },
+  payment_review: {
+    subject: "Permintaan Pembayaran perlu diperiksa",
+    heading: "Pemeriksaan BFP",
+    body: (p) => `Permintaan Pembayaran ${p.number ?? ""} (${p.entity ?? ""}) dari ${p.requester ?? "staf"} sudah disetujui atasan dan menunggu pemeriksaan Anda.`,
+    cta: "Periksa permintaan",
+  },
+  payment_approval: {
+    subject: "Permintaan Pembayaran menunggu persetujuan Head Divisi",
+    heading: "Persetujuan Head Divisi",
+    body: (p) => `Permintaan Pembayaran ${p.number ?? ""} (${p.entity ?? ""}) dari ${p.requester ?? "staf"} sudah diperiksa BFP dan menunggu persetujuan Anda.`,
+    cta: "Buka permintaan",
+  },
+  payment_approved: {
+    subject: "Permintaan Pembayaran siap dijadwalkan",
+    heading: "Siap dijadwalkan",
+    body: (p) => `Permintaan Pembayaran ${p.number ?? ""} (${p.entity ?? ""}) sudah disetujui. Jadwalkan pembayaran dan pilih bank asal.`,
+    cta: "Jadwalkan",
+  },
+  payment_scheduled: {
+    subject: "Permintaan Pembayaran sudah dijadwalkan",
+    heading: "Pembayaran dijadwalkan",
+    body: (p) => `Permintaan Pembayaran ${p.number ?? ""} dijadwalkan dibayar pada ${p.date ?? "tanggal yang ditetapkan"}.`,
+    cta: "Lihat permintaan",
+  },
+  payment_paid: {
+    subject: "Pembayaran sudah dilakukan",
+    heading: "Pembayaran berhasil",
+    body: (p) => `Permintaan Pembayaran ${p.number ?? ""} sudah dibayar pada ${p.date ?? ""}. Bukti bayar ada di aplikasi.`,
+    cta: "Lihat bukti bayar",
+  },
+  payment_returned: {
+    subject: "Permintaan Pembayaran dikembalikan",
+    heading: "Permintaan Anda dikembalikan",
+    body: (p) => `Permintaan Pembayaran ${p.number ?? ""} dikembalikan untuk diperbaiki. Catatan: "${p.comment ?? ""}"`,
+    cta: "Perbaiki permintaan",
+  },
   deadline_near: {
     subject: "Batas waktu RKA mendekat",
     heading: "Batas waktu mendekat",

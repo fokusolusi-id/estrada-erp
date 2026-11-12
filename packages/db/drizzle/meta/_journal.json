@@ -78,6 +78,20 @@
       "when": 1794363737659,
       "tag": "0010_yummy_catseye",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794452878087,
+      "tag": "0011_dry_metal_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794453276675,
+      "tag": "0012_lucky_pride",
+      "breakpoints": true
     }
   ]
 }

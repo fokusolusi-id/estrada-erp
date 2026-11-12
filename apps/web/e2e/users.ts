@@ -7,6 +7,8 @@ export const E2E_USERS = {
   division_owner: { email: "e2e.head.pdms@estrada.test", name: "Sari (Head PDMS)", title: "Head of PDMS", orgUnit: "PDMS", role: "division_owner", entities: ["ESTRADA"] },
   sales: { email: "e2e.sales@estrada.test", name: "Andi (BCD)", title: "Account Manager", orgUnit: "BCD", role: "requestor", entities: ["*"] },
   finance: { email: "e2e.finance@estrada.test", name: "Dewi (Finance)", title: "Business Finance", orgUnit: "FRM", role: "finance", entities: ["*"] },
+  bfp: { email: "e2e.bfp@estrada.test", name: "Lina (BFP)", title: "Business Finance & Precalc", orgUnit: "FRM", role: "bfp", entities: ["*"] },
+  cash_manager: { email: "e2e.cm@estrada.test", name: "Tari (Cash Management)", title: "Treasury & Cash Management", orgUnit: "FRM", role: "cash_manager", entities: ["*"] },
   director: { email: "e2e.direktur@estrada.test", name: "Direktur", title: "Direktur", orgUnit: "DIR", role: "director", entities: ["*"] },
 } satisfies Record<string, { email: string; name: string; title: string; orgUnit: string; role: Role; entities: string[] }>;
 
