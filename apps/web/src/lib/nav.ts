@@ -6,9 +6,9 @@ export interface NavItem {
   roles: readonly Role[] | "all";
   icon: string;
   /** Menu section; items without one sit at the top. */
-  group?: "Anggaran" | "Pembayaran" | "Laporan" | "Data" | "Admin" | "Bantuan";
-  /** Also shown to these roles when the user's unit sits within `unit` (BCD's people for Pipeline). */
-  alsoIn?: { unit: string; roles: readonly Role[] };
+  group?: "Anggaran" | "Pembayaran" | "Proyek" | "Laporan" | "Data" | "Admin" | "Bantuan";
+  /** Also shown to these roles when the user's unit sits within `unit`, or any of them (BCD's people for Pipeline). */
+  alsoIn?: { unit: string | readonly string[]; roles: readonly Role[] };
   phase?: number;
 }
 
@@ -24,6 +24,7 @@ export const NAV: readonly NavItem[] = [
   { href: "/pembayaran", icon: "pay", label: "Permintaan Pembayaran", roles: ["requestor", "default_owner", "division_owner", "finance", "bfp", "cash_manager", "director", "auditor"], group: "Pembayaran" },
   { href: "/pembayaran/rekap", icon: "recap", label: "Rekap Pembayaran", roles: ["finance", "bfp", "cash_manager", "director", "auditor"], group: "Pembayaran" },
   { href: "/pembayaran/rekening", icon: "bank", label: "Rekening Bank", roles: ["cash_manager", "admin"], group: "Pembayaran" },
+  { href: "/implementasi", icon: "project", label: "Implementasi", roles: ["finance", "director", "auditor"], alsoIn: { unit: ["BCD", "PDMS"], roles: ["requestor", "default_owner", "division_owner"] }, group: "Proyek" },
   { href: "/summary", icon: "chart", label: "Management Summary", roles: ["division_owner", "finance", "director", "auditor"], group: "Laporan" },
   { href: "/pipeline", icon: "pipeline", label: "Pipeline", roles: ["finance", "director", "auditor"], alsoIn: { unit: "BCD", roles: ["requestor", "default_owner", "division_owner"] }, group: "Laporan" },
   { href: "/cash", icon: "wallet", label: "Arus Kas", roles: ["finance", "director", "auditor"], group: "Laporan" },
@@ -38,5 +39,5 @@ export const NAV: readonly NavItem[] = [
 
 /** `within(unit)` says whether the user's unit sits within `unit`; without it, unit-based items stay hidden. */
 export function navFor(role: Role, within: (unit: string) => boolean = () => false): NavItem[] {
-  return NAV.filter((n) => n.roles === "all" || n.roles.includes(role) || (n.alsoIn?.roles.includes(role) && within(n.alsoIn.unit)));
+  return NAV.filter((n) => n.roles === "all" || n.roles.includes(role) || (n.alsoIn?.roles.includes(role) && [n.alsoIn.unit].flat().some(within)));
 }

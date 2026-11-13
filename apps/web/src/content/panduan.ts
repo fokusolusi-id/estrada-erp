@@ -32,14 +32,14 @@ Setiap pengguna memegang posisi: peran, unit organisasi, dan entitas yang boleh 
 | Requestor | Beranda, RKA Saya, Permintaan Pembayaran | Baris unitnya selama Draft | Kirim ke Default Owner |
 | Default Owner | Beranda, RKA Saya, Antrean Konsolidasi, Permintaan Pembayaran | Baris dalam cakupannya selama Konsolidasi | Kirim ke Division Owner, Kembalikan (catatan wajib) |
 | Division Owner | Beranda, RKA Divisi, Permintaan Pembayaran, Management Summary | Tidak | Setujui & kirim ke Finance |
-| Finance Reviewer | Beranda, Status Board Finance, Kunci RKA, Siklus RKA, Permintaan Pembayaran, Rekap Pembayaran, Management Summary, Pipeline, Arus Kas, Realisasi, Biaya Bersama, COA Master | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
+| Finance Reviewer | Beranda, Status Board Finance, Kunci RKA, Siklus RKA, Permintaan Pembayaran, Rekap Pembayaran, Implementasi, Management Summary, Pipeline, Arus Kas, Realisasi, Biaya Bersama, COA Master | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
 | Business Finance (BFP) | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Panduan | Tidak | Memeriksa Permintaan Pembayaran (lihat bagian Permintaan Pembayaran) |
 | Cash Management | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Rekening Bank, Panduan | Tidak | Menjadwalkan dan membayar Permintaan Pembayaran |
-| Direktur | Beranda, Kunci RKA, Siklus RKA, Permintaan Pembayaran, Rekap Pembayaran, Management Summary, Pipeline, Arus Kas | Tidak | Tidak ada, hanya membaca |
-| Auditor | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Management Summary, Pipeline, Arus Kas | Tidak | Tidak ada, membaca semua termasuk jejak audit |
+| Direktur | Beranda, Kunci RKA, Siklus RKA, Permintaan Pembayaran, Rekap Pembayaran, Implementasi, Management Summary, Pipeline, Arus Kas | Tidak | Tidak ada, hanya membaca |
+| Auditor | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Implementasi, Management Summary, Pipeline, Arus Kas | Tidak | Tidak ada, membaca semua termasuk jejak audit |
 | Admin | Beranda, Pengguna, Unit & Entitas, Struktur Organisasi, Rekening Bank | Tidak | Tidak ada; tidak melihat angka anggaran |
 
-Orang BCD dengan peran Requestor, Default Owner atau Division Owner juga melihat menu Pipeline. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
+Orang BCD dengan peran Requestor, Default Owner atau Division Owner juga melihat menu Pipeline. Orang PDMS (PMO, SCM, ISO, MSO) dan BCD dengan peran yang sama juga melihat menu Implementasi. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
 
 ## Memulai
 
@@ -232,6 +232,20 @@ Billing Termin adalah satu-satunya sumber rencana invoice dari Pipeline, sehingg
 | CW | Closed Won | 100% |
 
 Probabilitas di luar rentang statusnya memunculkan peringatan, tetapi tetap bisa disimpan.
+
+## Implementasi
+
+Proyek pelaksanaan dicatat **per lokasi (site)**, lalu diringkas ke proyek. PDMS (PMO, SCM, ISO, MSO), BCD, Finance Reviewer, Direktur dan Auditor membacanya, dalam entitas masing-masing.
+
+- **Membuka proyek**: deal berstatus Closed Won yang belum punya proyek tampil di kartu **Closed Won menunggu proyek**. BCD mengisi **jumlah lokasi kontrak** lalu *Buka proyek*. Nama project deal menjadi nama proyek. Deal yang sudah memiliki proyek tidak dapat dihapus dan statusnya tetap Closed Won.
+- **Tim proyek**: Head PMO (Default Owner atau Division Owner PMO, atau Head PDMS) menetapkan Project Manager, Delivery Control dan Project Admin dari orang PMO lewat *Simpan tim*. Delivery Control tidak boleh merangkap Project Manager maupun Project Admin, karena pelaksana instalasi tidak memverifikasi hasilnya sendiri dan pengumpul BAI bukan pengompilasinya.
+- **Lokasi**: Project Manager mendaftarkan lokasi dengan *Tambah lokasi* (kode, nama, alamat, wilayah, PIC pelanggan, rencana selesai) sampai jumlahnya sama dengan jumlah lokasi kontrak. Project Manager dan Project Admin memperbaruinya dengan *Ubah*. Kode lokasi unik per proyek.
+- **Status lokasi** yang dipilih manual: Belum mulai, Survei, Staging, Dikirim, Instalasi, Uji, Terkendala. Status BAI terbit, BAI terverifikasi dan Selesai mengikuti BAI lokasi dan tidak dipilih manual.
+- **Progres** = lokasi berstatus Selesai dibagi jumlah lokasi kontrak, bukan dibagi lokasi yang sudah terdaftar.
+- **Terlambat** dihitung sistem: hari sejak tanggal rencana selesai sampai tanggal aktual selesai, atau sampai hari ini bila belum selesai. Tidak diketik.
+- Setiap perubahan tercatat di jejak audit.
+
+Penetapan tim oleh Head PMO mengikuti usulan matriks kewenangan PDMS yang masih menunggu pengesahan Head PDMS. BAI per lokasi, RFS, BAST dan serah terima ke MSO belum tersedia di layar ini.
 
 ## Arus Kas
 

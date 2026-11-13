@@ -22,3 +22,4 @@ export * from "./fiscal";
 export * from "./view";
 export * from "./payment";
 export * from "./requestor";
+export * from "./project";
