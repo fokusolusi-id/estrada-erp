@@ -12,11 +12,11 @@ import { db, schema } from "@estrada/db";
 import type { Role } from "@estrada/domain";
 
 const DEMO: { email: string; name: string; title: string; orgUnit: string; role: Role; entities: string[] }[] = [
-  { email: "requestor.scm@estrada.local", name: "Rina (SCM)", title: "Staff SCM", orgUnit: "SCM", role: "requestor", entities: ["ESTRADA"] },
-  { email: "head.scm@estrada.local", name: "Bayu (Head SCM)", title: "Head of SCM", orgUnit: "SCM", role: "default_owner", entities: ["ESTRADA"] },
-  { email: "head.pdms@estrada.local", name: "Sari (Head PDMS)", title: "Head of PDMS", orgUnit: "PDMS", role: "division_owner", entities: ["ESTRADA"] },
-  { email: "finance@estrada.local", name: "Dewi (Finance)", title: "Business Finance", orgUnit: "FRM", role: "finance", entities: ["*"] },
-  { email: "direktur@estrada.local", name: "Direktur", title: "Direktur", orgUnit: "DIR", role: "director", entities: ["*"] },
+  { email: "d3dyw4hyud1+requestor.scm@gmail.com", name: "Rina (SCM)", title: "Staff SCM", orgUnit: "SCM", role: "requestor", entities: ["ESTRADA"] },
+  { email: "d3dyw4hyud1+head.scm@gmail.com", name: "Bayu (Head SCM)", title: "Head of SCM", orgUnit: "SCM", role: "default_owner", entities: ["ESTRADA"] },
+  { email: "d3dyw4hyud1+head.pdms@gmail.com", name: "Sari (Head PDMS)", title: "Head of PDMS", orgUnit: "PDMS", role: "division_owner", entities: ["ESTRADA"] },
+  { email: "d3dyw4hyud1+finance@gmail.com", name: "Dewi (Finance)", title: "Business Finance", orgUnit: "FRM", role: "finance", entities: ["*"] },
+  { email: "d3dyw4hyud1+direktur@gmail.com", name: "Direktur", title: "Direktur", orgUnit: "DIR", role: "director", entities: ["*"] },
 ];
 
 async function main() {
