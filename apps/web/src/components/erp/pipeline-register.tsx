@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { useState, useTransition } from "react";
 import {
   DEAL_STATUSES,
+  DEAL_STATUS_LABEL,
   DEAL_TYPE_LABEL,
   DEAL_TYPES,
   SEGMENTS,
@@ -13,6 +14,7 @@ import {
   parseIdr,
   pipelineTotals,
   statusBand,
+  terminTotal,
   weighted,
   type DealInput,
 } from "@estrada/domain";
@@ -43,6 +45,16 @@ const FIELD_LABEL: Record<string, string> = {
   segment: "Segmen tidak dikenal",
   value: "Nilai harus lebih dari 0",
   months: "Bulan selesai tidak boleh sebelum bulan mulai",
+  leadTime: "Lead time harus 0–24 bulan",
+};
+const TERMIN_LABEL: Record<string, string> = {
+  out_of_range: "Setiap termin perlu nilai lebih dari 0 dan tanggal rencana",
+  termin_over: "Jumlah termin melebihi nilai kontrak",
+  termin_total: "Closed Won: jumlah termin harus 100% nilai kontrak",
+};
+const band = (s: DealInput["status"]) => {
+  const [lo, hi] = statusBand(s);
+  return lo === hi ? `${lo}%` : `${lo}–${hi}%`;
 };
 const plain = (s: string) => {
   try {
@@ -99,6 +111,8 @@ export function PipelineRegister({
     startMonth: 1,
     endMonth: 12,
     notes: "",
+    leadTimeMonths: null,
+    termins: [],
   });
 
   return (
@@ -170,7 +184,10 @@ export function PipelineRegister({
               </TableCell>
               {entity ? null : <TableCell>{d.entity}</TableCell>}
               <TableCell>{d.segment}</TableCell>
-              <TableCell>{d.status}</TableCell>
+              <TableCell title={DEAL_STATUS_LABEL[d.status]}>
+                {d.status}
+                {d.termins?.length ? <span className="text-muted-foreground text-xs"> · {d.termins.length} termin</span> : null}
+              </TableCell>
               <TableCell className="tabular text-right">{d.probability.replace(".", ",")}%</TableCell>
               <TableCell className="text-right">
                 <MoneyCell value={money(d.value)} />
@@ -240,13 +257,30 @@ function DealForm({
   onDelete: (() => Promise<Result>) | null;
   onCancel: () => void;
 }) {
-  const [d, setD] = useState({ ...initial, value: shown(initial.value), probability: initial.probability.replace(".", ",") });
+  const [d, setD] = useState({
+    ...initial,
+    value: shown(initial.value),
+    probability: initial.probability.replace(".", ","),
+    leadTime: initial.leadTimeMonths == null ? "" : String(initial.leadTimeMonths),
+    termins: (initial.termins ?? []).map((t) => ({ amount: shown(t.amount), plannedDate: t.plannedDate, description: t.description ?? "" })),
+  });
   const [pending, startTransition] = useTransition();
   const set = (patch: Partial<typeof d>) => setD((cur) => ({ ...cur, ...patch }));
-  const normal: DealSave = { ...d, value: plain(d.value) || "0", probability: plain(d.probability) || "-1", endCustomer: d.endCustomer?.trim() || null, notes: d.notes?.trim() || null };
+  const { leadTime, ...rest } = d;
+  const normal: DealSave = {
+    ...rest,
+    value: plain(d.value) || "0",
+    probability: plain(d.probability) || "-1",
+    endCustomer: d.endCustomer?.trim() || null,
+    notes: d.notes?.trim() || null,
+    leadTimeMonths: leadTime.trim() === "" ? null : Number(leadTime.replace(",", ".")),
+    termins: d.termins.map((t) => ({ amount: plain(t.amount) || "0", plannedDate: t.plannedDate, description: t.description.trim() || null })),
+  };
+  const setTermin = (i: number, patch: Partial<(typeof d.termins)[number]>) => set({ termins: d.termins.map((t, j) => (j === i ? { ...t, ...patch } : t)) });
+  const planned = terminTotal(normal.termins ?? []);
+  const contract = money(normal.value);
   const problems = dealProblems(normal);
   const blocking = problems.filter((p) => p.blocking);
-  const [lo, hi] = statusBand(d.status);
   const field = (label: string, input: React.ReactNode, wide = false) => (
     <label className={`grid gap-1 text-sm ${wide ? "sm:col-span-2" : ""}`}>
       <span className="text-muted-foreground text-xs">{label}</span>
@@ -283,7 +317,7 @@ function DealForm({
       )}
       {field("Project", <Input aria-label="Project" value={d.project} onChange={(e) => set({ project: e.target.value })} />, true)}
       {field(
-        "COA",
+        "COA pendapatan (wajib)",
         <select aria-label="COA deal" className={SELECT} value={d.coaCode ?? ""} onChange={(e) => set({ coaCode: e.target.value || null })}>
           <option value="">—</option>
           {options.coa.map((c) => (
@@ -297,10 +331,15 @@ function DealForm({
       {field("Nilai (exclude PPN)", <MoneyInput aria-label="Nilai (exclude PPN)" value={d.value} onChange={(e) => set({ value: e.target.value })} />)}
       {field(
         "Status",
-        <select aria-label="Status deal" className={SELECT} value={d.status} onChange={(e) => set({ status: e.target.value as DealSave["status"] })}>
+        <select aria-label="Status deal" className={SELECT} value={d.status} onChange={(e) => {
+            const status = e.target.value as DealSave["status"];
+            // A signed contract counts in full.
+            set(status === "CW" ? { status, probability: "100" } : { status });
+          }}
+        >
           {DEAL_STATUSES.map((s) => (
             <option key={s} value={s}>
-              {s} ({statusBand(s)[0]}–{statusBand(s)[1]}%)
+              {s} · {DEAL_STATUS_LABEL[s]} ({band(s)})
             </option>
           ))}
         </select>,
@@ -336,19 +375,45 @@ function DealForm({
           ))}
         </select>,
       )}
-      {field("Catatan", <Input aria-label="Catatan" value={d.notes ?? ""} onChange={(e) => set({ notes: e.target.value })} />, true)}
+      {field("Lead time (bulan)", <Input aria-label="Lead time (bulan)" inputMode="numeric" className="tabular text-right" value={d.leadTime} onChange={(e) => set({ leadTime: e.target.value })} />)}
+      {field("Catatan", <Input aria-label="Catatan" value={d.notes ?? ""} onChange={(e) => set({ notes: e.target.value })} />)}
+      <fieldset className="grid gap-2 sm:col-span-4" aria-label="Billing Termin">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <legend className="text-sm font-medium">
+            Billing Termin{" "}
+            <span className="text-muted-foreground text-xs font-normal" data-testid="termin-total">
+              Rp {shown(planned.toFixed())} dari Rp {shown(contract.toFixed())}
+              {contract.gt(0) ? ` (${planned.div(contract).times(100).toFixed(1).replace(".", ",")}%)` : ""}
+            </span>
+          </legend>
+          <Button type="button" variant="outline" size="sm" onClick={() => set({ termins: [...d.termins, { amount: "", plannedDate: "", description: "" }] })}>
+            <Plus aria-hidden /> Tambah termin
+          </Button>
+        </div>
+        <p className="text-muted-foreground text-xs">Rencana invoice hanya berasal dari termin ini. Deal Closed Won wajib memiliki termin senilai 100% nilai kontrak.</p>
+        {d.termins.map((t, i) => (
+          <div key={i} className="grid gap-2 sm:grid-cols-[1fr_1fr_2fr_auto]" data-testid={`termin-${i + 1}`}>
+            <MoneyInput aria-label={`Nilai termin ${i + 1}`} placeholder="Nilai (exclude PPN)" value={t.amount} onChange={(e) => setTermin(i, { amount: e.target.value })} />
+            <Input type="date" aria-label={`Tanggal rencana termin ${i + 1}`} value={t.plannedDate} onChange={(e) => setTermin(i, { plannedDate: e.target.value })} />
+            <Input aria-label={`Keterangan termin ${i + 1}`} placeholder="Keterangan, mis. DP 30%" value={t.description} onChange={(e) => setTermin(i, { description: e.target.value })} />
+            <Button type="button" variant="ghost" size="sm" aria-label={`Hapus termin ${i + 1}`} onClick={() => set({ termins: d.termins.filter((_, j) => j !== i) })}>
+              Hapus
+            </Button>
+          </div>
+        ))}
+      </fieldset>
       <div className="grid gap-1 text-xs sm:col-span-4">
         {problems
           // A field left blank only disables saving; it says nothing until something is typed.
-          .filter((p) => p.field === "months" || p.field === "segment" || String(d[p.field]).trim() !== "")
+          .filter((p) => (p.field === "coa" ? false : p.field === "months" || p.field === "segment" || p.field === "leadTime" || p.field === "termin" || String(d[p.field]).trim() !== ""))
           .map((p) =>
             p.code === "outside_band" ? (
               <p key={p.field + p.code} className="text-warning-foreground">
-                Probabilitas di luar rentang status {d.status} ({lo}–{hi}%)
+                Probabilitas di luar rentang status {d.status} ({band(d.status)})
               </p>
             ) : (
               <p key={p.field + p.code} className="text-destructive">
-                {p.field === "probability" ? "Probabilitas harus 0–100" : FIELD_LABEL[p.field]}
+                {p.field === "probability" ? "Probabilitas harus 0–100" : p.field === "termin" ? TERMIN_LABEL[p.code] : FIELD_LABEL[p.field]}
               </p>
             ),
           )}

@@ -195,19 +195,35 @@ Ringkasan RKA untuk Division Owner, Finance Reviewer, Direktur dan Auditor.
 
 ## Pipeline
 
-Register deal yang dikelola BCD; Finance Reviewer, Direktur dan Auditor membacanya. Pipeline tidak pernah dijumlahkan ke pendapatan RKA, yang berasal dari rencana invoice.
+Register deal yang dikelola BCD; Finance Reviewer, Direktur dan Auditor membacanya. Pipeline tidak pernah dijumlahkan ke pendapatan RKA. Layar ini juga memasang kontrol atas selisih angka penjualan yang ditemukan di RKA 2027.
 
-- Kartu di atas: nilai pipeline (tanpa PPN), pipeline tertimbang (nilai dikali probabilitas), target pendapatan BCD dan selisihnya.
-- **Per segmen**: jumlah deal, nilai, tertimbang, target dan capaian untuk Telco, Government, Enterprise dan Territory Business.
+- **Kartu di atas**: nilai pipeline (dasar: seluruh pipeline, tanpa PPN), Won Bidding (dasar: Won Bidding saja), pipeline tertimbang (nilai dikali probabilitas) dan target pendapatan BCD dengan coverage-nya.
+- **Dua dasar, selalu disebut**: *seluruh pipeline* menjumlahkan semua deal; *Won Bidding saja* hanya deal berstatus WB dan CW. Keduanya tampil berdampingan di tabel **Per segmen** supaya tidak terbaca sebagai angka yang setara.
+- **Coverage** = pipeline tertimbang dibagi target segmen. Segmen dengan coverage di bawah 1,0x ditandai merah dan wajib memiliki **rencana pemulihan** tertulis. Rencana ditulis oleh Sales Head (Division Owner BCD) lewat *Simpan rencana*, tercatat nama dan tanggalnya di jejak audit; peran lain hanya membacanya.
+- **Per COA pendapatan**: jumlah deal, nilai dan tertimbang per COA, yaitu angka yang dibaca RKA sebagai pendapatan per COA.
 - **Daftar deal** mengikuti Entitas di kepala halaman, dengan filter segmen dan status serta pencarian customer atau project.
-- **BCD menambah atau mengubah deal** dengan *Tambah deal* atau *Ubah*: entitas, customer, end customer, segmen, project, COA pendapatan, nilai tanpa PPN, status, probabilitas, jenis (New atau Renewal) serta bulan mulai dan selesai. *Simpan deal* menyimpan dengan jejak audit; *Hapus deal* menghapus.
+- **BCD menambah atau mengubah deal** dengan *Tambah deal* atau *Ubah*: entitas, customer, end customer, segmen, project, COA pendapatan, nilai tanpa PPN, status, probabilitas, jenis (New atau Renewal), bulan mulai dan selesai, lead time dan Billing Termin. *Simpan deal* menyimpan dengan jejak audit; *Hapus deal* menghapus.
+- **COA pendapatan wajib** dan harus akun pendapatan yang aktif di COA Master.
+- **Nama project harus unik** per tahun dan entitas, karena menjadi Kode Proyek saat deal menang. Huruf besar kecil dan spasi diabaikan.
+- **Lead time (bulan)**, 0 sampai 24: jarak dari bulan mulai ke belanja PDMS. Boleh dikosongkan.
+- **Perlu dirapikan**: deal hasil impor yang belum memiliki COA atau memakai nama project yang sama dihitung di peringatan di atas tabel. Deal itu tetap tampil, tetapi tidak dapat disimpan ulang sebelum diperbaiki.
 
-| Status | Rentang probabilitas |
-| --- | --- |
-| PP | 0 sampai 30% |
-| PT | 30 sampai 60% |
-| QO | 60 sampai 70% |
-| WB | 70 sampai 90% |
+### Billing Termin dan Closed Won
+
+Billing Termin adalah satu-satunya sumber rencana invoice dari Pipeline, sehingga ringkasan selalu sama dengan jumlah detailnya.
+
+- Di formulir deal, *Tambah termin* menambah satu rencana invoice: nilai tanpa PPN, tanggal rencana dan keterangan. Jumlah termin tidak boleh melebihi nilai kontrak.
+- Status **CW (Closed Won)** berarti kontrak sudah ditandatangani: probabilitas menjadi 100% dan deal baru dapat disimpan bila jumlah termin tepat 100% nilai kontrak, masing-masing dengan tanggal rencana.
+- Kartu **Rencana invoice dari Billing Termin** menjumlahkan termin per bulan untuk tahun berjalan, lalu per project menampilkan nilai kontrak, invoice tahun ini dan nilai yang **jatuh ke tahun berikutnya** (nilai kontrak dikurangi invoice tahun ini). Kartu ini memuat semua deal Closed Won dan deal lain yang sudah memiliki termin.
+- Rencana invoice ini tampil berdampingan dengan RKA; baris pendapatan RKA tidak diubah olehnya.
+
+| Status | Arti | Rentang probabilitas |
+| --- | --- | --- |
+| PP | Potential | 0 sampai 30% |
+| PT | Potential | 30 sampai 60% |
+| QO | Quotation | 60 sampai 70% |
+| WB | Won Bidding | 70 sampai 90% |
+| CW | Closed Won | 100% |
 
 Probabilitas di luar rentang statusnya memunculkan peringatan, tetapi tetap bisa disimpan.
 

@@ -92,6 +92,13 @@
       "when": 1794453276675,
       "tag": "0012_lucky_pride",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794560045102,
+      "tag": "0013_premium_may_parker",
+      "breakpoints": true
     }
   ]
 }

@@ -36,7 +36,7 @@ export interface RkaWorkbook {
   lines: ImportedLine[];
   problems: ImportProblem[];
   /** The Pipeline sheet, when the workbook has one. */
-  pipeline: { deals: ImportedDeal[]; targets: { segment: string; target: Money }[]; problems: ImportProblem[] } | null;
+  pipeline: ReturnType<typeof parsePipeline> | null;
   /** Forecast CF Bulanan, the per-entity CF sheets and Obligo Pinjaman Bank, when the workbook has them. */
   cash: ImportedCash | null;
 }

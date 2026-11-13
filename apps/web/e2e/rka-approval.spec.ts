@@ -135,6 +135,61 @@ test("Finance fills the cash assumptions and a loan; the forecast follows; the D
   await expect(page.getByText("Asumsi arus kas 2027 belum diisi.")).toBeVisible();
   await page.getByLabel("Saldo kas awal ESTRADA").fill("1.000.000.000");
   await page.getByLabel("Kas minimum konsolidasi").fill("500.000.000");
+test("Pipeline controls: COA and a unique project are required, Closed Won needs 100% Billing Termin, a red segment needs the Sales Head's plan", async ({ page }) => {
+  await as("sales", page, "/pipeline");
+  // Both bases side by side; Rp 519,6 jt weighted against a Rp 1 miliar target is 0,52x: red.
+  const telco = page.getByTestId("segment-Telco Business");
+  await expect(telco.getByTestId("coverage")).toHaveText("0,52x");
+  await expect(page.getByTestId("coa-4100")).toContainText("1");
+  await expect(page.getByTestId("recovery-Telco Business")).toContainText("Belum ditulis");
+  await expect(page.getByRole("button", { name: "Simpan rencana" })).toHaveCount(0);
+
+  // The project name is the Kode Proyek: a second deal with it is refused.
+  await page.getByRole("button", { name: "Tambah deal" }).click();
+  let form = page.getByRole("form", { name: "Deal" });
+  await form.getByLabel("Customer", { exact: true }).fill("Telkom");
+  await form.getByLabel("Project").fill("sewa cpe SBST online korlantas polri ta 2027");
+  await form.getByLabel("Nilai (exclude PPN)").fill("1.000.000");
+  await form.getByLabel("Probabilitas (%)").fill("10");
+  await expect(form.getByRole("button", { name: "Simpan deal" })).toBeDisabled();
+  await form.getByLabel("COA deal").selectOption("4100");
+  await form.getByRole("button", { name: "Simpan deal" }).click();
+  await expect(page.getByText("Nama project sudah dipakai deal lain di entitas dan tahun ini.")).toBeVisible();
+  await form.getByRole("button", { name: "Batal" }).click();
+
+  // Closed Won: termin for 100% of Rp 577.320.000, part of it falling into the next year.
+  await page.getByRole("button", { name: /^Ubah Sewa CPE/ }).click();
+  form = page.getByRole("form", { name: "Deal" });
+  await form.getByLabel("Status deal").selectOption("CW");
+  await expect(form.getByText("Closed Won: jumlah termin harus 100% nilai kontrak")).toBeVisible();
+  await expect(form.getByRole("button", { name: "Simpan deal" })).toBeDisabled();
+  const year = Number((await page.getByRole("heading", { level: 1 }).innerText()).match(/\d{4}/)![0]);
+  await form.getByRole("button", { name: "Tambah termin" }).click();
+  await form.getByLabel("Nilai termin 1").fill("300.000.000");
+  await form.getByLabel("Tanggal rencana termin 1").fill(`${year}-03-15`);
+  await form.getByRole("button", { name: "Tambah termin" }).click();
+  await form.getByLabel("Nilai termin 2").fill("277.320.000");
+  await form.getByLabel("Tanggal rencana termin 2").fill(`${year + 1}-01-20`);
+  await form.getByRole("button", { name: "Simpan deal" }).click();
+  await expect(page.getByText("Deal disimpan.")).toBeVisible();
+  const total = page.getByTestId("billing-total");
+  await expect(total).toContainText("577,3");
+  await expect(total).toContainText("300,0");
+  await expect(total).toContainText("277,3");
+  // Signed in full: 577,3 jt weighted against 1 miliar is still below 1,0x.
+  await expect(telco.getByTestId("coverage")).toHaveText("0,58x");
+
+  await as("sales_head", page, "/pipeline");
+  const plan = page.getByTestId("recovery-Telco Business");
+  await plan.getByRole("textbox").fill("Kejar dua tender Telkom di Q2 dan percepat renewal Korlantas sebelum Juni.");
+  await plan.getByRole("button", { name: "Simpan rencana" }).click();
+  await expect(page.getByText("Rencana pemulihan disimpan.")).toBeVisible();
+
+  await as("finance", page, "/pipeline");
+  await expect(page.getByTestId("recovery-Telco Business")).toContainText("Kejar dua tender Telkom");
+  await expect(page.getByTestId("recovery-Telco Business")).toContainText("Yoga (Head BCD)");
+});
+
   await page.getByRole("button", { name: "Simpan asumsi" }).click();
   await expect(page.getByText("Asumsi disimpan.")).toBeVisible();
   await expect(page.getByText("Arus kas bulanan", { exact: true })).toBeVisible();

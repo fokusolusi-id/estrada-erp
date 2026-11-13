@@ -35,6 +35,8 @@ describe("PipelineRegister", () => {
     const form = within(screen.getByRole("form", { name: "Deal" }));
     fireEvent.change(form.getByLabelText("Customer"), { target: { value: "Kemhan" } });
     fireEvent.change(form.getByLabelText("Project"), { target: { value: "Platform Digital Workspace" } });
+    fireEvent.change(form.getByLabelText("COA deal"), { target: { value: "4200" } });
+    fireEvent.change(form.getByLabelText("Lead time (bulan)"), { target: { value: "3" } });
     fireEvent.change(form.getByLabelText("Nilai (exclude PPN)"), { target: { value: "24.379.658.426" } });
     fireEvent.change(form.getByLabelText("Status deal"), { target: { value: "PP" } });
     fireEvent.change(form.getByLabelText("Probabilitas (%)"), { target: { value: "90" } });
@@ -42,10 +44,54 @@ describe("PipelineRegister", () => {
     fireEvent.click(form.getByRole("button", { name: "Simpan deal" }));
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith(
-        expect.objectContaining({ id: null, customer: "Kemhan", project: "Platform Digital Workspace", value: "24379658426", status: "PP", probability: "90", entity: "ESTRADA" }),
+        expect.objectContaining({ id: null, customer: "Kemhan", project: "Platform Digital Workspace", value: "24379658426", status: "PP", probability: "90", entity: "ESTRADA", coaCode: "4200", leadTimeMonths: 3, termins: [] }),
       ),
     );
     expect(await screen.findByText("Deal disimpan.")).toBeTruthy();
+  });
+
+  it("requires the revenue COA: a complete deal without one cannot be saved", () => {
+    render(<PipelineRegister deals={[{ ...deals[0]!, coaCode: null }]} options={options} canAdd onSave={ok()} onDelete={ok()} />);
+    fireEvent.click(screen.getByRole("button", { name: /^Ubah/ }));
+    expect((screen.getByRole("button", { name: "Simpan deal" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(screen.getByLabelText("COA deal"), { target: { value: "4100" } });
+    expect((screen.getByRole("button", { name: "Simpan deal" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  // Kontrol RKA temuan 3: Closed Won needs Billing Termin for 100% of the contract value.
+  it("blocks Closed Won until the Billing Termin add up to the contract value", async () => {
+    const onSave = ok();
+    render(<PipelineRegister deals={deals} options={options} canAdd onSave={onSave} onDelete={ok()} />);
+    fireEvent.click(screen.getByRole("button", { name: /^Ubah Sewa CPE/ }));
+    const form = within(screen.getByRole("form", { name: "Deal" }));
+    const save = form.getByRole("button", { name: "Simpan deal" }) as HTMLButtonElement;
+    fireEvent.change(form.getByLabelText("Status deal"), { target: { value: "CW" } });
+    expect((form.getByLabelText("Probabilitas (%)") as HTMLInputElement).value).toBe("100");
+    expect(form.getByText("Closed Won: jumlah termin harus 100% nilai kontrak")).toBeTruthy();
+    expect(save.disabled).toBe(true);
+
+    fireEvent.click(form.getByRole("button", { name: "Tambah termin" }));
+    fireEvent.change(form.getByLabelText("Nilai termin 1"), { target: { value: "300.000.000" } });
+    fireEvent.change(form.getByLabelText("Tanggal rencana termin 1"), { target: { value: "2027-03-15" } });
+    expect(save.disabled).toBe(true);
+    fireEvent.click(form.getByRole("button", { name: "Tambah termin" }));
+    fireEvent.change(form.getByLabelText("Nilai termin 2"), { target: { value: "277.320.000" } });
+    fireEvent.change(form.getByLabelText("Tanggal rencana termin 2"), { target: { value: "2028-01-20" } });
+    expect(form.getByTestId("termin-total").textContent).toContain("(100,0%)");
+    expect(save.disabled).toBe(false);
+    fireEvent.click(save);
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "CW",
+          probability: "100",
+          termins: [
+            { amount: "300000000", plannedDate: "2027-03-15", description: null },
+            { amount: "277320000", plannedDate: "2028-01-20", description: null },
+          ],
+        }),
+      ),
+    );
   });
 
   it("blocks saving a deal without a customer or value", () => {

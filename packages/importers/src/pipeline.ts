@@ -1,4 +1,4 @@
-import { DEAL_STATUSES, money, type DealInput, type DealStatus, type DealType, type Money } from "@estrada/domain";
+import { DEAL_STATUSES, duplicateProjects, money, type DealInput, type DealStatus, type DealType, type Money } from "@estrada/domain";
 import { amount, header, text, type Cell } from "./cells";
 import type { ImportedCoa } from "./coa-master";
 import type { ImportProblem } from "./rka-data";
@@ -29,10 +29,12 @@ function target(c: Cell): Money | null {
 export function parsePipeline(
   rows: Cell[][],
   accounts: readonly Pick<ImportedCoa, "code" | "name" | "provisional">[],
-): { deals: ImportedDeal[]; targets: { segment: string; target: Money }[]; problems: ImportProblem[] } {
+): { deals: ImportedDeal[]; targets: { segment: string; target: Money }[]; problems: ImportProblem[]; warnings: ImportProblem[] } {
   const h = header(rows, COLS);
   const names = rows[h.row]!.map(text);
   const segmentCol = names.indexOf("SEGMEN");
+  // Optional: the 2027 sheet has no lead time column yet.
+  const leadCol = names.findIndex((n) => /^lead\s*time/i.test(n));
   const deals: ImportedDeal[] = [];
   const targets: { segment: string; target: Money }[] = [];
   const problems: ImportProblem[] = [];
@@ -56,7 +58,8 @@ export function parsePipeline(
     const fail = (message: string) => problems.push({ no, message });
 
     const status = text(r[h.col("Status")]).toUpperCase();
-    if (!(DEAL_STATUSES as readonly string[]).includes(status)) { fail(`Status tidak dikenal: ${status}`); continue; }
+    // CW (Closed Won) is set in the app with its Billing Termin, never imported.
+    if (status === "CW" || !(DEAL_STATUSES as readonly string[]).includes(status)) { fail(`Status tidak dikenal: ${status}`); continue; }
     const typeText = text(r[h.col("Type Project")]).toLowerCase();
     if (typeText !== "new" && typeText !== "renewal") { fail(`Type Project tidak dikenal: ${text(r[h.col("Type Project")])}`); continue; }
     const start = MONTH[text(r[h.col("Start")]).toLowerCase().slice(0, 3)];
@@ -67,6 +70,7 @@ export function parsePipeline(
     const p = amount(r[h.col("Probabilitas (%)")]);
     if (!p) { fail("Probabilitas kosong"); continue; }
 
+    const lead = leadCol >= 0 ? amount(r[leadCol] ?? null) : null;
     const coaName = text(r[h.col("COA")]);
     const coaCode = coaName ? coaOf(coaName) : null;
     deals.push({
@@ -85,7 +89,13 @@ export function parsePipeline(
       startMonth: start,
       endMonth: end,
       notes: coaName && !coaCode ? `COA di workbook: ${coaName}` : null,
+      leadTimeMonths: lead && lead.isInteger() && lead.gte(0) && lead.lte(24) ? lead.toNumber() : null,
     });
   }
-  return { deals, targets, problems };
+  // Kontrol RKA: these load, but the app will not save the deal again until they are fixed.
+  const warnings: ImportProblem[] = [
+    ...deals.filter((d) => !d.coaCode).map((d) => ({ no: d.ref.no, message: "COA pendapatan belum dikenali; wajib diisi di aplikasi" })),
+    ...duplicateProjects(deals).flatMap((g) => g.slice(1).map((d) => ({ no: d.ref.no, message: `Project Name sama dengan No ${g[0]!.ref.no} di entitas ${d.entity}; harus unik` }))),
+  ];
+  return { deals, targets, problems, warnings };
 }

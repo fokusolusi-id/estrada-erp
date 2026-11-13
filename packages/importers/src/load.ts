@@ -58,6 +58,7 @@ async function main() {
     console.log(`Cash: lag ${c.settings.collectionLag}/${c.settings.cogsPaymentLag} months · PPh ${c.settings.taxRate} · ${c.openings.size} entities · ${c.facilities.length} loan facilities · interest COA ${c.settings.interestCoa.join(", ")} · non-cash COA ${c.settings.nonCashCoa.join(", ")}`);
   }
   if (wb.pipeline) {
+    for (const w of wb.pipeline.warnings) console.warn(`  Pipeline No ${w.no}: ${w.message}`);
     const p = pipelineTotals(wb.pipeline.deals);
     console.log(`Pipeline: ${wb.pipeline.deals.length} deals · value ${formatIdr(p.value)} · weighted ${formatIdr(p.weighted)} · ${wb.pipeline.targets.length} segment targets`);
   }

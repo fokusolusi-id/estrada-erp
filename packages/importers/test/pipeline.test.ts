@@ -55,7 +55,18 @@ describe("parsePipeline: the Pipeline sheet", () => {
         startMonth: 1,
         endMonth: 12,
         notes: null,
+        leadTimeMonths: null,
       },
+    ]);
+  });
+
+  // Kontrol RKA, titik sambung 1 and 6: these load, with a warning, and are fixed in the app.
+  it("warns about a deal without a recognised COA and about a project name repeated within an entity", () => {
+    const { deals, problems, warnings } = parsePipeline(SHEET([row(), row({ No: 2 }), row({ No: 3, "Perusahaan/Entitas": "MATRIK", COA: "Tidak Ada" })]), COA);
+    expect([deals.length, problems]).toEqual([3, []]);
+    expect(warnings).toEqual([
+      { no: 3, message: "COA pendapatan belum dikenali; wajib diisi di aplikasi" },
+      { no: 2, message: "Project Name sama dengan No 1 di entitas ESTRADA; harus unik" },
     ]);
   });
 

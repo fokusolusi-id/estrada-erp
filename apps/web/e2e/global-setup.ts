@@ -33,5 +33,7 @@ export default async function globalSetup() {
       await sql`insert into position_entity_scope (position_id, entity_code) values (${pos!.id}, ${entity})`;
     }
   }
+  // BCD's segment target, so the Pipeline shows coverage whatever year the cycle runs for.
+  for (const year of [2026, 2027, 2028]) await sql`insert into pipeline_target (fiscal_year, segment, target) values (${year}, 'Telco Business', 1000000000)`;
   await sql.end();
 }
