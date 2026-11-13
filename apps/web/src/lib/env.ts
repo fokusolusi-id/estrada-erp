@@ -5,7 +5,7 @@ const schema = z.object({
   BETTER_AUTH_SECRET: z.string().min(16).default("dev-only-secret-change-me-please"),
   APP_URL: z.string().url().default("http://localhost:3000"),
   RESEND_API_KEY: z.string().optional(),
-  EMAIL_FROM: z.string().default("ERP Estrada <no-reply@estrada.local>"),
+  EMAIL_FROM: z.string().default("ERP Estrada <info@erpestrada.com>"),
   /** Who locks the final RKA version — open question 3 for the client. */
   RKA_LOCK_ROLE: z.enum(["director", "finance"]).default("finance"),
   /** Bearer token the daily scheduler sends to /api/cron/reminders. Unset = the endpoint is off. */
