@@ -135,11 +135,6 @@ test("BCD adds a deal to the Pipeline; Finance reads it; other divisions cannot 
   await expect(page.getByText("Halaman tidak ditemukan atau tidak dapat diakses")).toBeVisible();
 });
 
-test("Finance fills the cash assumptions and a loan; the forecast follows; the Director reads it", async ({ page }) => {
-  await as("finance", page, "/cash");
-  await expect(page.getByText("Asumsi arus kas 2027 belum diisi.")).toBeVisible();
-  await page.getByLabel("Saldo kas awal ESTRADA").fill("1.000.000.000");
-  await page.getByLabel("Kas minimum konsolidasi").fill("500.000.000");
 test("Pipeline controls: COA and a unique project are required, Closed Won needs 100% Billing Termin, a red segment needs the Sales Head's plan", async ({ page }) => {
   await as("sales", page, "/pipeline");
   // Both bases side by side; Rp 519,6 jt weighted against a Rp 1 miliar target is 0,52x: red.
@@ -195,6 +190,11 @@ test("Pipeline controls: COA and a unique project are required, Closed Won needs
   await expect(page.getByTestId("recovery-Telco Business")).toContainText("Yoga (Head BCD)");
 });
 
+test("Finance fills the cash assumptions and a loan; the forecast follows; the Director reads it", async ({ page }) => {
+  await as("finance", page, "/cash");
+  await expect(page.getByText("Asumsi arus kas 2027 belum diisi.")).toBeVisible();
+  await page.getByLabel("Saldo kas awal ESTRADA").fill("1.000.000.000");
+  await page.getByLabel("Kas minimum konsolidasi").fill("500.000.000");
   await page.getByRole("button", { name: "Simpan asumsi" }).click();
   await expect(page.getByText("Asumsi disimpan.")).toBeVisible();
   await expect(page.getByText("Arus kas bulanan", { exact: true })).toBeVisible();
