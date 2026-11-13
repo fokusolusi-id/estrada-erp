@@ -2,7 +2,7 @@
 
 import { useState, useTransition, type ClipboardEvent, type KeyboardEvent } from "react";
 import { ArrowRightToLine, Info, Plus, Save, Send, Trash2, TriangleAlert } from "lucide-react";
-import { fillRight, formatIdr, money, parseIdr, parsePaste, sum, ZERO, type Money } from "@estrada/domain";
+import { duplicateOf, fillRight, formatIdr, money, parseIdr, parsePaste, spreadEvenly, sum, ZERO, type Money } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -46,6 +46,8 @@ interface Row extends Omit<EditorLine, "months"> {
   cells: string[];
   dirty: boolean;
   focusMonth: number;
+  /** A yearly total being typed, before it is split over the months. */
+  yearly: string;
   errors: Record<string, string>;
 }
 
@@ -81,6 +83,7 @@ const toRow = (l: EditorLine): Row => ({
   cells: l.months.map((m) => plain(money(m))),
   dirty: !l.id,
   focusMonth: 1,
+  yearly: "",
   errors: {},
 });
 
@@ -148,6 +151,20 @@ export function BudgetEditor({
     setCells(r.key, r.cells.map((c, i) => (i >= r.focusMonth - 1 ? plain(filled[i]!) : c)));
   };
 
+  // Prorate: a yearly total typed once becomes twelve even months; the months stay editable afterwards.
+  const onSpread = (rowIdx: number) => {
+    const r = rows[rowIdx]!;
+    if (!r.yearly.trim()) return;
+    const total = tryParse(r.yearly);
+    if (!total || total.isNegative()) return;
+    update(r.key, { cells: spreadEvenly(total).map(plain), yearly: "" });
+  };
+
+  // The same COA goes in once per entity and budget owner; the server checks again against lines already sent.
+  const slots = editable.map((r) => ({ id: r.key, requestorUnit: "", coaCode: r.coaCode, entity: r.entityCode, ownerUnit: r.ownerUnit }));
+  // Only rows being changed are held back: lines the workbook import already doubled stay editable.
+  const duplicates = new Set(editable.filter((r, i) => r.dirty && duplicateOf(slots[i]!, slots)).map((r) => r.key));
+
   const onKeyDown = (rowIdx: number, month: number) => (e: KeyboardEvent<HTMLInputElement>) => {
     const delta = e.key === "ArrowDown" || e.key === "Enter" ? 1 : e.key === "ArrowUp" ? -1 : 0;
     if (!delta) return;
@@ -160,7 +177,7 @@ export function BudgetEditor({
 
   // Every changed row is saved from one bar, like a sheet; a row that is not valid yet holds the save back.
   const changed = editable.filter((r) => r.dirty);
-  const changedValid = changed.every((r) => parsed[rows.findIndex((x) => x.key === r.key)]!.every(Boolean));
+  const changedValid = !duplicates.size && changed.every((r) => parsed[rows.findIndex((x) => x.key === r.key)]!.every(Boolean));
   const saveAll = () =>
     startTransition(async () => {
       let saved = 0;
@@ -276,7 +293,7 @@ export function BudgetEditor({
                     className={SELECT}
                     disabled={locked}
                     value={r.coaCode}
-                    aria-invalid={!!r.errors.coaCode}
+                    aria-invalid={!!r.errors.coaCode || duplicates.has(r.key)}
                     onChange={(e) => {
                       const coa = masters.coa.find((c) => c.code === e.target.value);
                       update(r.key, { coaCode: e.target.value, ...(coa?.defaultOwnerUnit ? { ownerUnit: coa.defaultOwnerUnit } : {}) });
@@ -296,7 +313,10 @@ export function BudgetEditor({
                     value={r.item}
                     onChange={(e) => update(r.key, { item: e.target.value })}
                   />
-                  {r.errors.coaCode ? <span className="text-destructive text-xs">{r.errors.coaCode}</span> : null}
+                  {r.errors.coaCode ? <span className="text-destructive max-w-56 text-xs whitespace-normal">{r.errors.coaCode}</span> : null}
+                  {duplicates.has(r.key) ? (
+                    <span className="text-destructive max-w-56 text-xs whitespace-normal">COA ini sudah ada untuk Entitas dan Pemilik yang sama.</span>
+                  ) : null}
                   {hasNotes ? (
                     notesOpen.has(r.key) ? (
                       <div className="bg-muted/60 grid max-w-64 gap-1 rounded-md p-2 text-xs whitespace-normal">
@@ -398,8 +418,28 @@ export function BudgetEditor({
                     />
                   </TableCell>
                 ))}
-                <TableCell className="bg-accent/50 text-right font-medium" data-testid={`editor-total-${n}`}>
-                  <MoneyCell value={totals[i]!} unit="rp" />
+                <TableCell className="bg-accent/50 text-right font-medium">
+                  <div data-testid={`editor-total-${n}`}>
+                    <MoneyCell value={totals[i]!} unit="rp" />
+                  </div>
+                  {locked ? null : (
+                    <Input
+                      aria-label={`Total setahun baris ${n}`}
+                      title="Ketik total setahun, lalu Enter: dibagi rata ke 12 bulan"
+                      placeholder="Bagi rata 12 bln"
+                      inputMode="decimal"
+                      className="tabular bg-background mt-1 h-7 min-w-32 text-right text-xs font-normal"
+                      value={r.yearly}
+                      aria-invalid={!!r.yearly.trim() && !(tryParse(r.yearly)?.isNegative() === false)}
+                      onChange={(e) => setRows((rs) => rs.map((x) => (x.key === r.key ? { ...x, yearly: e.target.value } : x)))}
+                      onBlur={() => onSpread(i)}
+                      onKeyDown={(e) => {
+                        if (e.key !== "Enter") return;
+                        e.preventDefault();
+                        onSpread(i);
+                      }}
+                    />
+                  )}
                 </TableCell>
                 <TableCell>
                   <Input
@@ -443,7 +483,7 @@ export function BudgetEditor({
           <span className="text-sm">
             <span className="bg-state-finance mr-2 inline-block size-2 rounded-full align-middle" aria-hidden />
             {changed.length} baris belum disimpan
-            {!changedValid ? <span className="text-destructive"> · ada nominal yang belum benar</span> : null}
+            {duplicates.size ? <span className="text-destructive"> · ada COA ganda</span> : !changedValid ? <span className="text-destructive"> · ada nominal yang belum benar</span> : null}
           </span>
           <Button type="button" disabled={!changedValid || pending} onClick={saveAll}>
             <Save aria-hidden /> Simpan ({changed.length})

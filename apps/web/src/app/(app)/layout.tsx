@@ -8,6 +8,9 @@ import { activeYear, yearVersions } from "@/lib/fiscal-year";
 import { displayUnit } from "@/lib/display-unit";
 import { viewSetup } from "@/lib/view-filter";
 import { ViewBar } from "@/components/erp/view-bar";
+import { NotificationBell } from "@/components/erp/notification-bell";
+import { loadNotifications } from "@/lib/notifications";
+import { markNotificationsRead } from "./notification-actions";
 import { setDisplayUnit } from "./unit-actions";
 import { setView } from "./view-actions";
 import { setFiscalYear } from "./year-actions";
@@ -27,6 +30,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     viewSetup(),
     displayUnit(),
   ]);
+  const notifications = await loadNotifications(user.id);
   const nav = navFor(user.actor.role, (unit) => org.isWithin(user.actor.orgUnit, unit));
   const collapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "1";
 
@@ -72,6 +76,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 onUnit={setDisplayUnit}
               />
             ) : null}
+            <NotificationBell items={notifications.items} unread={notifications.unread} onRead={markNotificationsRead} />
             <ThemeSwitcher />
             <span className="text-muted-foreground hidden items-center gap-1.5 lg:flex">
               <UserRound aria-hidden className="size-4" />

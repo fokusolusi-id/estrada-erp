@@ -21,3 +21,4 @@ export * from "./dashboard";
 export * from "./fiscal";
 export * from "./view";
 export * from "./payment";
+export * from "./requestor";

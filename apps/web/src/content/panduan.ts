@@ -70,7 +70,11 @@ Hanya satu versi per tahun anggaran yang dapat terbuka. Tahun baru baru dapat di
 
 Requestor mengisi baris anggaran unitnya selama Draft, lalu mengirimnya ke Default Owner. Mulai dari Beranda atau menu RKA Saya.
 
-RKA Saya terdiri dari tiga bagian: **Draft usulan** (baris yang masih bisa diubah), **Sudah dikirim** (baris yang sudah dikirim beserta tahapnya, hanya baca) dan **Rencana headcount** (rekrutmen baru yang menjadi baris gaji).
+RKA Saya hanya menampilkan baris yang diusulkan unit Anda sendiri, dalam entitas yang menjadi akses Anda. Baris unit lain yang dibebankan ke unit Anda tidak tampil di sini.
+
+Di bagian atas ada ringkasan: **Sudah dikirim** (jumlah baris yang sudah Anda kirim) dan posisinya per tahap, yaitu Konsolidasi (di Default Owner), Persetujuan Divisi (di Division Owner), Review Finance, Menunggu Kunci dan Terkunci. Bila ada baris yang dikembalikan, tampil *N baris dikembalikan, perlu diubah*; bila ada baris yang punya komentar, tampil *N baris punya diskusi*.
+
+Di bawahnya ada tiga bagian: **Draft usulan** (baris yang masih bisa diubah), **Rencana headcount** (rekrutmen baru yang menjadi baris gaji) dan **Sudah dikirim** (baris yang sudah dikirim beserta tahapnya, hanya baca).
 
 **Mengisi baris di Draft usulan**
 
@@ -78,8 +82,10 @@ RKA Saya terdiri dari tiga bagian: **Draft usulan** (baris yang masih bisa diuba
 2. Ketik nominal Jan sampai Des dalam rupiah. Sel bulan tampil seperti spreadsheet: tanpa garis sampai disentuh, dan berbingkai biru saat diisi. Total RKA dihitung otomatis.
 3. Untuk menyalin dari Excel, tempel satu baris atau satu blok ke sel bulan; nilainya mengisi bulan ke kanan dan baris ke bawah.
 4. Tombol *Isi ke kanan* menyalin bulan yang dipilih sampai Des. Panah atas dan bawah berpindah baris.
-5. Isi Dasar perhitungan. Baris tidak tersimpan bila COA tidak aktif atau tidak dikenal, entitas tidak dikenal, atau ada nominal negatif.
-6. Baris yang berubah diberi warna. Bilah di bawah menunjukkan *N baris belum disimpan*; tekan *Simpan (N)* untuk menyimpan semuanya sekaligus. *Hapus baris* menghapus baris yang tidak diperlukan.
+5. **Bagi rata 12 bulan**: ketik total setahun sekali di kotak *Bagi rata 12 bln* di kolom Total RKA, lalu tekan Enter. Total dibagi rata ke Jan sampai Des; sisa pembulatan masuk ke Des supaya jumlahnya tepat. Setelah itu tiap bulan tetap bisa diubah satu per satu.
+6. Isi Dasar perhitungan. Baris tidak tersimpan bila COA tidak aktif atau tidak dikenal, entitas tidak dikenal, atau ada nominal negatif.
+7. **Satu COA sekali per Entitas dan Pemilik.** COA yang sama tidak bisa dimasukkan dua kali untuk Entitas dan Pemilik yang sama; ubah baris yang sudah ada. COA yang sama boleh untuk Entitas lain atau Pemilik lain. Baris dari Rencana headcount dikecualikan, dan baris ganda yang sudah ada dari impor workbook tetap bisa diubah.
+8. Baris yang berubah diberi warna. Bilah di bawah menunjukkan *N baris belum disimpan*; tekan *Simpan (N)* untuk menyimpan semuanya sekaligus. *Hapus baris* menghapus baris yang tidak diperlukan.
 
 Catatan dari workbook dan angka tahun lalu terlipat di tautan kecil di bawah uraian (misalnya *2 catatan*); klik untuk membukanya. Catatan pengembalian dari Default Owner selalu tampil.
 
@@ -256,6 +262,8 @@ Proyeksi arus kas bulanan per entitas dan konsolidasi, menggantikan Forecast CF 
 - **Daftar kosong** menampilkan penjelasan dan langkah berikutnya, bukan halaman kosong.
 
 ## Email dan pengingat
+
+**Notifikasi di kepala halaman.** Ikon lonceng menampilkan jumlah pemberitahuan yang belum dibaca. Klik untuk membuka daftarnya: baris yang masuk ke antrean Anda, usulan yang dikembalikan atau diminta klarifikasi (bertanda *Perlu diubah*), dan komentar baru di Diskusi. Klik satu pemberitahuan untuk membuka layarnya dan menandainya dibaca, atau *Tandai semua dibaca*. Setiap pemberitahuan ini juga dikirim lewat email.
 
 Aplikasi mengirim satu email per serah terima, bukan per baris. Email tidak pernah memuat angka rupiah; setiap email berisi tautan ke layar tempat penerima bertindak.
 

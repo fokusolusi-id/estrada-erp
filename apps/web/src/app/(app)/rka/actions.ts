@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@estrada/db";
-import { can, headcountBasis, headcountMonths, headcountProblems, money, validateLine, type ApprovalAction, type CoaAccount, type HeadcountField } from "@estrada/domain";
+import { can, duplicateOf, headcountBasis, headcountMonths, headcountProblems, money, validateLine, type ApprovalAction, type CoaAccount, type HeadcountField } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { openVersion } from "@/lib/rka";
 import { applyTransition, loadOrg, WorkflowError } from "@/lib/workflow";
@@ -33,6 +33,7 @@ const VALIDATION_MESSAGE: Record<string, string> = {
   entity_unknown: "Entitas tidak dikenal atau di luar akses Anda",
   basis_required: "Dasar perhitungan wajib diisi",
 };
+const DUPLICATE_MESSAGE = "COA ini sudah diusulkan untuk Entitas dan Pemilik yang sama. Ubah baris yang ada, atau pilih Entitas atau Pemilik lain.";
 
 const RKA_PATHS = ["/rka", "/rka/queue", "/rka/division", "/rka/review", "/rka/lock"];
 const revalidateRka = () => RKA_PATHS.forEach((p) => revalidatePath(p));
@@ -89,6 +90,29 @@ async function writeLine(user: Awaited<ReturnType<typeof requireUser>>, v: z.out
   );
   if (errors.length) {
     return { ok: false, message: "Periksa isian baris.", errors: Object.fromEntries(errors.map((e) => [e.field === "entity" ? "entityCode" : e.field, VALIDATION_MESSAGE[e.code] ?? e.code])) };
+  }
+
+  // One line per COA, entity and budget owner for a requesting unit; headcount positions share a salary COA and are left out.
+  // Lines the import already doubled stay editable: the check runs when a line is new or moves to another slot.
+  const moved = !existing || existing.coaCode !== v.coaCode || existing.entityCode !== v.entityCode || existing.ownerUnit !== v.ownerUnit;
+  if (!plan && moved) {
+    const same = await db
+      .select({ id: schema.budgetLine.id, planned: schema.headcountPlan.lineId })
+      .from(schema.budgetLine)
+      .leftJoin(schema.headcountPlan, eq(schema.headcountPlan.lineId, schema.budgetLine.id))
+      .where(
+        and(
+          eq(schema.budgetLine.versionId, version.id),
+          eq(schema.budgetLine.requestorUnit, requestorUnit),
+          eq(schema.budgetLine.coaCode, v.coaCode),
+          eq(schema.budgetLine.entityCode, v.entityCode),
+          eq(schema.budgetLine.ownerUnit, v.ownerUnit),
+        ),
+      );
+    const key = { requestorUnit, coaCode: v.coaCode, entity: v.entityCode, ownerUnit: v.ownerUnit };
+    if (duplicateOf({ ...key, ...(v.id ? { id: v.id } : {}) }, same.map((r) => ({ ...key, id: r.id, planned: !!r.planned })))) {
+      return { ok: false, message: DUPLICATE_MESSAGE, errors: { coaCode: DUPLICATE_MESSAGE } };
+    }
   }
 
   const values = {

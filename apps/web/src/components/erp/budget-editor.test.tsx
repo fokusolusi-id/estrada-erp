@@ -17,7 +17,7 @@ const masters = {
 const zero = Array.from({ length: 12 }, () => "0");
 const lines: EditorLine[] = [
   { id: "11111111-1111-4111-8111-111111111111", coaCode: "6241", entityCode: "ESTRADA", ownerUnit: "SCM", item: "Internet kantor", basis: "Kontrak 2027", months: zero, priorRka: "200000000", priorActual: "180000000", flags: ["Cek potensi double counting dengan RKA HCM"] },
-  { id: "22222222-2222-4222-8222-222222222222", coaCode: "6241", entityCode: "ESTRADA", ownerUnit: "SCM", item: "Internet gudang", basis: "", months: zero, remark: { by: "Bayu (Head SCM)", comment: "Basis kontrak belum dilampirkan" } },
+  { id: "22222222-2222-4222-8222-222222222222", coaCode: "6241", entityCode: "MATRIK", ownerUnit: "SCM", item: "Internet gudang", basis: "", months: zero, remark: { by: "Bayu (Head SCM)", comment: "Basis kontrak belum dilampirkan" } },
 ];
 
 const ok = () => vi.fn(async () => ({ ok: true, message: "ok", id: "33333333-3333-4333-8333-333333333333" }));
@@ -53,6 +53,34 @@ describe("BudgetEditor", () => {
     expect(cell(1, 12).value).toBe("19.821.320");
     expect(cell(1, 2).value).toBe("0");
     expect(screen.getByTestId("editor-total-1").textContent).toBe("Rp 198.213.200");
+  });
+
+  it("splits a yearly total typed once evenly over the 12 months, which stay editable", () => {
+    setup();
+    const total = screen.getByLabelText("Total setahun baris 1") as HTMLInputElement;
+    fireEvent.change(total, { target: { value: "45.000.000" } });
+    fireEvent.blur(total);
+    expect([cell(1, 1).value, cell(1, 12).value]).toEqual(["3.750.000", "3.750.000"]);
+    expect(screen.getByTestId("editor-total-1").textContent).toBe("Rp 45.000.000");
+    expect(total.value).toBe("");
+    fireEvent.change(cell(1, 1), { target: { value: "4.000.000" } });
+    expect(screen.getByTestId("editor-total-1").textContent).toBe("Rp 45.250.000");
+  });
+
+  it("puts the leftover of an uneven total in December, so the months add up", () => {
+    setup();
+    const total = screen.getByLabelText("Total setahun baris 1") as HTMLInputElement;
+    fireEvent.change(total, { target: { value: "100.000" } });
+    fireEvent.keyDown(total, { key: "Enter" });
+    expect(screen.getByTestId("editor-total-1").textContent).toBe("Rp 100.000");
+  });
+
+  it("refuses the same COA twice for one entity and owner, but allows another entity", () => {
+    setup();
+    expect(screen.queryByText(/sudah ada untuk Entitas dan Pemilik yang sama/)).toBeNull();
+    fireEvent.change(screen.getByLabelText("Entitas baris 2"), { target: { value: "ESTRADA" } });
+    expect(screen.getAllByText(/sudah ada untuk Entitas dan Pemilik yang sama/).length).toBeGreaterThan(0);
+    expect((screen.getByRole("button", { name: "Simpan (1)" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("flags text that is not an amount and blocks saving", () => {

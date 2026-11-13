@@ -34,7 +34,12 @@ test("1. Requestor drafts a line like in Excel and submits to the Default Owner"
   await as("requestor", page, "/rka");
   await page.getByRole("button", { name: "Tambah baris" }).click();
 
+  // 6241 for ESTRADA and SCM is already in the draft: the same COA goes in once per entity and owner.
   await page.getByLabel("COA baris 3").selectOption("6241");
+  await expect(page.getByText("COA ini sudah ada untuk Entitas dan Pemilik yang sama.")).toBeVisible();
+  await page.getByLabel("COA baris 3").selectOption("6320");
+  await page.getByLabel("Unit pemilik baris 3").selectOption("SCM");
+  await expect(page.getByText("COA ini sudah ada untuk Entitas dan Pemilik yang sama.")).toBeHidden();
   await page.getByLabel("Uraian baris 3").fill("Internet cabang");
   await page.getByLabel("Baris 3 bulan 1", { exact: true }).fill("1.500.000");
   await page.getByLabel("Baris 3 bulan 1", { exact: true }).focus();
@@ -604,7 +609,7 @@ test("Finance opens a revision of the locked version and adjusts it alone", asyn
     await sql`
       insert into headcount_plan (line_id, position, head_count, start_month, cost_per_head)
       select l.id, 'Network Engineer', 2, 1, 9910660 from budget_line l join budget_version v on v.id = l.version_id
-      where v.name = 'RKA 2027 (demo)' and l.coa_code = '6241' and l.shared_basis is null limit 1`;
+      where v.name = 'RKA 2027 (demo)' and l.coa_code = '6320' and l.shared_basis is null limit 1`;
   } finally {
     await sql.end();
   }

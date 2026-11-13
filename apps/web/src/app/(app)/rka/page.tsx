@@ -12,7 +12,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { deleteLine, saveHeadcount, saveLine, submitLines } from "./actions";
 import { FileText } from "lucide-react";
 import { EmptyState } from "@/components/erp/empty-state";
-import { rkaLabel } from "@estrada/domain";
+import { ROLE_LABEL, requestedWithin, requestorOverview, rkaLabel } from "@estrada/domain";
+import { RequestorOverview } from "@/components/erp/requestor-overview";
+import { approvalConfig, loadOrg } from "@/lib/workflow";
 
 /** The workbook budgets new hires on Beban rekrutmen, owned by HCM. */
 const HEADCOUNT_COA = "6221";
@@ -21,10 +23,13 @@ export const metadata: Metadata = { title: "RKA Saya" };
 
 export default async function RkaPage() {
   const user = await requireUser();
-  const [version, lines, unit, year, view] = await Promise.all([openVersion(), loadScopedLines(user), displayUnit(), activeYear(), activeView()]);
+  const [version, scoped, unit, year, view, org] = await Promise.all([openVersion(), loadScopedLines(user), displayUnit(), activeYear(), activeView(), loadOrg()]);
   const prior = (version?.fiscalYear ?? year ?? new Date().getFullYear()) - 1;
 
   const isRequestor = user.actor.role === "requestor";
+  // A requestor's RKA Saya is what its own unit asked for, within its entities; lines other units charge to it stay out.
+  const lines = isRequestor ? scoped.filter(requestedWithin(user.actor.orgUnit, org)) : scoped;
+  const overview = isRequestor && version ? requestorOverview(lines.map((l) => ({ state: l.state, returned: !!l.remark, commentCount: l.commentCount }))) : null;
   const drafts = isRequestor ? lines.filter((l) => l.state === "draft" && l.canEdit) : [];
   // The editor keeps every draft so nothing is hidden while editing; the header narrows the read-only list.
   const others = await viewLines(lines.filter((l) => !drafts.includes(l)));
@@ -59,12 +64,26 @@ export default async function RkaPage() {
         <ViewNote />
       </div>
 
+      {overview ? (
+        <RequestorOverview
+          overview={overview}
+          holders={{
+            consolidation: `di ${ROLE_LABEL.default_owner}`,
+            division_approval: `di ${ROLE_LABEL.division_owner}`,
+            finance_review: `di ${ROLE_LABEL.finance}`,
+            awaiting_lock: `di ${ROLE_LABEL[approvalConfig().lockRole]}`,
+            locked: "final",
+          }}
+        />
+      ) : null}
+
       {masters ? (
-        <Card>
+        <Card id="draft" className="scroll-mt-4">
           <CardHeader>
             <CardTitle>Draft usulan</CardTitle>
             <CardDescription>
-              Isi nominal dalam Rupiah. Tempel blok dari Excel langsung ke sel bulan, atau isi satu bulan lalu tekan “Isi ke kanan”.
+              Isi nominal dalam Rupiah. Ketik total setahun di kolom Total RKA untuk membaginya rata ke 12 bulan, atau isi tiap bulan sendiri:
+              tempel blok dari Excel langsung ke sel bulan, atau isi satu bulan lalu tekan “Isi ke kanan”. Satu COA hanya sekali per Entitas dan Pemilik.
               Perubahan disimpan sekaligus lewat tombol Simpan di bawah; centang baris yang sudah siap, lalu kirim ke Default Owner.
             </CardDescription>
           </CardHeader>
