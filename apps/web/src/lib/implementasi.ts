@@ -33,6 +33,12 @@ export interface ProjectRow {
   contractSites: number;
   rfs: Signoff;
   bast: Signoff;
+  telkomScheme: boolean;
+  kickoffGateOn: string | null;
+  baselineOn: string | null;
+  rfsTargetOn: string | null;
+  bard: { nomor: string; tanggal: string } | null;
+  baut: { nomor: string; tanggal: string } | null;
   /** The date MSO accepted the handover: when responsibility for the service moved. */
   msoAcceptedOn: string | null;
   warrantyEndsOn: string | null;
@@ -40,6 +46,8 @@ export interface ProjectRow {
   team: ProjectTeam;
   sites: SiteRow[];
 }
+
+const jakartaDay = (d: Date | null) => (d ? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" }).format(d) : null);
 
 const toSite = (s: typeof schema.projectSite.$inferSelect): SiteRow => ({
   id: s.id,
@@ -55,7 +63,7 @@ const toSite = (s: typeof schema.projectSite.$inferSelect): SiteRow => ({
   ujiPetik: s.spotCheck,
   bai:
     s.baiNumber && s.baiOn && s.baiCollectedBy
-      ? { nomor: s.baiNumber, tanggal: s.baiOn, evidence: s.baiEvidence ?? "", collectedBy: s.baiCollectedBy, compiledBy: s.baiCompiledBy, verifiedBy: s.baiVerifiedBy, spotCheckPassed: s.spotCheckPassed }
+      ? { nomor: s.baiNumber, tanggal: s.baiOn, evidence: s.baiEvidence ?? "", collectedBy: s.baiCollectedBy, compiledBy: s.baiCompiledBy, verifiedBy: s.baiVerifiedBy, spotCheckPassed: s.spotCheckPassed, collectedOn: jakartaDay(s.baiCollectedAt), compiledOn: jakartaDay(s.baiCompiledAt), verifiedOn: jakartaDay(s.baiVerifiedAt) }
       : null,
   baiReturnNote: s.baiReturnNote,
 });
@@ -88,6 +96,12 @@ export async function loadProjects(id?: string): Promise<ProjectRow[]> {
     contractSites: p.contractSites,
     rfs: { on: p.rfsOn, proposedOn: p.rfsProposedOn, proposedBy: p.rfsProposedBy },
     bast: { on: p.bastOn, proposedOn: p.bastProposedOn, proposedBy: p.bastProposedBy, number: p.bastNumber },
+    telkomScheme: p.telkomScheme,
+    kickoffGateOn: p.kickoffGateOn,
+    baselineOn: p.baselineOn,
+    rfsTargetOn: p.rfsTargetOn,
+    bard: p.bardNumber && p.bardOn ? { nomor: p.bardNumber, tanggal: p.bardOn } : null,
+    baut: p.bautNumber && p.bautOn ? { nomor: p.bautNumber, tanggal: p.bautOn } : null,
     msoAcceptedOn: p.msoAcceptedOn,
     warrantyEndsOn: p.warrantyEndsOn,
     closedOn: p.closedOn,
@@ -197,4 +211,16 @@ export async function loadDefects(projectId: string): Promise<DefectRow[]> {
     rejectNote: d.rejectNote,
     fixNote: d.fixNote,
   }));
+}
+
+export interface PlanningRecord {
+  reference: string;
+  recordedBy: string | null;
+  recordedOn: string;
+}
+
+/** The planning records of a project, by key. */
+export async function loadPlanning(projectId: string): Promise<Record<string, PlanningRecord>> {
+  const rows = await db.select().from(schema.projectPlanningItem).where(eq(schema.projectPlanningItem.projectId, projectId));
+  return Object.fromEntries(rows.map((r) => [r.key, { reference: r.reference, recordedBy: r.recordedBy, recordedOn: jakartaDay(r.recordedAt)! }]));
 }

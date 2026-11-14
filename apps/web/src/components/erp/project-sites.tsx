@@ -12,6 +12,8 @@ type Result = { ok: boolean; message: string };
 
 export interface SiteView extends SiteInput {
   id: string;
+  /** Nothing has happened on the site: it may be deleted. */
+  deletable?: boolean;
 }
 type Draft = SiteInput & { id: string | null };
 
@@ -35,7 +37,9 @@ export function ProjectSites({
   today,
   canAdd,
   canEdit,
+  canDelete = false,
   onSave,
+  onDelete,
 }: {
   sites: SiteView[];
   contractSites: number;
@@ -43,11 +47,14 @@ export function ProjectSites({
   today: string;
   canAdd: boolean;
   canEdit: boolean;
+  canDelete?: boolean;
   onSave: (site: Draft) => Promise<Result>;
+  onDelete?: (siteId: string) => Promise<Result>;
 }) {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [message, setMessage] = useState<Result | null>(null);
   const [pending, startTransition] = useTransition();
+  const [confirming, setConfirming] = useState<string | null>(null);
   const full = sites.length >= contractSites;
   const set = (patch: Partial<Draft>) => setDraft((d) => (d ? { ...d, ...patch } : d));
   const locked = !!draft?.id && !isField(draft.status);
@@ -200,6 +207,33 @@ export function ProjectSites({
                       >
                         Ubah
                       </Button>
+                      {canDelete && s.deletable && onDelete ? (
+                        confirming === s.id ? (
+                          <>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              aria-label={`Yakin hapus ${s.kode}`}
+                              disabled={pending}
+                              onClick={() =>
+                                startTransition(async () => {
+                                  setMessage(await onDelete(s.id));
+                                  setConfirming(null);
+                                })
+                              }
+                            >
+                              Yakin hapus?
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => setConfirming(null)}>
+                              Batal
+                            </Button>
+                          </>
+                        ) : (
+                          <Button variant="ghost" size="sm" aria-label={`Hapus ${s.kode}`} disabled={!!draft} onClick={() => setConfirming(s.id)}>
+                            Hapus
+                          </Button>
+                        )
+                      ) : null}
                     </TableCell>
                   ) : null}
                 </TableRow>

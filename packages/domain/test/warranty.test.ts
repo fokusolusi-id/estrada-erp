@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { OrgTree } from "../src/org";
 import type { Actor } from "../src/policy";
-import { DEFECT_STATUSES, canWarranty, closureProblems, defectProblems, isOpenDefect, serviceStage, transitionDays, warrantyProblems, type DefectState } from "../src/warranty";
+import { DEFECT_STATUSES, canWarranty, costBearer, closureProblems, defectProblems, isOpenDefect, serviceStage, transitionDays, warrantyProblems, type DefectState } from "../src/warranty";
 
 const org = new OrgTree([
   { code: "DIR", parent: null },
@@ -160,7 +160,34 @@ describe("canWarranty: matriks peran (Kewenangan A rows 32, 34)", () => {
     expect(canWarranty(actor({ role: "default_owner", orgUnit: "ISO" }), "close", project, org)).toBe(false);
   });
 
+  it("turns every action off on a closed or dropped project", () => {
+    for (const status of ["Closing", "Drop"] as const) {
+      expect(canWarranty(actor({ orgUnit: "ISO-PH" }), "defect.report", { ...project, status }, org)).toBe(false);
+      expect(canWarranty(actor({ role: "default_owner", orgUnit: "PMO" }), "defect.close", { ...project, status }, org)).toBe(false);
+    }
+  });
+
   it("keeps every action inside the user's entities", () => {
     expect(canWarranty(actor({ role: "default_owner", orgUnit: "PMO", entities: ["MMT"] }), "close", project, org)).toBe(false);
+  });
+});
+
+describe("costBearer: siapa membiayai penggantian (Serah Terima D row 3)", () => {
+  it("an inherited defect is repaired at the project's cost, and claimed from the vendor by RMA where the device is under warranty", () => {
+    expect(costBearer("Cacat_Bawaan")).toEqual({ budget: "proyek", note: "Anggaran proyek; klaim ke vendor lewat RMA bila perangkat bergaransi" });
+    expect(costBearer("Diperbaiki")).toEqual({ budget: "proyek", note: "Anggaran proyek; klaim ke vendor lewat RMA bila perangkat bergaransi" });
+  });
+
+  it("an operational fault is charged to the service budget, with the Head ISO's approval", () => {
+    expect(costBearer("Operasional")).toEqual({ budget: "layanan", note: "Anggaran layanan dengan persetujuan Head ISO" });
+  });
+
+  it("is undecided until the heads have classified the report", () => {
+    expect(costBearer("Diajukan")).toBeNull();
+  });
+
+  it("stays with the project once a defect that was inherited is closed", () => {
+    expect(costBearer("Ditutup", true)?.budget).toBe("proyek");
+    expect(costBearer("Ditutup", false)).toBeNull();
   });
 });

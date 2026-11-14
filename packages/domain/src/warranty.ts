@@ -132,8 +132,9 @@ const isOperatorHead = (actor: Actor) => HEADS.includes(actor.role) && actor.org
  * BCD sets the warranty end date; ISO and MSO report a suspected inherited defect; the Head ISO and the Head PMO
  * classify it together; Delivery Control repairs it and the Head PMO closes it, and declares the project closed.
  */
-export function canWarranty(actor: Actor, action: WarrantyAction, project: { entity: string; team: ProjectTeam }, org: OrgTree): boolean {
+export function canWarranty(actor: Actor, action: WarrantyAction, project: { entity: string; team: ProjectTeam; status?: ProjectStatus }, org: OrgTree): boolean {
   if (!(actor.entities.includes("*") || actor.entities.includes(project.entity))) return false;
+  if (project.status === "Closing" || project.status === "Drop") return false;
   switch (action) {
     case "warranty.set":
       return canPipeline(actor, "edit", project.entity, org);
@@ -150,4 +151,21 @@ export function canWarranty(actor: Actor, action: WarrantyAction, project: { ent
     case "defect.fix":
       return project.team.deliveryControl === actor.userId;
   }
+}
+
+export interface CostBearer {
+  /** Whose budget pays for the replacement. */
+  budget: "proyek" | "layanan";
+  note: string;
+}
+
+/**
+ * Who pays (Serah Terima section D row 3): an inherited defect is the project's, claimed from the vendor by RMA where the
+ * device is under warranty; an operational fault is the service budget's, with the Head ISO's approval. Null until
+ * classified. `wasInherited` tells a closed defect which way it went.
+ */
+export function costBearer(status: DefectStatus, wasInherited = false): CostBearer | null {
+  if (status === "Cacat_Bawaan" || status === "Diperbaiki" || (status === "Ditutup" && wasInherited)) return { budget: "proyek", note: "Anggaran proyek; klaim ke vendor lewat RMA bila perangkat bergaransi" };
+  if (status === "Operasional") return { budget: "layanan", note: "Anggaran layanan dengan persetujuan Head ISO" };
+  return null;
 }

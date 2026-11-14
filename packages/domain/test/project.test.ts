@@ -3,6 +3,9 @@ import { OrgTree } from "../src/org";
 import type { Actor } from "../src/policy";
 import {
   FIELD_SITE_STATUSES,
+  BAI_TARGETS,
+  baiKpi,
+  baiTimeliness,
   baiProblems,
   baiReturnProblems,
   bastProblems,
@@ -13,6 +16,10 @@ import {
   PROJECT_STATUSES,
   SITE_STATUSES,
   canOpenProject,
+  contractSitesProblems,
+  dropProblems,
+  telkomProblems,
+  siteDeleteProblems,
   canProject,
   delayDays,
   projectProgress,
@@ -334,5 +341,196 @@ describe("canProject: BAI, RFS dan BAST (Kewenangan A rows 17-19, 22-24)", () =>
     expect(canProject(actor({ userId: "pm" }), "bast.prepare", project, org)).toBe(false);
     expect(canProject(actor({ role: "division_owner", orgUnit: "PDMS", userId: "head" }), "bast.approve", project, org)).toBe(true);
     expect(canProject(actor({ userId: "pa" }), "bast.approve", project, org)).toBe(false);
+  });
+});
+
+describe("siteDeleteProblems: lokasi salah daftar boleh dihapus selama belum dikerjakan", () => {
+  it("allows deleting a site that has not started or is only surveyed, in a project still being delivered", () => {
+    expect(siteDeleteProblems({ status: "Belum_Mulai", bai: null }, { status: "Initiation" })).toEqual([]);
+    expect(siteDeleteProblems({ status: "Survei", bai: null }, { status: "Implementasi" })).toEqual([]);
+  });
+
+  it("refuses a site that has been worked on: it is evidence, not a mistake", () => {
+    for (const status of ["Staging", "Dikirim", "Instalasi", "Uji", "BAI_Terbit", "BAI_Terverifikasi", "Selesai", "Terkendala"] as const) {
+      expect(siteDeleteProblems({ status, bai: null }, { status: "Implementasi" })).toEqual(["worked_on"]);
+    }
+  });
+
+  it("refuses a site that carries a BAI, even if it was returned to an earlier status", () => {
+    const bai = { nomor: "BAI/1", tanggal: "2027-03-28", evidence: "x", collectedBy: "dc", compiledBy: null, verifiedBy: null, spotCheckPassed: null };
+    expect(siteDeleteProblems({ status: "Survei", bai }, { status: "Implementasi" })).toEqual(["worked_on"]);
+  });
+
+  it("refuses once the project is past Implementasi", () => {
+    expect(siteDeleteProblems({ status: "Belum_Mulai", bai: null }, { status: "Penagihan" })).toEqual(["project_closed_in"]);
+    expect(siteDeleteProblems({ status: "Belum_Mulai", bai: null }, { status: "Garansi" })).toEqual(["project_closed_in"]);
+  });
+});
+
+describe("contractSitesProblems: perubahan jumlah lokasi kontrak (change order)", () => {
+  const ok = { status: "Implementasi" as const, bastOn: null, contractSites: 10 };
+
+  it("accepts a new count not below the sites already registered, with a reason", () => {
+    expect(contractSitesProblems(ok, 8, 12, "Addendum kontrak: tambah 2 lokasi")).toEqual([]);
+    expect(contractSitesProblems(ok, 8, 8, "Addendum kontrak: kurangi 2 lokasi")).toEqual([]);
+  });
+
+  it("refuses a count that is not a positive whole number, or is unchanged", () => {
+    expect(contractSitesProblems(ok, 0, 0, "x")).toEqual(["count"]);
+    expect(contractSitesProblems(ok, 0, 2.5, "x")).toEqual(["count"]);
+    expect(contractSitesProblems(ok, 0, 10, "x")).toEqual(["unchanged"]);
+  });
+
+  it("refuses a count below the sites already registered", () => {
+    expect(contractSitesProblems(ok, 8, 7, "x")).toEqual(["below_registered"]);
+  });
+
+  it("requires the reason", () => {
+    expect(contractSitesProblems(ok, 8, 12, "  ")).toEqual(["reason"]);
+  });
+
+  it("refuses once the BAST is approved, or the project is closed", () => {
+    expect(contractSitesProblems({ ...ok, bastOn: "2027-07-05", status: "Penagihan" }, 8, 12, "x")).toEqual(["locked"]);
+    expect(contractSitesProblems({ ...ok, status: "Closing" }, 8, 12, "x")).toEqual(["locked"]);
+  });
+});
+
+describe("canProject: menghapus lokasi dan mengubah jumlah lokasi kontrak", () => {
+  it("the Project Manager deletes a site, like registering one", () => {
+    expect(canProject(actor({ userId: "pm" }), "site.delete", project, org)).toBe(true);
+    expect(canProject(actor({ userId: "pa" }), "site.delete", project, org)).toBe(false);
+  });
+
+  it("BCD changes the contract count: it owns the contract (Kamus Field domain SALES_ASSURANCE)", () => {
+    expect(canProject(actor({ orgUnit: "BCD" }), "contract.change", project, org)).toBe(true);
+    expect(canProject(actor({ userId: "pm" }), "contract.change", project, org)).toBe(false);
+    expect(canProject(actor({ orgUnit: "BCD", entities: ["MMT"] }), "contract.change", project, org)).toBe(false);
+  });
+});
+
+// Tahap Implementasi B rows 19-21 and section C: 7 days to collect, 5 to compile, 3 to verify.
+const timed = (over: Partial<SiteBai> = {}): SiteBai => ({ ...bai, tanggal: "2027-03-01", collectedOn: "2027-03-05", compiledOn: "2027-03-08", verifiedOn: "2027-03-10", ...over });
+
+describe("baiTimeliness: berapa hari tiap langkah BAI, dibanding targetnya", () => {
+  it("has the targets of the job descriptions", () => {
+    expect(BAI_TARGETS).toEqual({ collect: 7, compile: 5, verify: 3 });
+  });
+
+  it("counts each step from the one before: BAI date, collected, compiled", () => {
+    expect(baiTimeliness(timed(), "2027-04-01")).toEqual({
+      collect: { days: 4, target: 7, state: "on_time" },
+      compile: { days: 3, target: 5, state: "on_time" },
+      verify: { days: 2, target: 3, state: "on_time" },
+    });
+  });
+
+  it("calls a step late past its target, and on time on the target day itself", () => {
+    const t = baiTimeliness(timed({ collectedOn: "2027-03-08", compiledOn: "2027-03-14", verifiedOn: "2027-03-18" }), "2027-04-01");
+    expect(t.collect).toEqual({ days: 7, target: 7, state: "on_time" });
+    expect(t.compile).toEqual({ days: 6, target: 5, state: "late" });
+    expect(t.verify).toEqual({ days: 4, target: 3, state: "late" });
+  });
+
+  it("measures an unfinished step up to today: still waiting inside the target, or already late", () => {
+    const open = timed({ compiledOn: null, verifiedOn: null });
+    expect(baiTimeliness(open, "2027-03-09").compile).toEqual({ days: 4, target: 5, state: "waiting" });
+    expect(baiTimeliness(open, "2027-03-20").compile).toEqual({ days: 15, target: 5, state: "late_open" });
+    expect(baiTimeliness(open, "2027-03-20").verify).toBeNull();
+  });
+
+  it("has nothing to measure without a BAI", () => {
+    expect(baiTimeliness(null, "2027-04-01")).toEqual({ collect: null, compile: null, verify: null });
+  });
+});
+
+describe("baiKpi: ketepatan waktu per pemegang langkah", () => {
+  const sites = [
+    { bai: timed() },
+    { bai: timed({ collectedOn: "2027-03-12", compiledOn: "2027-03-15", verifiedOn: "2027-03-17" }) },
+    { bai: timed({ compiledOn: null, verifiedOn: null }) },
+    { bai: null },
+  ];
+
+  it("counts per step how many were on time, late (finished or still open) and waiting", () => {
+    const k = baiKpi(sites, "2027-03-20");
+    expect(k.collect).toEqual({ total: 3, onTime: 2, late: 1, waiting: 0, pct: 66.7, averageDays: 6.3 });
+    expect(k.compile).toEqual({ total: 3, onTime: 2, late: 1, waiting: 0, pct: 66.7, averageDays: 3 });
+    expect(k.verify).toEqual({ total: 2, onTime: 2, late: 0, waiting: 0, pct: 100, averageDays: 2 });
+  });
+
+  it("leaves the percentage empty when nothing is due yet", () => {
+    expect(baiKpi([{ bai: null }], "2027-03-20").collect).toEqual({ total: 0, onTime: 0, late: 0, waiting: 0, pct: null, averageDays: null });
+  });
+
+  it("leaves steps still inside their target out of the percentage", () => {
+    const k = baiKpi([{ bai: timed({ compiledOn: null, verifiedOn: null }) }], "2027-03-09");
+    expect(k.compile).toEqual({ total: 1, onTime: 0, late: 0, waiting: 1, pct: null, averageDays: null });
+  });
+});
+
+describe("dropProblems: menghentikan proyek (status Drop)", () => {
+  it("allows dropping a project before its BAST is approved, with a reason", () => {
+    expect(dropProblems({ status: "Initiation", bastOn: null }, "Kontrak dibatalkan pelanggan")).toEqual([]);
+    expect(dropProblems({ status: "Implementasi", bastOn: null }, "Kontrak dibatalkan pelanggan")).toEqual([]);
+  });
+
+  it("requires the reason", () => {
+    expect(dropProblems({ status: "Implementasi", bastOn: null }, " ")).toEqual(["reason"]);
+  });
+
+  it("refuses once the BAST is approved, billing has started and a project cannot simply be dropped", () => {
+    expect(dropProblems({ status: "Penagihan", bastOn: "2027-07-05" }, "x")).toEqual(["locked"]);
+    expect(dropProblems({ status: "Layanan", bastOn: "2027-07-05" }, "x")).toEqual(["locked"]);
+  });
+
+  it("refuses a project already closed or dropped", () => {
+    expect(dropProblems({ status: "Closing", bastOn: null }, "x")).toEqual(["locked"]);
+    expect(dropProblems({ status: "Drop", bastOn: null }, "x")).toEqual(["locked"]);
+  });
+});
+
+describe("canProject: a dropped or closed project is read-only", () => {
+  it("lets everyone read it and nobody change it", () => {
+    for (const status of ["Drop", "Closing"] as const) {
+      const p = { ...project, status };
+      expect(canProject(actor({ userId: "pm" }), "view", p, org)).toBe(true);
+      expect(canProject(actor({ userId: "pm" }), "site.add", p, org)).toBe(false);
+      expect(canProject(actor({ userId: "pa" }), "site.edit", p, org)).toBe(false);
+      expect(canProject(actor({ role: "default_owner", orgUnit: "PMO" }), "assign", p, org)).toBe(false);
+    }
+  });
+
+  it("row 35: the Head PMO, or a head above PMO, drops a project", () => {
+    expect(canProject(actor({ role: "default_owner", orgUnit: "PMO" }), "drop", project, org)).toBe(true);
+    expect(canProject(actor({ userId: "pm" }), "drop", project, org)).toBe(false);
+    expect(canProject(actor({ role: "default_owner", orgUnit: "PMO" }), "drop", { ...project, status: "Drop" }, org)).toBe(false);
+  });
+});
+
+describe("BARD dan BAUT untuk pelanggan skema TELKOM (Tahap Implementasi B row 25)", () => {
+  const done = (n: number) => Array.from({ length: n }, () => ({ status: "Selesai" as const }));
+  const base = { contractSites: 2, rfsOn: "2027-06-30", sites: done(2) };
+
+  it("is not asked of a project outside the TELKOM scheme", () => {
+    expect(bastProblems(base)).toEqual([]);
+    expect(bastProblems({ ...base, telkomScheme: false })).toEqual([]);
+  });
+
+  it("holds the BAST of a TELKOM project until BARD and BAUT are both recorded", () => {
+    expect(bastProblems({ ...base, telkomScheme: true })).toEqual(["bard", "baut"]);
+    expect(bastProblems({ ...base, telkomScheme: true, bard: { nomor: "BARD/1", tanggal: "2027-07-01" } })).toEqual(["baut"]);
+    expect(bastProblems({ ...base, telkomScheme: true, bard: { nomor: "BARD/1", tanggal: "2027-07-01" }, baut: { nomor: "BAUT/1", tanggal: "2027-07-02" } })).toEqual([]);
+  });
+
+  it("telkomProblems: needs a number and a valid date for each document", () => {
+    expect(telkomProblems({ nomor: "BARD/1", tanggal: "2027-07-01" })).toEqual([]);
+    expect(telkomProblems({ nomor: " ", tanggal: "2027-07-01" })).toEqual(["nomor"]);
+    expect(telkomProblems({ nomor: "BARD/1", tanggal: "2027-07-32" })).toEqual(["tanggal"]);
+  });
+
+  it("is recorded by Assurance (BCD) once RFS is approved, never by PDMS", () => {
+    expect(canProject(actor({ orgUnit: "BCD" }), "telkom.record", project, org)).toBe(true);
+    expect(canProject(actor({ userId: "pa" }), "telkom.record", project, org)).toBe(false);
+    expect(canProject(actor({ orgUnit: "BCD", entities: ["MMT"] }), "telkom.record", project, org)).toBe(false);
   });
 });

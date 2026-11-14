@@ -243,7 +243,20 @@ Proyek pelaksanaan dicatat **per lokasi (site)**, lalu diringkas ke proyek. PDMS
 - **Status lokasi** yang dipilih manual: Belum mulai, Survei, Staging, Dikirim, Instalasi, Uji, Terkendala. Status BAI terbit, BAI terverifikasi dan Selesai mengikuti BAI lokasi dan tidak dipilih manual. Proyek berpindah dari Initiation ke Implementasi saat lokasi pertama masuk Staging atau lebih lanjut.
 - **Progres** = lokasi berstatus Selesai dibagi jumlah lokasi kontrak, bukan dibagi lokasi yang sudah terdaftar.
 - **Terlambat** dihitung sistem: hari sejak tanggal rencana selesai sampai tanggal aktual selesai, atau sampai hari ini bila belum selesai. Tidak diketik.
+- **Menghapus lokasi**: Project Manager dapat *Hapus* (dengan konfirmasi) lokasi yang salah didaftarkan, selama statusnya masih Belum mulai atau Survei, belum memiliki BAI, dan proyek belum melewati tahap Implementasi. Lokasi yang sudah dikerjakan tidak dapat dihapus karena menjadi bukti.
+- **Mengubah jumlah lokasi kontrak** (addendum): BCD mengisi jumlah baru dan dasar perubahannya (misalnya nomor addendum) di kartu *Lingkup kontrak*. Jumlah baru tidak boleh di bawah lokasi yang sudah terdaftar, dan tidak dapat diubah setelah BAST disahkan.
+- **Hentikan proyek (Drop)**: Head PMO dapat menghentikan proyek yang tidak jadi dikerjakan, dengan alasan dan konfirmasi, hanya sebelum BAST disahkan. Proyek berstatus Drop atau Closing hanya dapat dibaca; data yang sudah tercatat tetap tersimpan.
 - Setiap perubahan tercatat di jejak audit.
+
+### Perencanaan
+
+Tautan *Perencanaan* di halaman proyek.
+
+- **Initiation**: Project Manager mencatat rujukan notulen kick-off, Project Admin mencatat rujukan MoM kick-off. Rujukan adalah tempat berkas disimpan. Head PMO lalu menekan *Sahkan Kick-Off Gate*.
+- **Planning**: Project Manager mencatat Project Charter (timeline dan anggaran) dan Risk Register; Project Admin mencatat berkas kebutuhan administrasi. Setelah Kick-Off Gate disahkan, tim lengkap dan charter serta risk register tercatat, Head PMO mengisi **target RFS** dan menekan *Sahkan baseline*.
+- **Setelah baseline**: pekerjaan lapangan lokasi (Staging, Dikirim, Instalasi, Uji) baru dapat dimulai; sebelumnya hanya survei. Perubahan rencana sesudah baseline menjadi change order.
+- Head PMO yang juga anggota tim proyek tidak dapat mengesahkan gate dan baseline proyek itu.
+- **Kurva S**: lokasi selesai kumulatif per bulan terhadap jumlah lokasi kontrak. Rencana dihitung dari tanggal rencana selesai tiap lokasi, aktual dari tanggal aktual selesai; selisih negatif ditandai merah.
 
 ### BAI per lokasi
 
@@ -255,11 +268,16 @@ Tiga tangan memegang satu dokumen, dan satu orang tidak boleh memegang dua langk
 
 Project Admin dan Assurance dapat *Kembalikan* BAI dengan alasan; lokasi kembali ke status Uji dan BAI dicatat ulang oleh Delivery Control.
 
+### Ketepatan waktu BAI
+
+Kartu *Ketepatan waktu BAI* di halaman proyek menunjukkan, per pemegang langkah, berapa lokasi tepat waktu dan terlambat: Delivery Control 7 hari sejak tanggal BAI, Project Admin 5 hari sejak BAI dicatat, Assurance 3 hari sejak BAI dikompilasi. Langkah yang masih berjalan melewati targetnya dihitung terlambat; yang masih di dalam target tidak ikut persentase.
+
 ### RFS dan BAST
 
 - **RFS (Ready For Service)**: Project Manager mengisi tanggal dan *Nyatakan RFS* setelah semua lokasi kontrak terdaftar dan lulus uji. Head PMO mengesahkannya dengan *Sahkan RFS*.
-- **BAST**: Project Admin mengisi nomor dan tanggal lalu *Siapkan BAST* setelah RFS disahkan dan jumlah BAI terverifikasi sama dengan jumlah lokasi kontrak. Head PMO mengesahkannya dengan *Sahkan BAST*, dan proyek masuk tahap Penagihan.
+- **BAST**: Project Admin mengisi nomor dan tanggal lalu *Siapkan BAST* setelah RFS disahkan dan jumlah BAI terverifikasi sama dengan jumlah lokasi kontrak (dan, untuk pelanggan skema TELKOM, BARD dan BAUT tercatat). Head PMO mengesahkannya dengan *Sahkan BAST*, dan proyek masuk tahap Penagihan.
 - Yang mengajukan tidak dapat mengesahkan pengajuannya sendiri. Syarat yang belum terpenuhi ditulis di kartunya.
+- **BARD dan BAUT** (hanya pelanggan skema TELKOM): BCD mencentang *Pelanggan skema TELKOM* di kartu BARD dan BAUT; setelah RFS disahkan, Assurance mencatat nomor dan tanggal BARD dan BAUT. BAST skema TELKOM baru dapat disiapkan setelah keduanya tercatat.
 
 ### Serah terima ke MSO dan ISO
 
@@ -280,6 +298,7 @@ Tautan *Garansi & penutupan* di halaman proyek. Aturan di bagian ini adalah usul
 - **Akhir garansi**: BCD mengisi tanggal akhir garansi terakhir dengan *Simpan akhir garansi*, setelah BAST disahkan dan tidak sebelum tanggal BAST. Setelah ISO menerima turunan teknis dan tanggal ini terisi, proyek masuk tahap Garansi.
 - **Cacat bawaan proyek**: orang ISO atau MSO melaporkan gangguan yang diduga bawaan proyek dengan *Laporkan*, setelah MSO menerima serah terima. Gangguan menjadi cacat bawaan hanya bila **Head ISO dan Head PMO sama-sama menetapkannya**; pelapor tidak dapat menetapkan laporannya sendiri dan satu orang tidak dapat menetapkan kedua sisi. Salah satu dari keduanya dapat menetapkannya sebagai *Gangguan operasional* dengan alasan, kecuali atas laporan yang ia buat sendiri; gangguan itu ditangani ISO.
 - **Perbaikan**: Delivery Control proyek mencatat perbaikan cacat bawaan dengan *Catat perbaikan*, lalu Head PMO menekan *Tutup*.
+- **Biaya**: cacat bawaan dibebankan ke anggaran proyek, dengan klaim ke vendor lewat RMA bila perangkat bergaransi. Gangguan operasional dibebankan ke anggaran layanan dengan persetujuan Head ISO. Keterangannya tampil di baris laporan setelah dikelompokkan; nominal belum dicatat.
 - **Penutupan proyek**: Head PMO menekan *Nyatakan proyek ditutup* setelah MSO dan ISO menerima, masa garansi berakhir dan tidak ada laporan atau cacat bawaan yang terbuka. Laporan yang masih terbuka memperpanjang masa garansi sampai ditutup. Proyek berstatus Closing dan paket serah terima berstatus Selesai. Syarat yang belum terpenuhi ditulis di kartunya.
 
 Kewenangan di layar ini mengikuti usulan matriks kewenangan PDMS yang masih menunggu pengesahan Head PDMS.
@@ -340,8 +359,19 @@ Aplikasi mengirim satu email per serah terima, bukan per baris. Email tidak pern
 | Cash Management menjadwalkan | Pemohon | Dijadwalkan, dengan tanggal jadwal |
 | Cash Management membayar | Pemohon | Sudah dibayar, dengan tanggal bayar |
 | Permintaan dikembalikan | Pemohon | Dikembalikan, dengan alasan |
+| Head PMO menetapkan tim proyek | Anggota tim yang baru ditetapkan | Penugasan proyek |
+| Project Manager menyatakan RFS | Head PMO | RFS menunggu pengesahan |
+| Project Admin menyiapkan BAST | Head PMO | BAST menunggu pengesahan |
+| Head PMO mengesahkan BAST | Assurance (orang BCD entitas itu) dan Project Manager | Penagihan dan serah terima dapat dimulai |
+| Project Manager mengajukan paket serah terima | Head MSO | Paket menunggu penilaian |
+| Head MSO mengembalikan paket | Project Manager | Dikembalikan, dengan catatan |
+| Head MSO menerima serah terima | Head ISO dan Staff Operational EOS | Tindak lanjut checklist dan turunan teknis |
+| ISO atau MSO melaporkan dugaan cacat bawaan | Head ISO dan Head PMO | Menunggu penetapan bersama |
+| Cacat bawaan ditetapkan bersama | Delivery Control proyek | Menunggu perbaikan |
 
 Dua pengingat terakhir berjalan setiap hari pukul 08.00 WIB.
+
+Email Implementasi dikirim per serah terima proyek, tidak per lokasi: langkah BAI per lokasi tidak mengirim email, dan orang yang melakukan langkah itu tidak dikirimi emailnya sendiri. Isinya hanya nama proyek, entitas dan tautan.
 
 Email Permintaan Pembayaran juga tanpa nominal: hanya nomor permintaan, entitas, nama pemohon dan tautannya. Bila kursi tahap berikutnya kosong (misalnya belum ada BFP atau Cash Management untuk entitas itu), tidak ada email yang terkirim dan tidak ada pemberitahuan ke Admin; permintaan tetap menunggu di tab *Perlu tindakan* dan langsung terlihat oleh orang yang kemudian ditetapkan di kursi itu, termasuk pjs.
 

@@ -2,19 +2,23 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
-import { PROJECT_STATUS_LABEL, bastProblems, canProject, delayDays, projectProgress, rfsProblems } from "@estrada/domain";
+import { PROJECT_STATUS_LABEL, baiKpi, bastProblems, canProject, delayDays, projectProgress, rfsProblems, siteDeleteProblems } from "@estrada/domain";
 import { deliveryPeople, loadProjects, userNames } from "@/lib/implementasi";
 import { todayJakarta } from "@/lib/payment";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
+import { BaiKpi } from "@/components/erp/bai-kpi";
 import { PageHeader } from "@/components/erp/page-header";
+import { ProjectContract } from "@/components/erp/project-contract";
+import { ProjectDrop } from "@/components/erp/project-drop";
 import { ProjectSignoff } from "@/components/erp/project-signoff";
 import { ProjectSites } from "@/components/erp/project-sites";
+import { ProjectTelkom } from "@/components/erp/project-telkom";
 import { ProjectTeam } from "@/components/erp/project-team";
 import { SiteBai } from "@/components/erp/site-bai";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { approveSignoff, assignTeam, baiStep, declareRfs, prepareBast, returnBai, saveSite } from "../actions";
+import { approveSignoff, assignTeam, baiStep, changeContractSites, declareRfs, deleteSite, dropProject, prepareBast, recordTelkomDoc, returnBai, saveSite, setTelkomScheme } from "../actions";
 
 export const metadata: Metadata = { title: "Proyek" };
 
@@ -36,6 +40,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const BAST_BLOCKER = {
     rfs: "RFS belum disahkan.",
     bai_incomplete: `BAI terverifikasi ${verified} dari ${project.contractSites} lokasi kontrak.`,
+    bard: "Skema TELKOM: BARD belum dicatat.",
+    baut: "Skema TELKOM: BAUT belum dicatat.",
   };
   const progress = projectProgress(project.sites, project.contractSites);
   const late = project.sites.filter((s) => delayDays(s, today) > 0).length;
@@ -54,6 +60,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         actions={
           <>
             <Badge variant="secondary">{PROJECT_STATUS_LABEL[project.status]}</Badge>
+            <Link href={`/implementasi/${project.id}/perencanaan`} className="text-sm font-medium underline underline-offset-4">
+              Perencanaan
+            </Link>
             <Link href={`/implementasi/${project.id}/serah-terima`} className="text-sm font-medium underline underline-offset-4">
               Serah terima
             </Link>
@@ -75,6 +84,22 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
           </div>
         ))}
       </dl>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Lingkup kontrak</CardTitle>
+          <CardDescription>Jumlah lokasi menurut kontrak adalah pembagi progres. Perubahannya (addendum) dicatat oleh BCD dengan dasarnya, sampai BAST disahkan.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ProjectContract
+            contractSites={project.contractSites}
+            registered={project.sites.length}
+            canChange={can("contract.change")}
+            locked={!!project.bast.on || !["Initiation", "Pengadaan_Barang", "Implementasi"].includes(project.status)}
+            onChange={changeContractSites.bind(null, project.id)}
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -119,6 +144,38 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
 
       <Card>
         <CardHeader>
+          <CardTitle>BARD dan BAUT</CardTitle>
+          <CardDescription>Hanya untuk pelanggan skema TELKOM: kedua dokumen ditandatangani sebelum BAST. BCD menandai skemanya; Assurance mencatat dokumennya setelah RFS disahkan.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ProjectTelkom
+            telkomScheme={project.telkomScheme}
+            bard={project.bard}
+            baut={project.baut}
+            rfsApproved={!!project.rfs.on}
+            locked={!!project.bast.on}
+            canRecord={can("telkom.record")}
+            onScheme={setTelkomScheme.bind(null, project.id)}
+            onRecord={recordTelkomDoc.bind(null, project.id)}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Ketepatan waktu BAI</CardTitle>
+          <CardDescription>
+            Target tiap langkah: Delivery Control 7 hari, Project Admin 5 hari, Assurance 3 hari, masing-masing dihitung sejak langkah sebelumnya. Langkah yang masih berjalan melewati target dihitung
+            terlambat.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BaiKpi kpi={baiKpi(project.sites, today)} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>BAI per lokasi</CardTitle>
           <CardDescription>
             Tiga tangan, satu dokumen: Delivery Control mencatat BAI lokasi yang lulus uji, Project Admin mengompilasi, Assurance (BCD) memverifikasi untuk penagihan. Satu orang tidak
@@ -145,15 +202,28 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         </CardHeader>
         <CardContent>
           <ProjectSites
-            sites={project.sites}
+            sites={project.sites.map((s) => ({ ...s, deletable: siteDeleteProblems(s, project).length === 0 }))}
             contractSites={project.contractSites}
             today={today}
             canAdd={canProject(user.actor, "site.add", project, org)}
             canEdit={canProject(user.actor, "site.edit", project, org)}
+            canDelete={can("site.delete")}
             onSave={saveSite.bind(null, project.id)}
+            onDelete={deleteSite.bind(null, project.id)}
           />
         </CardContent>
       </Card>
+      {can("drop") && !project.bast.on ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Hentikan proyek</CardTitle>
+            <CardDescription>Untuk proyek yang tidak jadi dikerjakan. Hanya sebelum BAST disahkan; data yang sudah tercatat tetap tersimpan.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ProjectDrop onDrop={dropProject.bind(null, project.id)} />
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }

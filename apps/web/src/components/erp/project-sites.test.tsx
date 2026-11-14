@@ -53,4 +53,17 @@ describe("ProjectSites", () => {
     expect(options).not.toContain("Selesai");
     expect(options).toContain("Terkendala");
   });
+
+  it("offers Hapus only to the Project Manager and only on a site nothing has happened on, after a confirmation", async () => {
+    const onDelete = vi.fn<(siteId: string) => Promise<{ ok: boolean; message: string }>>(async () => ({ ok: true, message: "Lokasi dihapus." }));
+    const fresh: SiteView[] = [{ ...sites[0]!, id: "a", status: "Belum_Mulai", deletable: true }, { ...sites[1]!, id: "b", deletable: false }];
+    const { rerender } = render(<ProjectSites sites={fresh} contractSites={4} today="2027-04-10" canAdd canEdit canDelete onSave={ok()} onDelete={onDelete} />);
+    expect(screen.queryByRole("button", { name: "Hapus POLDA-JABAR-01" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Hapus POLDA-JATIM-01" }));
+    expect(onDelete).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Yakin hapus POLDA-JATIM-01" }));
+    await waitFor(() => expect(onDelete).toHaveBeenCalledWith("a"));
+    rerender(<ProjectSites sites={fresh} contractSites={4} today="2027-04-10" canAdd canEdit canDelete={false} onSave={ok()} onDelete={onDelete} />);
+    expect(screen.queryByRole("button", { name: "Hapus POLDA-JATIM-01" })).toBeNull();
+  });
 });

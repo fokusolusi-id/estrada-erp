@@ -1,5 +1,6 @@
 import type { ApprovalAction, ApprovalState } from "./approval";
 import type { PaymentTemplate } from "./payment";
+import type { ProjectTemplate } from "./project-notices";
 import type { Role } from "./roles";
 
 export type EmailTemplate =
@@ -17,7 +18,8 @@ export type EmailTemplate =
   | "line_comment"
   | "invitation"
   | "password_reset"
-  | PaymentTemplate;
+  | PaymentTemplate
+  | ProjectTemplate;
 
 export type Recipient = Role | "lock_role" | "all_participants";
 

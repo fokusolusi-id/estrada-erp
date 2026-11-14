@@ -130,7 +130,7 @@ export function teamProblems(team: ProjectTeam): TeamProblem[] {
   return out;
 }
 
-export type ProjectAction = "view" | "open" | "assign" | "site.add" | "site.edit" | "bai.collect" | "bai.compile" | "bai.verify" | "rfs.declare" | "rfs.approve" | "bast.prepare" | "bast.approve";
+export type ProjectAction = "view" | "open" | "assign" | "site.add" | "site.edit" | "bai.collect" | "bai.compile" | "bai.verify" | "rfs.declare" | "rfs.approve" | "bast.prepare" | "bast.approve" | "site.delete" | "contract.change" | "drop" | "telkom.record";
 
 const HEADS: readonly Role[] = ["default_owner", "division_owner"];
 const READERS: readonly Role[] = ["finance", "director", "auditor"];
@@ -145,14 +145,17 @@ export const isDeliveryHead = (actor: Actor, org: OrgTree): boolean => HEADS.inc
  * the BAST and the Head PMO approves both. PDMS, BCD, Finance, Direktur and Auditor read.
  * `project` is null for the list, before any project is chosen.
  */
-export function canProject(actor: Actor, action: ProjectAction, project: { entity: string; team: ProjectTeam | null } | null, org: OrgTree): boolean {
+export function canProject(actor: Actor, action: ProjectAction, project: { entity: string; team: ProjectTeam | null; status?: ProjectStatus } | null, org: OrgTree): boolean {
   if (project && !(actor.entities.includes("*") || actor.entities.includes(project.entity))) return false;
+  // A dropped or closed project is read-only.
+  if (action !== "view" && (project?.status === "Drop" || project?.status === "Closing")) return false;
   switch (action) {
     case "view":
       return READERS.includes(actor.role) || org.isWithin(actor.orgUnit, DELIVERY_DIVISION) || canPipeline(actor, "view", null, org);
     case "open":
       return !!project && canPipeline(actor, "edit", project.entity, org);
     case "assign":
+    case "drop":
     case "rfs.approve":
     case "bast.approve":
       return !!project && isDeliveryHead(actor, org);
@@ -163,10 +166,13 @@ export function canProject(actor: Actor, action: ProjectAction, project: { entit
     case "bai.compile":
     case "bast.prepare":
       return !!project?.team && project.team.projectAdmin === actor.userId;
+    case "contract.change":
+    case "telkom.record":
     case "bai.verify":
       // Assurance sits in Commercial Business, outside PDMS: BCD's people, within their entities.
       return !!project && canPipeline(actor, "edit", project.entity, org);
     case "site.add":
+    case "site.delete":
       return !!project?.team && project.team.pm === actor.userId;
     case "site.edit":
       return !!project?.team && (project.team.pm === actor.userId || project.team.projectAdmin === actor.userId);
@@ -185,6 +191,10 @@ export interface SiteBai {
   verifiedBy: string | null;
   /** Result of uji petik, for a site chosen as a sample. */
   spotCheckPassed: boolean | null;
+  /** The days (YYYY-MM-DD) Delivery Control recorded it, the Project Admin compiled it and Assurance verified it. */
+  collectedOn?: string | null;
+  compiledOn?: string | null;
+  verifiedOn?: string | null;
 }
 
 export type BaiStep = "collect" | "compile" | "verify";
@@ -243,10 +253,33 @@ export function rfsProblems(p: { contractSites: number; sites: readonly { status
 }
 
 /** BAST: RFS is declared and the verified BAI equal the contract's sites. */
-export function bastProblems(p: { contractSites: number; rfsOn: string | null; sites: readonly { status: SiteStatus }[] }): ("rfs" | "bai_incomplete")[] {
-  const out: ("rfs" | "bai_incomplete")[] = [];
+export function bastProblems(p: {
+  contractSites: number;
+  rfsOn: string | null;
+  sites: readonly { status: SiteStatus }[];
+  /** A TELKOM-scheme customer also needs the BARD and BAUT signed. */
+  telkomScheme?: boolean;
+  bard?: TelkomDoc | null;
+  baut?: TelkomDoc | null;
+}): ("rfs" | "bai_incomplete" | "bard" | "baut")[] {
+  const out: ("rfs" | "bai_incomplete" | "bard" | "baut")[] = [];
   if (!p.rfsOn) out.push("rfs");
   if (projectProgress(p.sites, p.contractSites).done < p.contractSites) out.push("bai_incomplete");
+  if (p.telkomScheme && !p.bard) out.push("bard");
+  if (p.telkomScheme && !p.baut) out.push("baut");
+  return out;
+}
+
+/** BARD or BAUT: the number of the signed document and the day it was signed. */
+export interface TelkomDoc {
+  nomor: string;
+  tanggal: string;
+}
+
+export function telkomProblems(doc: TelkomDoc): ("nomor" | "tanggal")[] {
+  const out: ("nomor" | "tanggal")[] = [];
+  if (!doc.nomor.trim()) out.push("nomor");
+  if (!isDate(doc.tanggal)) out.push("tanggal");
   return out;
 }
 
@@ -261,4 +294,106 @@ export function signoffProblems(
   if (kind === "bast" && !input.number?.trim()) out.push("number");
   if (approval && approval.proposedBy === approval.approver) out.push("SELF_APPROVAL_NOT_ALLOWED");
   return out;
+}
+
+const IN_DELIVERY: readonly ProjectStatus[] = ["Initiation", "Pengadaan_Barang", "Implementasi"];
+
+export type SiteDeleteProblem = "worked_on" | "project_closed_in";
+
+/**
+ * A site registered by mistake may be deleted while nothing has happened on it: not started or only surveyed, no BAI,
+ * in a project still being delivered. Anything more is evidence and stays.
+ */
+export function siteDeleteProblems(site: { status: SiteStatus; bai: SiteBai | null }, project: { status: ProjectStatus }): SiteDeleteProblem[] {
+  if (!IN_DELIVERY.includes(project.status)) return ["project_closed_in"];
+  return site.bai || (site.status !== "Belum_Mulai" && site.status !== "Survei") ? ["worked_on"] : [];
+}
+
+export type ContractSitesProblem = "locked" | "count" | "unchanged" | "below_registered" | "reason";
+
+/**
+ * Changing jumlah_site_kontrak is a change order: a new whole count not below the sites already registered, with the
+ * reason (the addendum), until the BAST is approved.
+ */
+export function contractSitesProblems(p: { status: ProjectStatus; bastOn: string | null; contractSites: number }, registered: number, next: number, reason: string): ContractSitesProblem[] {
+  if (p.bastOn || !IN_DELIVERY.includes(p.status)) return ["locked"];
+  if (!Number.isInteger(next) || next < 1) return ["count"];
+  if (next === p.contractSites) return ["unchanged"];
+  if (next < registered) return ["below_registered"];
+  return reason.trim() ? [] : ["reason"];
+}
+
+/** Days allowed for each BAI step (Tahap Implementasi B rows 19-21): to record, to compile, to verify. */
+export const BAI_TARGETS = { collect: 7, compile: 5, verify: 3 } as const;
+
+export type BaiTimelinessState = "on_time" | "late" | "waiting" | "late_open";
+export interface BaiStepTime {
+  days: number;
+  target: number;
+  /** on_time or late once done; waiting or late_open while the step is still open. */
+  state: BaiTimelinessState;
+}
+export type BaiTimeliness = Record<BaiStep, BaiStepTime | null>;
+
+/**
+ * How long each BAI step took against its target. Collect counts from the BAI date, compile from collect, verify from
+ * compile; a step still open counts up to `today`. A step whose start date is missing is not measured.
+ */
+export function baiTimeliness(bai: SiteBai | null, today: string): BaiTimeliness {
+  const step = (from: string | null | undefined, to: string | null | undefined, target: number): BaiStepTime | null => {
+    if (!from) return null;
+    const open = !to;
+    const days = Math.max(0, dayNumber(to ?? today) - dayNumber(from));
+    return { days, target, state: open ? (days > target ? "late_open" : "waiting") : days > target ? "late" : "on_time" };
+  };
+  if (!bai) return { collect: null, compile: null, verify: null };
+  return {
+    collect: step(bai.tanggal, bai.collectedOn, BAI_TARGETS.collect),
+    compile: step(bai.collectedOn, bai.compiledOn, BAI_TARGETS.compile),
+    verify: bai.compiledOn ? step(bai.compiledOn, bai.verifiedOn, BAI_TARGETS.verify) : null,
+  };
+}
+
+export interface BaiKpiRow {
+  /** Sites that reached this step. */
+  total: number;
+  onTime: number;
+  /** Finished late, or still open past the target. */
+  late: number;
+  /** Open and still inside the target. */
+  waiting: number;
+  /** On time over (on time + late), one decimal; null when nothing is due yet. */
+  pct: number | null;
+  /** Average days of the finished steps, one decimal. */
+  averageDays: number | null;
+}
+
+/** Timeliness per step, so each holder (Delivery Control, Project Admin, Assurance) sees theirs. */
+export function baiKpi(sites: readonly { bai: SiteBai | null }[], today: string): Record<BaiStep, BaiKpiRow> {
+  const out = {} as Record<BaiStep, BaiKpiRow>;
+  const round = (n: number) => Math.round(n * 10) / 10;
+  for (const step of ["collect", "compile", "verify"] as const) {
+    const times = sites.map((s) => baiTimeliness(s.bai, today)[step]).filter((t): t is BaiStepTime => !!t);
+    const count = (state: BaiTimelinessState) => times.filter((t) => t.state === state).length;
+    const onTime = count("on_time");
+    const late = count("late") + count("late_open");
+    const finished = times.filter((t) => t.state === "on_time" || t.state === "late");
+    out[step] = {
+      total: times.length,
+      onTime,
+      late,
+      waiting: count("waiting"),
+      pct: onTime + late ? round((onTime / (onTime + late)) * 100) : null,
+      averageDays: finished.length ? round(finished.reduce((a, t) => a + t.days, 0) / finished.length) : null,
+    };
+  }
+  return out;
+}
+
+export type DropProblem = "locked" | "reason";
+
+/** A project is dropped, with a reason, only before its BAST is approved: after that billing has started. */
+export function dropProblems(p: { status: ProjectStatus; bastOn: string | null }, reason: string): DropProblem[] {
+  if (p.bastOn || !IN_DELIVERY.includes(p.status)) return ["locked"];
+  return reason.trim() ? [] : ["reason"];
 }

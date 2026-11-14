@@ -75,6 +75,15 @@ describe("ProjectWarranty", () => {
     await waitFor(() => expect(f.onStep).toHaveBeenCalledWith("d1", "reject", "Tersambar petir"));
   });
 
+  it("says whose budget pays once the heads have classified the fault", () => {
+    const { rerender } = render(<ProjectWarranty view={view()} defects={[defect()]} sites={sites} {...fns()} />);
+    expect(screen.queryByTestId("cost")).toBeNull();
+    rerender(<ProjectWarranty view={view()} defects={[defect({ status: "Cacat_Bawaan" })]} sites={sites} {...fns()} />);
+    expect(screen.getByTestId("cost").textContent).toContain("Anggaran proyek");
+    rerender(<ProjectWarranty view={view()} defects={[defect({ status: "Operasional" })]} sites={sites} {...fns()} />);
+    expect(screen.getByTestId("cost").textContent).toContain("Anggaran layanan dengan persetujuan Head ISO");
+  });
+
   it("confirms without a note", async () => {
     const f = fns();
     render(<ProjectWarranty view={view()} defects={[defect({ steps: ["confirm_pmo"] })]} sites={sites} {...f} />);

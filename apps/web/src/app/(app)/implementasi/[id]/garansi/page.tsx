@@ -82,6 +82,7 @@ export default async function WarrantyPage({ params }: { params: Promise<{ id: s
           confirmedPmo: d.confirmedPmo ? (names[d.confirmedPmo] ?? "ya") : null,
           rejectNote: d.rejectNote,
           fixNote: d.fixNote,
+          wasInherited: !!d.confirmedIso && !!d.confirmedPmo,
           // Offer a step only when the user may take it and the rules allow it now (notes are typed afterwards).
           steps: project.closedOn
             ? []

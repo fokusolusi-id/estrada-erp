@@ -23,7 +23,16 @@ export const NOTIFICATION_TEXT: Record<EmailTemplate, string> = {
   payment_scheduled: "Permintaan Pembayaran Anda dijadwalkan",
   payment_paid: "Permintaan Pembayaran Anda sudah dibayar",
   payment_returned: "Permintaan Pembayaran dikembalikan: perlu diubah",
+  project_team: "Anda ditetapkan di tim proyek",
+  project_rfs_approval: "RFS proyek menunggu pengesahan Anda",
+  project_bast_approval: "BAST proyek menunggu pengesahan Anda",
+  project_bast_approved: "BAST proyek disahkan",
+  project_handover_submitted: "Paket serah terima menunggu penilaian Anda",
+  project_handover_returned: "Paket serah terima dikembalikan: perlu dilengkapi",
+  project_handover_accepted: "Serah terima diterima MSO: tindak lanjut Anda",
+  project_defect_reported: "Dugaan cacat bawaan menunggu penetapan Anda",
+  project_defect_inherited: "Cacat bawaan proyek menunggu perbaikan Anda",
 };
 
 /** Notifications that ask the reader to change their own data. */
-export const NEEDS_CHANGE: ReadonlySet<string> = new Set<EmailTemplate>(["returned", "clarification", "payment_returned"]);
+export const NEEDS_CHANGE: ReadonlySet<string> = new Set<EmailTemplate>(["returned", "clarification", "payment_returned", "project_handover_returned"]);

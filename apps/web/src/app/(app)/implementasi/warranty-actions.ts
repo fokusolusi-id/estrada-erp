@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db, schema } from "@estrada/db";
 import { canWarranty, closureProblems, defectProblems, serviceStage, warrantyProblems, type ClosureProblem, type DefectAction, type DefectProblem, type WarrantyAction, type WarrantyProblem } from "@estrada/domain";
 import { loadDefects, loadHandover, loadProjects } from "@/lib/implementasi";
+import { notifyProject } from "@/lib/project-notify";
 import { todayJakarta } from "@/lib/payment";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
@@ -92,6 +93,7 @@ export async function reportDefect(projectId: string, input: { description: stri
     await tx.insert(schema.auditLog).values({ actorUserId: l.user.id, action: "project_defect.report", subjectType: "project_defect", subjectId: row!.id, after: { projectId, ...parsed.data } });
   });
   done(projectId);
+  await notifyProject("defect_reported", l.project, l.user.id);
   return { ok: true, message: "Laporan dicatat; menunggu penetapan Head ISO dan Head PMO." };
 }
 
@@ -138,6 +140,7 @@ export async function defectStep(projectId: string, defectId: string, action: Ex
     await tx.insert(schema.auditLog).values({ actorUserId: l.user.id, action: `project_defect.${action}`, subjectType: "project_defect", subjectId: defectId, before: { status: defect.status }, after: { ...values, status: next } });
   });
   done(projectId);
+  if (next === "Cacat_Bawaan" && action.startsWith("confirm")) await notifyProject("defect_inherited", l.project, l.user.id);
   return { ok: true, message: action.startsWith("confirm") && next === "Cacat_Bawaan" ? "Ditetapkan sebagai cacat bawaan proyek; ditangani Delivery Control." : STEP_DONE[action] };
 }
 

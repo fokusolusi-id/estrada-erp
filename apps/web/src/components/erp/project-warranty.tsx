@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { DEFECT_STATUS_LABEL, isOpenDefect, type DefectAction, type DefectStatus } from "@estrada/domain";
+import { DEFECT_STATUS_LABEL, costBearer, isOpenDefect, type DefectAction, type DefectStatus } from "@estrada/domain";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,8 @@ export interface DefectView {
   confirmedPmo: string | null;
   rejectNote: string | null;
   fixNote: string | null;
+  /** A closed defect was inherited: the project paid for it. */
+  wasInherited?: boolean;
   /** The steps this user may take on this defect right now. */
   steps: Step[];
 }
@@ -188,6 +190,11 @@ export function ProjectWarranty({
                     </span>
                     {d.fixNote ? <span className="block text-xs">Perbaikan: {d.fixNote}</span> : null}
                     {d.rejectNote ? <span className="block text-xs">Alasan: {d.rejectNote}</span> : null}
+                    {costBearer(d.status, d.wasInherited) ? (
+                      <span className="text-muted-foreground block text-xs" data-testid="cost">
+                        Biaya: {costBearer(d.status, d.wasInherited)!.note}
+                      </span>
+                    ) : null}
                   </TableCell>
                   <TableCell>
                     <Badge variant={d.status === "Cacat_Bawaan" ? "destructive" : isOpenDefect(d.status) ? "secondary" : "outline"} data-testid="status">

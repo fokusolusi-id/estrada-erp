@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db, schema } from "@estrada/db";
 import { ARTEFACTS, EOS_CHECKLIST, MSO_CRITERIA, canHandover, handoverProblems, serviceStage, type HandoverAction, type HandoverProblem, type HandoverState } from "@estrada/domain";
 import { loadHandover, loadProjects } from "@/lib/implementasi";
+import { notifyProject } from "@/lib/project-notify";
 import { todayJakarta } from "@/lib/payment";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
@@ -89,6 +90,7 @@ export async function submitHandover(projectId: string): Promise<Result> {
     await tx.insert(schema.auditLog).values({ actorUserId: g.user.id, action: "handover.submit", subjectType: "project_handover", subjectId: projectId, before: { status: g.handover.status }, after: { status: g.next } });
   });
   done(projectId);
+  await notifyProject("handover_submitted", g.project, g.user.id);
   return { ok: true, message: "Paket serah terima diajukan ke MSO." };
 }
 
@@ -120,6 +122,7 @@ export async function decideHandover(projectId: string, input: z.input<typeof De
     });
   });
   done(projectId);
+  await notifyProject(parsed.data.accept ? "handover_accepted" : "handover_returned", g.project, g.user.id, parsed.data.accept ? {} : { comment: note });
   return { ok: true, message: parsed.data.accept ? "Serah terima diterima MSO; proyek masuk tahap Layanan." : "Paket dikembalikan ke PMO." };
 }
 

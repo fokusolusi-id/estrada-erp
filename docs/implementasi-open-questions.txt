@@ -168,3 +168,61 @@ G2. Checked in a browser on 14 Nov 2026, through the real screens: open project,
     package, returning a package, saving the EOS checklist, setting the warranty date,
     confirming an inherited defect, recording and closing its repair. Their rules are
     covered by unit tests; their server actions are not exercised.
+
+
+H. BUILT IN THE SECOND PASS (14 Nov 2026): DEFAULTS CHOSEN, TO CONFIRM
+----------------------------------------------------------------------
+These close earlier questions (C2, C6, C7, C8, D2, E15, E17, F1) with a default. None
+has been approved by the client.
+
+H1. Emails (F1). One per handoff, never per site, no rupiah, never to the person who
+    did it. Sent for: team assigned, RFS declared, BAST prepared, BAST approved (to
+    BCD and the Project Manager), handover submitted, handover returned, handover
+    accepted by MSO (to Head ISO and EOS), fault reported (Head ISO and Head PMO),
+    defect confirmed inherited (Delivery Control). NOT sent: per-site BAI steps (a
+    206-site project would send 206 emails per step), site edits, contract changes,
+    warranty date. Should the per-site BAI steps get a daily digest instead?
+H2. Site deletion (C2). The Project Manager deletes a site only while it is Belum
+    Mulai or Survei, has no BAI, and the project is still before Penagihan. Right
+    person and right limit?
+H3. Contract site count (C6). BCD changes it, with a written reason, until the BAST
+    is approved; never below the sites already registered. There is NO approval step
+    and no value threshold: the Delegation of Authority (A4) does not exist. Should a
+    change order need the Head PMO's approval, or the customer's addendum number?
+H4. KPI (D2). Targets are the job descriptions' own: Delivery Control 7 days from the
+    BAI date to recording it, Project Admin 5 days from recording to compiling,
+    Assurance 3 days from compiling to verifying. Each step is counted from the one
+    before, NOT from "installation finished" as KPI 3 and KPI 1 say, because the app
+    does not record when installation finished. The conflict in sheet 02 section C
+    (D1) is therefore avoided, not resolved. Which clock does the client want?
+    Business days or calendar days? The report is per project; a per-person, per-month
+    report is not built.
+H5. Status Drop (E17). The Head PMO drops a project with a reason, only before the
+    BAST is approved. Dropped and closed projects are read-only. Should BCD (who owns
+    the contract) have to agree? Can a dropped project be reopened?
+H6. BARD and BAUT (C7). A tick box "skema TELKOM" set by BCD, then Assurance (BCD)
+    records the number and date of each document after RFS is approved; the BAST is
+    held until both exist. Is a TELKOM customer known from the contract or the deal
+    (so the box could be filled automatically)? Who signs BARD and BAUT, and are two
+    numbers and dates enough?
+H7. Planning records (C8). Five records (kick-off notes, MoM, charter, risk register,
+    requirements), each a text reference to where the file is kept, like BAI
+    evidence. Kick-Off Gate needs the kick-off and MoM; the baseline needs the gate,
+    charter, risk register, a complete team and a target RFS date. Both are approved
+    by a Head PMO who is NOT on the project team. Field work (Staging, Dikirim,
+    Instalasi, Uji) is blocked until the baseline is approved; survey is allowed.
+    Kurva S is computed from the sites' planned and actual finish dates. Open points:
+      - Requirements (record 5) is not required by any gate. Should it be?
+      - Charter holds a reference only, not the budget or timeline themselves.
+      - After the baseline, a change of a site's planned date is NOT yet a change
+        order: it is just audited. Who approves one?
+      - Existing projects without a baseline cannot move a site into Staging until a
+        Head PMO approves one.
+H8. Who pays (E15). Shown on each fault once classified: inherited defect = project
+    budget, with an RMA claim where the device is under warranty; operational fault =
+    service budget with Head ISO approval. No amount, no RMA number and no per-device
+    warranty date is recorded (there is no device register: sheet 03 / SCM). Is the
+    label enough for now?
+H9. Not clicked through in a browser (see G2), added this pass: delete site, change
+    contract count, drop, TELKOM documents, planning page and Kurva S, and the
+    emails. Rules are unit tested; actions and email delivery are not exercised.

@@ -25,6 +25,18 @@ export const project = pgTable(
     rfsProposedBy: text("rfs_proposed_by").references(() => user.id),
     /** Set when the Head PMO approves the BAST the Project Admin prepared. */
     bastOn: date("bast_on"),
+    /** Head PMO's approval of the kick-off gate, and of the baseline (the plan, with the target RFS date). */
+    kickoffGateOn: date("kickoff_gate_on"),
+    kickoffGateBy: text("kickoff_gate_by").references(() => user.id),
+    baselineOn: date("baseline_on"),
+    baselineBy: text("baseline_by").references(() => user.id),
+    rfsTargetOn: date("rfs_target_on"),
+    /** A TELKOM-scheme customer: BARD and BAUT must be signed before the BAST. */
+    telkomScheme: boolean("telkom_scheme").notNull().default(false),
+    bardNumber: text("bard_number"),
+    bardOn: date("bard_on"),
+    bautNumber: text("baut_number"),
+    bautOn: date("baut_on"),
     bastNumber: text("bast_number"),
     bastProposedOn: date("bast_proposed_on"),
     bastProposedBy: text("bast_proposed_by").references(() => user.id),
@@ -159,4 +171,19 @@ export const projectDefect = pgTable(
     closedAt: timestamp("closed_at", { withTimezone: true }),
   },
   (t) => [index("project_defect_project_idx").on(t.projectId)],
+);
+
+/** A record of Initiation or Planning (kick-off, MoM, charter, risk register, requirements): where it is kept. */
+export const projectPlanningItem = pgTable(
+  "project_planning_item",
+  {
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => project.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    reference: text("reference").notNull(),
+    recordedBy: text("recorded_by").references(() => user.id),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.projectId, t.key] })],
 );
