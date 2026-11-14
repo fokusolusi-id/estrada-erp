@@ -1,7 +1,7 @@
 import "server-only";
 import { asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
-import { DELIVERY_UNIT, type ProjectStatus, type ProjectTeam, type SiteBai, type SiteInput } from "@estrada/domain";
+import { DELIVERY_UNIT, type DefectStatus, type HandoverStatus, type ProjectStatus, type ProjectTeam, type SiteBai, type SiteInput } from "@estrada/domain";
 import { loadOrg } from "./workflow";
 
 export interface SiteRow extends SiteInput {
@@ -33,6 +33,10 @@ export interface ProjectRow {
   contractSites: number;
   rfs: Signoff;
   bast: Signoff;
+  /** The date MSO accepted the handover: when responsibility for the service moved. */
+  msoAcceptedOn: string | null;
+  warrantyEndsOn: string | null;
+  closedOn: string | null;
   team: ProjectTeam;
   sites: SiteRow[];
 }
@@ -84,6 +88,9 @@ export async function loadProjects(id?: string): Promise<ProjectRow[]> {
     contractSites: p.contractSites,
     rfs: { on: p.rfsOn, proposedOn: p.rfsProposedOn, proposedBy: p.rfsProposedBy },
     bast: { on: p.bastOn, proposedOn: p.bastProposedOn, proposedBy: p.bastProposedBy, number: p.bastNumber },
+    msoAcceptedOn: p.msoAcceptedOn,
+    warrantyEndsOn: p.warrantyEndsOn,
+    closedOn: p.closedOn,
     team: { pm: p.pmUserId, deliveryControl: p.deliveryControlUserId, projectAdmin: p.projectAdminUserId },
     sites: (byProject.get(p.id) ?? []).map(toSite),
   }));
@@ -126,4 +133,68 @@ export async function dealsAwaitingProject() {
   ]);
   const has = new Set(opened.map((o) => o.dealId));
   return deals.filter((d) => !has.has(d.id)).map((d) => ({ id: d.id, name: d.project, customer: d.customer, entity: d.entityCode, fiscalYear: d.fiscalYear }));
+}
+
+export interface HandoverRow {
+  status: HandoverStatus;
+  hasApplication: boolean;
+  submittedBy: string | null;
+  criteria: Record<string, boolean>;
+  checklist: Record<string, boolean>;
+  checklistBy: string | null;
+  msoAcceptedBy: string | null;
+  isoAcceptedBy: string | null;
+  returnNote: string | null;
+  /** Where each artefact is kept, by its number in the catalogue. */
+  artefacts: Record<number, string>;
+}
+
+/** A project's handover package; an untouched draft when nothing has been saved yet. */
+export async function loadHandover(projectId: string): Promise<HandoverRow> {
+  const [[row], artefacts] = await Promise.all([
+    db.select().from(schema.projectHandover).where(eq(schema.projectHandover.projectId, projectId)),
+    db.select().from(schema.handoverArtefact).where(eq(schema.handoverArtefact.projectId, projectId)),
+  ]);
+  return {
+    status: row?.status ?? "Disusun",
+    hasApplication: row?.hasApplication ?? false,
+    submittedBy: row?.submittedBy ?? null,
+    criteria: row?.criteria ?? {},
+    checklist: row?.checklist ?? {},
+    checklistBy: row?.checklistBy ?? null,
+    msoAcceptedBy: row?.msoAcceptedBy ?? null,
+    isoAcceptedBy: row?.isoAcceptedBy ?? null,
+    returnNote: row?.returnNote ?? null,
+    artefacts: Object.fromEntries(artefacts.map((a) => [a.no, a.reference])),
+  };
+}
+
+export interface DefectRow {
+  id: string;
+  siteId: string | null;
+  description: string;
+  status: DefectStatus;
+  reportedBy: string;
+  reportedAt: Date;
+  confirmedIso: string | null;
+  confirmedPmo: string | null;
+  rejectNote: string | null;
+  fixNote: string | null;
+}
+
+/** Faults reported against a project during warranty, oldest first. */
+export async function loadDefects(projectId: string): Promise<DefectRow[]> {
+  const rows = await db.select().from(schema.projectDefect).where(eq(schema.projectDefect.projectId, projectId)).orderBy(asc(schema.projectDefect.reportedAt));
+  return rows.map((d) => ({
+    id: d.id,
+    siteId: d.siteId,
+    description: d.description,
+    status: d.status,
+    reportedBy: d.reportedBy,
+    reportedAt: d.reportedAt,
+    confirmedIso: d.confirmedIsoBy,
+    confirmedPmo: d.confirmedPmoBy,
+    rejectNote: d.rejectNote,
+    fixNote: d.fixNote,
+  }));
 }

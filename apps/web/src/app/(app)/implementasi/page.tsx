@@ -62,7 +62,7 @@ export default async function ImplementasiPage() {
                   const late = p.sites.filter((s) => delayDays(s, today) > 0).length;
                   return (
                     <TableRow key={p.id} data-testid={`project-${p.id}`}>
-                      <TableCell className="font-medium whitespace-normal">
+                      <TableCell className="min-w-56 font-medium whitespace-normal">
                         <Link href={`/implementasi/${p.id}`} className="underline-offset-4 hover:underline">
                           {p.name}
                         </Link>

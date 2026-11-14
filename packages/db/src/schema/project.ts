@@ -1,4 +1,4 @@
-import { boolean, date, index, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, date, index, integer, jsonb, pgEnum, pgTable, primaryKey, smallint, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { pipelineDeal } from "./pipeline";
 
@@ -31,6 +31,9 @@ export const project = pgTable(
     /** The date responsibility for availability moves to MSO. */
     msoAcceptedOn: date("mso_accepted_on"),
     warrantyEndsOn: date("warranty_ends_on"),
+    /** The day the Head PMO declared the project closed. */
+    closedOn: date("closed_on"),
+    closedBy: text("closed_by").references(() => user.id),
     pmUserId: text("pm_user_id").references(() => user.id),
     deliveryControlUserId: text("delivery_control_user_id").references(() => user.id),
     projectAdminUserId: text("project_admin_user_id").references(() => user.id),
@@ -78,4 +81,82 @@ export const projectSite = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("project_site_project_idx").on(t.projectId), uniqueIndex("project_site_code_uq").on(t.projectId, t.code)],
+);
+
+export const handoverStatusEnum = pgEnum("handover_status", ["Disusun", "Diajukan", "Dikembalikan", "Diterima_MSO", "Diterima_ISO", "Selesai"]);
+
+/**
+ * The handover package of a project, PMO to MSO and on to ISO: one per project. The date MSO accepts lives on the
+ * project (`mso_accepted_on`), because that is when responsibility for the service moves.
+ */
+export const projectHandover = pgTable("project_handover", {
+  projectId: uuid("project_id")
+    .primaryKey()
+    .references(() => project.id, { onDelete: "cascade" }),
+  status: handoverStatusEnum("status").notNull().default("Disusun"),
+  /** The project delivered an application: repository and CI/CD access become mandatory. */
+  hasApplication: boolean("has_application").notNull().default(false),
+  submittedBy: text("submitted_by").references(() => user.id),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }),
+  /** Head MSO's five criteria, by key. */
+  criteria: jsonb("criteria").$type<Record<string, boolean>>().notNull().default({}),
+  /** Staff Operational EOS's four checklist items, by key. */
+  checklist: jsonb("checklist").$type<Record<string, boolean>>().notNull().default({}),
+  checklistBy: text("checklist_by").references(() => user.id),
+  msoAcceptedBy: text("mso_accepted_by").references(() => user.id),
+  isoAcceptedBy: text("iso_accepted_by").references(() => user.id),
+  isoAcceptedAt: timestamp("iso_accepted_at", { withTimezone: true }),
+  /** What PMO must complete, written by Head MSO on return. */
+  returnNote: text("return_note"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** One artefact of the package: where it is kept. `no` is its number in the catalogue (1-15). */
+export const handoverArtefact = pgTable(
+  "handover_artefact",
+  {
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => project.id, { onDelete: "cascade" }),
+    no: smallint("no").notNull(),
+    reference: text("reference").notNull(),
+    updatedBy: text("updated_by").references(() => user.id),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.projectId, t.no] })],
+);
+
+export const defectStatusEnum = pgEnum("defect_status", ["Diajukan", "Cacat_Bawaan", "Operasional", "Diperbaiki", "Ditutup"]);
+
+/**
+ * A fault reported during warranty. It is an inherited project defect only when the Head ISO and the Head PMO both
+ * confirm it; an open one keeps the project from closing.
+ */
+export const projectDefect = pgTable(
+  "project_defect",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => project.id, { onDelete: "cascade" }),
+    siteId: uuid("site_id").references(() => projectSite.id, { onDelete: "set null" }),
+    description: text("description").notNull(),
+    status: defectStatusEnum("status").notNull().default("Diajukan"),
+    reportedBy: text("reported_by")
+      .notNull()
+      .references(() => user.id),
+    reportedAt: timestamp("reported_at", { withTimezone: true }).notNull().defaultNow(),
+    confirmedIsoBy: text("confirmed_iso_by").references(() => user.id),
+    confirmedPmoBy: text("confirmed_pmo_by").references(() => user.id),
+    /** Why it was set aside as operational, and by whom. */
+    rejectNote: text("reject_note"),
+    rejectedBy: text("rejected_by").references(() => user.id),
+    /** The corrective work Delivery Control did. */
+    fixNote: text("fix_note"),
+    fixedBy: text("fixed_by").references(() => user.id),
+    fixedAt: timestamp("fixed_at", { withTimezone: true }),
+    closedBy: text("closed_by").references(() => user.id),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+  },
+  (t) => [index("project_defect_project_idx").on(t.projectId)],
 );

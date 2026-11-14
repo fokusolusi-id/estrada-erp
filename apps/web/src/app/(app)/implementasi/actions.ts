@@ -199,7 +199,8 @@ export async function baiStep(projectId: string, siteId: string, input: z.input<
       ? { baiNumber: data.nomor!.trim(), baiOn: data.tanggal!, baiEvidence: data.evidence!.trim(), baiCollectedBy: user.id, baiCollectedAt: now, baiCompiledBy: null, baiCompiledAt: null, baiVerifiedBy: null, baiVerifiedAt: null, baiReturnNote: null, spotCheckPassed: null }
       : step === "compile"
         ? { baiCompiledBy: user.id, baiCompiledAt: now, spotCheckPassed: site.ujiPetik ? true : null }
-        : { baiVerifiedBy: user.id, baiVerifiedAt: now };
+        : // A verified site is finished: without an actual finish date it would keep counting as late.
+          { baiVerifiedBy: user.id, baiVerifiedAt: now, actualDoneOn: site.tglAktualSelesai || site.bai!.tanggal };
   await db.transaction(async (tx) => {
     await tx.update(schema.projectSite).set({ ...values, status: next, updatedAt: now }).where(eq(schema.projectSite.id, siteId));
     await tx.insert(schema.auditLog).values({ actorUserId: user.id, action: `project_site.bai_${step}`, subjectType: "project_site", subjectId: siteId, before: { status: site.status, bai: site.bai }, after: { ...values, status: next } });

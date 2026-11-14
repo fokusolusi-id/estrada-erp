@@ -1,5 +1,5 @@
 MODUL IMPLEMENTASI - OPEN QUESTIONS
-Updated: 2026-11-13
+Updated: 2026-11-14
 Source: "Modul Implementasi - ERP Estrada Group.xlsx", sheets 02, 04, 07, 08.
 Sheets 03, 05, 06, 09, 10, 11, 12, 13 have not been read yet.
 
@@ -53,9 +53,15 @@ B3. Everyone in PDMS (PMO, SCM, ISO, MSO) and BCD reads every project in their
     hiding COGS and GP from PDMS. Should reading be narrowed to assigned people?
 B4. BAI verification is open to any BCD requestor, default owner or division owner in
     the entity. Should it be narrowed to specific units, for example Sales Ops?
-B5. Head MSO, Staff Operational EOS and Head ISO are needed for slice 3. Proposed
-    mapping: head = Default Owner or Division Owner seated at MSO / ISO; Staff
-    Operational EOS = anyone seated in MSO-EOS. Correct?
+B5. Built in slice 3 with this mapping, to be confirmed: Head MSO / Head ISO = a
+    Default Owner or Division Owner seated exactly at MSO / ISO; Staff Operational EOS
+    = anyone seated in MSO-EOS. Unlike Head PMO (B1), Head PDMS does NOT qualify as
+    Head MSO or Head ISO, so the giver's superior cannot also be the receiver. Correct?
+B6. Sheet 07 row 25 gives Head PMO an approval (S) on submitting the handover package.
+    The app has no such step: the Project Manager submits straight to MSO, as sheet 04
+    gate 5 describes. Should Head PMO approve the package before it goes to MSO?
+B7. Sheet 07 row 26 gives ISO a verification (V) before Head MSO accepts. Not built:
+    ISO only acts after MSO accepts. Needed?
 
 
 C. PROJECT AND SITE RULES
@@ -64,8 +70,10 @@ C1. Project status Pengadaan_Barang belongs to SCM (sheet 03, out of scope). Tod
     project jumps from Initiation to Implementasi when its first site is past survey.
     Who sets Pengadaan_Barang, and when?
 C2. A site cannot be deleted, only edited. Is deletion needed, and by whom?
-C3. "Aktual selesai" on a site is typed by hand. Should it be taken from the BAI date,
-    or from the date installation finished?
+C3. "Aktual selesai" on a site is typed by hand. When Assurance verifies the BAI and
+    the date is still empty, the app now fills it with the BAI date, so a finished site
+    stops counting as late. Is the BAI date the right one, or the date installation
+    finished?
 C4. Uji petik: the sample flag is set on the site by the Project Manager or Project
     Admin, and the Project Admin confirms "lulus" when compiling the BAI. Is that the
     right person, and is a pass/fail enough or is a document needed?
@@ -98,10 +106,41 @@ E1. Credentials and remote access (artefact 7): store only a reference to where 
 E2. Devices, spares and licences have no register in this app (no warehouse module).
     Proposal: accept them as handover documents first, and build real registers with
     the SCM module. Acceptable for the MSO criteria and the EOS checklist?
-E3. The 15 artefacts: text reference like BAI evidence, or file upload?
-E4. "Wajib bila ada aplikasi" (artefact 8): who marks a project as having an
-    application, and when?
-E5. Warranty end date: one date per project, or per device? Who enters it?
+E3. The 15 artefacts are built as text references (where the file is kept), following
+    the decision for BAI evidence. Confirm, or is upload wanted here?
+E4. "Wajib bila ada aplikasi" (artefact 8): built as a tick box any project team
+    member sets while drafting the package. Should it come from the contract instead?
+E7. The project moves to status Layanan the moment Head MSO accepts, and to Garansi
+    once ISO has accepted AND the warranty end date is set. The package status "Selesai"
+    is set when the project is closed. Are these the intended meanings?
+E8. Head ISO cannot return the package. Sheet 04 gate 8 says a failure escalates to
+    Head PDMS. How should that escalation be recorded?
+E9. Once Head MSO has accepted, the artefact references are frozen. Who may correct
+    one afterwards (for example a moved folder)?
+E10. The EOS checklist can be filled as soon as the package is submitted, before Head
+    MSO accepts, although sheet 04 orders it after (gate 7). Acceptable?
+E5. Warranty end date is built as ONE date per project ("the last warranty"), entered
+    by BCD (Kamus Field domain SALES_ASSURANCE). Per-device warranty dates (artefact
+    15) are only a handover document. Is one date enough, and is BCD the right owner?
+E11. Slice 4 is built on the four section D proposals (A2) BEFORE Head PDMS approved
+    them. If any is rejected, the rule and its screen must change.
+E12. Inherited defects are a small register on the project, not tickets: reported by
+    ISO or MSO, classified jointly by Head ISO and Head PMO, repaired by Delivery
+    Control, closed by Head PMO. When the ticket module (sheet 05) is built, should
+    this register be replaced by the ticket's "sumber_gangguan" field?
+E19. One head alone can set a report aside as operational (not the reporter). Sheet
+    07 says inherited-or-not is decided jointly. Should "operational" also need both
+    heads, like "inherited" does?
+E13. A report that neither head has acted on blocks closing the project. Should there
+    be a time limit, or an escalation to Head PDMS?
+E14. Sheet 07 row 32 has the Project Manager verify (V) the corrective work before
+    Head PMO closes it. Not built: Delivery Control records, Head PMO closes. Needed?
+E15. Who pays (A2c: RMA at zero cost under warranty, service budget outside it) is not
+    recorded anywhere yet. It needs device warranty dates and a budget link.
+E16. Closing is allowed from the warranty end date itself (that day counts as ended).
+    Correct, or the day after?
+E17. Project status Drop cannot be set from any screen. Who may drop a project?
+E18. Proposing a contract extension (A3) is not built: it has no owner.
 E6. service_agreement_id is meant to be filled when the BAST is approved. Service
     agreements do not exist in this app. Out of scope until the ticket module?
 
@@ -115,9 +154,17 @@ F1. No emails are sent yet from this module. Which handoffs should send one? Can
 
 G. DATA AND ENVIRONMENT
 -----------------------
-G1. The local database has no Closed Won deal and nobody seated in PMO, so the module
-    cannot be exercised end to end. Seed test data, or import real people first?
-G2. The screens have not been checked in a browser: port 3000 is held by another
-    session's dev server.
-G3. apps/web/e2e/rka-approval.spec.ts line 177 fails typecheck ("sales_head"). It comes
-    from other uncommitted work in the tree, not from this module.
+G1. Local test data now exists: apps/web/scripts/seed-implementasi.ts adds nine
+    accounts (@estrada.test, one per job in the module) and one Closed Won deal named
+    "[UJI] Sewa CPE SBST Online Korlantas". It refuses to run against a non-local
+    database. The test project it was used on is now closed in the local database.
+    Real PMO, MSO and ISO people still need seats before the module can be used.
+G2. Checked in a browser on 14 Nov 2026, through the real screens: open project,
+    assign team, register a site, BAI collect / compile / verify / return, approve
+    BAST, Head MSO acceptance, Head ISO acceptance, report a fault, set it aside as
+    operational, close the project. NOT clicked through (state was set in the database
+    instead, to stay inside the 5-per-5-minutes sign-in limit): editing a site,
+    declaring and approving RFS, preparing the BAST, saving and submitting the handover
+    package, returning a package, saving the EOS checklist, setting the warranty date,
+    confirming an inherited defect, recording and closing its repair. Their rules are
+    covered by unit tests; their server actions are not exercised.

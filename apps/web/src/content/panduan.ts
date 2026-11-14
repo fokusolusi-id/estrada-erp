@@ -240,12 +240,49 @@ Proyek pelaksanaan dicatat **per lokasi (site)**, lalu diringkas ke proyek. PDMS
 - **Membuka proyek**: deal berstatus Closed Won yang belum punya proyek tampil di kartu **Closed Won menunggu proyek**. BCD mengisi **jumlah lokasi kontrak** lalu *Buka proyek*. Nama project deal menjadi nama proyek. Deal yang sudah memiliki proyek tidak dapat dihapus dan statusnya tetap Closed Won.
 - **Tim proyek**: Head PMO (Default Owner atau Division Owner PMO, atau Head PDMS) menetapkan Project Manager, Delivery Control dan Project Admin dari orang PMO lewat *Simpan tim*. Delivery Control tidak boleh merangkap Project Manager maupun Project Admin, karena pelaksana instalasi tidak memverifikasi hasilnya sendiri dan pengumpul BAI bukan pengompilasinya.
 - **Lokasi**: Project Manager mendaftarkan lokasi dengan *Tambah lokasi* (kode, nama, alamat, wilayah, PIC pelanggan, rencana selesai) sampai jumlahnya sama dengan jumlah lokasi kontrak. Project Manager dan Project Admin memperbaruinya dengan *Ubah*. Kode lokasi unik per proyek.
-- **Status lokasi** yang dipilih manual: Belum mulai, Survei, Staging, Dikirim, Instalasi, Uji, Terkendala. Status BAI terbit, BAI terverifikasi dan Selesai mengikuti BAI lokasi dan tidak dipilih manual.
+- **Status lokasi** yang dipilih manual: Belum mulai, Survei, Staging, Dikirim, Instalasi, Uji, Terkendala. Status BAI terbit, BAI terverifikasi dan Selesai mengikuti BAI lokasi dan tidak dipilih manual. Proyek berpindah dari Initiation ke Implementasi saat lokasi pertama masuk Staging atau lebih lanjut.
 - **Progres** = lokasi berstatus Selesai dibagi jumlah lokasi kontrak, bukan dibagi lokasi yang sudah terdaftar.
 - **Terlambat** dihitung sistem: hari sejak tanggal rencana selesai sampai tanggal aktual selesai, atau sampai hari ini bila belum selesai. Tidak diketik.
 - Setiap perubahan tercatat di jejak audit.
 
-Penetapan tim oleh Head PMO mengikuti usulan matriks kewenangan PDMS yang masih menunggu pengesahan Head PDMS. BAI per lokasi, RFS, BAST dan serah terima ke MSO belum tersedia di layar ini.
+### BAI per lokasi
+
+Tiga tangan memegang satu dokumen, dan satu orang tidak boleh memegang dua langkah:
+
+1. **Delivery Control** mencatat BAI lokasi berstatus Uji dengan *Catat BAI*: nomor, tanggal dan rujukan evidence (tempat berkas foto dan hasil uji disimpan). Status lokasi menjadi BAI terbit.
+2. **Project Admin** memeriksa evidence lalu *Kompilasi BAI*. Untuk lokasi sampel uji petik, centang *Uji petik lulus* lebih dahulu. Status menjadi BAI terverifikasi.
+3. **Assurance (orang BCD)** memeriksa kesesuaian dengan kontrak lalu *Verifikasi BAI*. Status menjadi Selesai dan lokasi dihitung ke progres. Bila tanggal aktual selesai masih kosong, tanggal BAI dipakai, sehingga hitungan terlambat berhenti.
+
+Project Admin dan Assurance dapat *Kembalikan* BAI dengan alasan; lokasi kembali ke status Uji dan BAI dicatat ulang oleh Delivery Control.
+
+### RFS dan BAST
+
+- **RFS (Ready For Service)**: Project Manager mengisi tanggal dan *Nyatakan RFS* setelah semua lokasi kontrak terdaftar dan lulus uji. Head PMO mengesahkannya dengan *Sahkan RFS*.
+- **BAST**: Project Admin mengisi nomor dan tanggal lalu *Siapkan BAST* setelah RFS disahkan dan jumlah BAI terverifikasi sama dengan jumlah lokasi kontrak. Head PMO mengesahkannya dengan *Sahkan BAST*, dan proyek masuk tahap Penagihan.
+- Yang mengajukan tidak dapat mengesahkan pengajuannya sendiri. Syarat yang belum terpenuhi ditulis di kartunya.
+
+### Serah terima ke MSO dan ISO
+
+Tautan *Serah terima* di halaman proyek membuka empat gerbang berurutan. Penerima resmi adalah MSO; ISO menerima turunan teknisnya.
+
+1. **Paket serah terima**: tim proyek (Project Manager, Delivery Control, Project Admin) mengisi rujukan 15 artefak, yaitu tempat berkasnya disimpan, lalu *Simpan paket*. Tiga belas artefak wajib; artefak 8 (akses repository dan CI/CD) wajib bila proyek menyerahkan aplikasi; artefak 14 (manual pengguna) dianjurkan. Project Manager menekan *Ajukan ke MSO* setelah BAST disahkan dan semua artefak wajib terisi.
+2. **Lima kriteria Head MSO** (Default Owner atau Division Owner MSO): ruang lingkup kontrak, ambang batas SLA, ketersediaan spare parts, topologi dan konfigurasi teknis, kelengkapan administrasi. Bila semuanya terpenuhi, *Terima serah terima*: tanggal itu menjadi tanggal berpindahnya tanggung jawab layanan dan proyek masuk tahap Layanan. Bila ada yang kurang, *Kembalikan ke PMO* dengan catatan; paket berstatus Dikembalikan dan dapat dilengkapi lalu diajukan lagi. Yang mengajukan paket tidak dapat menerimanya.
+3. **Empat checklist Staff Operational EOS** (orang MSO-EOS): perangkat cadangan, lisensi, topologi jaringan, akses remote, disimpan dengan *Simpan checklist*.
+4. **Head ISO** (Default Owner atau Division Owner ISO) menekan *Terima turunan teknis* setelah MSO menerima dan keempat checklist lengkap.
+
+Status paket: Disusun, Diajukan, Dikembalikan, Diterima MSO, Diterima ISO, lalu Selesai saat proyek ditutup. Setiap langkah tercatat di jejak audit.
+
+### Garansi dan penutupan
+
+Tautan *Garansi & penutupan* di halaman proyek. Aturan di bagian ini adalah usulan modul yang masih menunggu persetujuan Head PDMS.
+
+- **Masa peralihan**: selisih hari antara tanggal BAST dan tanggal MSO menerima. Tanggung jawab layanan berpindah pada tanggal MSO menerima, bukan tanggal BAST; masa peralihan tetap tanggung jawab PMO.
+- **Akhir garansi**: BCD mengisi tanggal akhir garansi terakhir dengan *Simpan akhir garansi*, setelah BAST disahkan dan tidak sebelum tanggal BAST. Setelah ISO menerima turunan teknis dan tanggal ini terisi, proyek masuk tahap Garansi.
+- **Cacat bawaan proyek**: orang ISO atau MSO melaporkan gangguan yang diduga bawaan proyek dengan *Laporkan*, setelah MSO menerima serah terima. Gangguan menjadi cacat bawaan hanya bila **Head ISO dan Head PMO sama-sama menetapkannya**; pelapor tidak dapat menetapkan laporannya sendiri dan satu orang tidak dapat menetapkan kedua sisi. Salah satu dari keduanya dapat menetapkannya sebagai *Gangguan operasional* dengan alasan, kecuali atas laporan yang ia buat sendiri; gangguan itu ditangani ISO.
+- **Perbaikan**: Delivery Control proyek mencatat perbaikan cacat bawaan dengan *Catat perbaikan*, lalu Head PMO menekan *Tutup*.
+- **Penutupan proyek**: Head PMO menekan *Nyatakan proyek ditutup* setelah MSO dan ISO menerima, masa garansi berakhir dan tidak ada laporan atau cacat bawaan yang terbuka. Laporan yang masih terbuka memperpanjang masa garansi sampai ditutup. Proyek berstatus Closing dan paket serah terima berstatus Selesai. Syarat yang belum terpenuhi ditulis di kartunya.
+
+Kewenangan di layar ini mengikuti usulan matriks kewenangan PDMS yang masih menunggu pengesahan Head PDMS.
 
 ## Arus Kas
 
