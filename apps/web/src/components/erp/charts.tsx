@@ -140,9 +140,9 @@ export function WaterfallChart({ steps, decimals, unitLabel }: { steps: { label:
 }
 
 /** A small trend line for a number card. */
-export function Sparkline({ values, tone = "var(--primary)" }: { values: number[]; tone?: string }) {
+export function Sparkline({ values, tone = "var(--primary)", className = "h-8 w-24" }: { values: number[]; tone?: string; className?: string }) {
   return (
-    <div className="h-8 w-24" aria-hidden>
+    <div className={className} aria-hidden>
       <ResponsiveContainer>
         <LineChart data={values.map((v, i) => ({ i, v }))} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
           <Line dataKey="v" stroke={tone} strokeWidth={1.5} dot={false} isAnimationActive={false} />

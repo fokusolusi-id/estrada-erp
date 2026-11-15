@@ -203,7 +203,7 @@ function LoanForm({
   );
   const grid = (label: string, values: string[], key: "drawdown" | "repayment") => (
     <TableRow>
-      <TableCell className="bg-background sticky left-0 font-medium">{label}</TableCell>
+      <TableCell className="bg-card sticky left-0 shadow-[inset_-1px_0_0_var(--border)] font-medium">{label}</TableCell>
       {MONTHS.map((m, i) => (
         <TableCell key={m}>
           <Input
@@ -252,7 +252,7 @@ function LoanForm({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="bg-background sticky left-0">Pokok</TableHead>
+            <TableHead className="bg-card sticky left-0 shadow-[inset_-1px_0_0_var(--border)]">Pokok</TableHead>
             {MONTHS.map((m) => (
               <TableHead key={m} className="text-right">
                 {m}

@@ -1,6 +1,5 @@
 import { formatAmount, type Money, type Unit } from "@estrada/domain";
 import { ArrowUpRight, Minus, TrendingDown } from "lucide-react";
-import { Badge } from "@/components/ui/badge-2";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Sparkline } from "./charts";
@@ -17,8 +16,10 @@ export function KpiStrip({ children, className }: { children: React.ReactNode; c
 }
 
 /**
- * One headline number: title and note, the value with the change against last year as a pill, and a trend line.
- * The number stays neutral; red is for results to watch (`signal`). The pill is green for an increase and red for a decrease.
+ * One headline number, read like a ledger line: the label, the figure, then the change against last year as a coloured
+ * figure with an arrow (no pill), and the trend as a line along the foot of the cell.
+ * The figure stays neutral; red is for results to watch (`signal`). The change is green for an increase and red for a decrease,
+ * and always carries an arrow and a sign, so colour is never the only cue.
  */
 export function KpiCard({
   label,
@@ -40,37 +41,35 @@ export function KpiCard({
   const pct = change?.pct;
   const tone = !pct || pct.isZero() ? null : pct.isPositive();
   const Icon = !pct || pct.isZero() ? Minus : pct.isNegative() ? TrendingDown : ArrowUpRight;
+  const changeColour = tone === null ? "text-muted-foreground" : tone ? "text-success" : "text-destructive";
+  const lineTone = tone === null ? "var(--muted-foreground)" : tone ? "var(--success)" : "var(--destructive)";
   return (
     <Card className="border-border gap-0 rounded-none border-0 border-b py-0 shadow-none last:border-b-0 @xl:border-r @xl:last:border-r-0">
-      <CardContent className="flex h-full flex-col justify-between gap-6 p-5">
-        <div className="space-y-0.5">
-          <div className="text-foreground text-base font-semibold">{label}</div>
-          <div className="text-muted-foreground min-h-5 text-sm">{note}</div>
+      <CardContent className="flex h-full flex-col gap-3 px-5 pt-4 pb-0">
+        <div className="grid gap-0.5">
+          <div className="text-muted-foreground text-sm font-medium">{label}</div>
+          <div className="text-muted-foreground min-h-4 text-xs">{note}</div>
         </div>
-        <div className="grid gap-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={cn("tabular text-2xl font-bold tracking-tight whitespace-nowrap", signal && value.isNegative() && "text-destructive")}>
-              {formatAmount(value, unit)}
-            </span>
+        <div className="grid gap-1">
+          <span className={cn("tabular text-figure whitespace-nowrap", signal && value.isNegative() && "text-destructive")}>
+            {formatAmount(value, unit)}
+          </span>
+          <div className="flex min-h-5 flex-wrap items-baseline gap-x-2 text-sm">
             {pct ? (
-              <Badge
-                data-testid="kpi-change"
-                appearance="light"
-                variant={tone === null ? "secondary" : tone ? "success" : "destructive"}
-                shape="circle"
-                className="px-2 text-xs"
-              >
-                <Icon />
+              <span data-testid="kpi-change" className={cn("tabular inline-flex items-center gap-1 font-medium", changeColour)}>
+                <Icon aria-hidden className="size-3.5 self-center" />
                 {pct.isNegative() ? "-" : "+"}
                 {pct.abs().toFixed(1).replace(".", ",")}%
-              </Badge>
+              </span>
             ) : null}
-          </div>
-          <div className="flex items-end gap-2 text-sm">
-            {trend && trend.length > 1 ? <Sparkline values={trend} /> : null}
-            <span className="text-muted-foreground">{change ? `vs ${change.against}` : null}</span>
+            {change ? <span className="text-muted-foreground text-xs">vs {change.against}</span> : null}
           </div>
         </div>
+        {trend && trend.length > 1 ? (
+          <Sparkline values={trend} tone={lineTone} className="-mx-5 mt-auto h-12 w-[calc(100%+2.5rem)]" />
+        ) : (
+          <div className="pb-4" />
+        )}
       </CardContent>
     </Card>
   );

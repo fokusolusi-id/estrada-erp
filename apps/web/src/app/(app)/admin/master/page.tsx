@@ -25,7 +25,7 @@ export default async function MasterPage() {
   return (
     <div className="grid max-w-5xl gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Unit & Entitas</h1>
+        <h1 className="text-page">Unit & Entitas</h1>
         <p className="text-muted-foreground text-sm">
           Pilihan Unit dan Entitas di seluruh aplikasi berasal dari daftar ini. Kode tidak bisa diubah setelah dibuat.
         </p>

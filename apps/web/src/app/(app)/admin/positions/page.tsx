@@ -65,7 +65,7 @@ export default async function PositionsPage({ searchParams }: { searchParams: Pr
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Struktur Organisasi</h1>
+          <h1 className="text-page">Struktur Organisasi</h1>
           <p className="text-muted-foreground text-sm">
             Unit dari Unit & Entitas, posisi dan pemegangnya di sini. Hak akses mengikuti posisi; posisi kepala yang kosong tidak dieskalasi ke atasan:
             tetapkan pejabat sementara (pjs).

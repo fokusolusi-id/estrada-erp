@@ -24,7 +24,7 @@ export default async function UsersPage() {
 
   return (
     <div className="grid max-w-5xl gap-6">
-      <h1 className="text-2xl font-semibold">Pengguna</h1>
+      <h1 className="text-page">Pengguna</h1>
       <Card>
         <CardHeader>
           <CardTitle>Undang pengguna</CardTitle>

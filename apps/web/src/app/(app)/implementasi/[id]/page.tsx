@@ -80,7 +80,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         {stats.map((s) => (
           <div key={s.label} className="rounded-lg border p-4">
             <dt className="text-muted-foreground text-xs">{s.label}</dt>
-            <dd className={s.alert ? "text-destructive tabular mt-1 text-xl font-semibold" : "tabular mt-1 text-xl font-semibold"}>{s.value}</dd>
+            <dd className={s.alert ? "text-destructive tabular mt-1 text-section" : "tabular mt-1 text-section"}>{s.value}</dd>
           </div>
         ))}
       </dl>

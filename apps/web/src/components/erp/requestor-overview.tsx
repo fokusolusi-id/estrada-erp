@@ -21,7 +21,7 @@ export function RequestorOverview({ overview, holders }: { overview: Overview; h
       <div className="flex flex-wrap items-stretch gap-2">
         <div className="bg-accent/50 grid min-w-36 content-center rounded-lg border px-4 py-2">
           <span className="text-muted-foreground text-xs">Sudah dikirim</span>
-          <span className="tabular text-2xl font-semibold" data-testid="submitted-count">
+          <span className="tabular text-figure" data-testid="submitted-count">
             {overview.submitted} <span className="text-muted-foreground text-sm font-normal">baris</span>
           </span>
         </div>
@@ -31,7 +31,7 @@ export function RequestorOverview({ overview, holders }: { overview: Overview; h
               <span aria-hidden className={cn("size-1.5 rounded-full", DOT[p.state])} />
               {STATE_LABEL[p.state]}
             </span>
-            <span className="tabular text-lg font-semibold">{p.count || "–"}</span>
+            <span className="tabular text-section">{p.count || "–"}</span>
             <span className="text-muted-foreground text-xs">{holders[p.state]}</span>
           </div>
         ))}

@@ -102,7 +102,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
       </Link>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="grid gap-1">
-          <h1 className="flex flex-wrap items-center gap-3 text-2xl font-semibold">
+          <h1 className="flex flex-wrap items-center gap-3 text-page">
             <span className="font-mono">{r.number ?? "Draft"}</span>
             <PaymentStatusBadge state={r.state} />
           </h1>

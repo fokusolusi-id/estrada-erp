@@ -250,7 +250,7 @@ export function BudgetEditor({
         <TableHeader>
           <TableRow>
             <TableHead className="w-8" />
-            <TableHead className="bg-background sticky left-0 min-w-56">COA / Uraian</TableHead>
+            <TableHead className="bg-card sticky left-0 shadow-[inset_-1px_0_0_var(--border)] min-w-56">COA / Uraian</TableHead>
             <TableHead className="min-w-28">Entitas</TableHead>
             <TableHead className="min-w-28">Pemilik</TableHead>
             {MONTHS.map((m) => (
@@ -287,7 +287,7 @@ export function BudgetEditor({
                     }
                   />
                 </TableCell>
-                <TableCell className="bg-background sticky left-0 grid gap-1">
+                <TableCell className="bg-card sticky left-0 shadow-[inset_-1px_0_0_var(--border)] grid gap-1">
                   <select
                     aria-label={`COA baris ${n}`}
                     className={SELECT}

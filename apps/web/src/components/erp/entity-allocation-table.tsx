@@ -1,5 +1,6 @@
 import { sum, unitLabel, type EntityAllocationRow, type Money, type Unit } from "@estrada/domain";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { EntityMark } from "./entity-mark";
 import { FigureCell } from "./money-cell";
 
 /** Per entitas after shared costs are split: own cost, the shared cost moved to or from the entity, and the result. */
@@ -28,7 +29,9 @@ export function EntityAllocationTable({ rows, unit = "juta" }: { rows: EntityAll
       <TableBody>
         {rows.map((r) => (
           <TableRow key={r.key} data-testid={`allocation-${r.key}`}>
-            <TableCell className="font-medium">{r.key}</TableCell>
+            <TableCell className="font-medium">
+              <EntityMark code={r.key} />
+            </TableCell>
             {cells(r)}
           </TableRow>
         ))}

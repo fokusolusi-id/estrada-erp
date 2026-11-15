@@ -35,7 +35,7 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
         <Link href="/admin/users" className="text-muted-foreground text-sm hover:underline">
           ← Pengguna
         </Link>
-        <h1 className="text-2xl font-semibold">Edit pengguna</h1>
+        <h1 className="text-page">Edit pengguna</h1>
       </div>
       <Card>
         <CardHeader>

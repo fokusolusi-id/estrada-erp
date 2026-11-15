@@ -65,7 +65,7 @@ export default async function ActualPage() {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Realisasi</h1>
+        <h1 className="text-page">Realisasi</h1>
         <p className="text-muted-foreground text-sm">
           {version ? rkaLabel(version) : "Belum ada siklus RKA yang dibuka"} · {filled} dari {lines.length} baris sudah berisi realisasi
         </p>

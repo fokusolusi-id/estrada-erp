@@ -43,7 +43,7 @@ export function ApprovalFlow() {
         {APPROVAL_STATES.map((s, i) => (
           <li key={s} className="relative">
             <div className={cn("h-full rounded-lg border-l-4 px-3 py-2.5", BORDER[s], TINT[s])}>
-              <div className="text-muted-foreground text-[11px] font-medium">Tahap {i + 1}</div>
+              <div className="text-muted-foreground text-xs font-medium">Tahap {i + 1}</div>
               <div className="text-sm font-semibold">{STATE_LABEL[s]}</div>
               <div className="text-muted-foreground mt-0.5 text-xs">{HOLDER[s]}</div>
               {NEXT[s] ? (

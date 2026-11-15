@@ -36,7 +36,7 @@ export default async function PipelinePage() {
   if (!year) {
     return (
       <div className="grid gap-2">
-        <h1 className="text-2xl font-semibold">Pipeline</h1>
+        <h1 className="text-page">Pipeline</h1>
         <p className="text-muted-foreground text-sm">Belum ada siklus RKA.</p>
       </div>
     );

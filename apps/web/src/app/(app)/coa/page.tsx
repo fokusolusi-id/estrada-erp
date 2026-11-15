@@ -45,7 +45,7 @@ export default async function CoaPage() {
   return (
     <div className="grid max-w-6xl gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">COA Master</h1>
+        <h1 className="text-page">COA Master</h1>
         <p className="text-muted-foreground text-sm">
           {accounts.length} kode · {provisionalCount} sementara · baris dihitung dari {version ? rkaLabel(version) : "—"}
         </p>

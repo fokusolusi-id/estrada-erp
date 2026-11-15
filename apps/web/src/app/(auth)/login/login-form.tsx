@@ -46,7 +46,7 @@ export function LoginForm({ next, error }: { next: string; error?: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Masuk</CardTitle>
+        <CardTitle className="text-page">Masuk</CardTitle>
         <CardDescription>Gunakan email kantor Anda.</CardDescription>
       </CardHeader>
       <CardContent>

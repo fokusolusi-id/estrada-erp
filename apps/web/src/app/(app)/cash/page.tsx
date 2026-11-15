@@ -80,7 +80,7 @@ export default async function CashPage() {
   if (!view) {
     return (
       <div className="grid gap-2">
-        <h1 className="text-2xl font-semibold">Arus Kas</h1>
+        <h1 className="text-page">Arus Kas</h1>
         <p className="text-muted-foreground text-sm">Belum ada siklus RKA.</p>
       </div>
     );

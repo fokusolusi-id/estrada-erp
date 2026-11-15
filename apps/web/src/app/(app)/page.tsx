@@ -142,8 +142,8 @@ export default async function HomePage() {
           icon={<CircleCheck aria-hidden className="size-4" />}
         />
       </div>
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-3">
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-6 lg:col-span-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 2xl:grid-cols-3">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-6 2xl:col-span-2">
           {action}
           <Card>
             <CardHeader>
@@ -199,7 +199,7 @@ function StatCard({ label, value, note, tone, icon }: { label: string; value: st
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-1 px-4">
-        <span className="text-xl font-semibold tracking-tight">{value}</span>
+        <span className="text-section">{value}</span>
         <span className="text-muted-foreground text-xs">{note}</span>
       </CardContent>
     </Card>

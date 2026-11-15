@@ -64,7 +64,7 @@ export function Sidebar({ items, defaultCollapsed }: { items: readonly NavItem[]
                 collapsed ? (
                   <hr className="border-sidebar-border mx-2 my-2" />
                 ) : (
-                  <div className="text-muted-foreground px-3 pt-4 pb-1 text-[11px] font-semibold tracking-wider uppercase">{section}</div>
+                  <div className="text-muted-foreground px-3 pt-4 pb-1 text-xs font-semibold">{section}</div>
                 )
               ) : null}
             <Link
@@ -74,7 +74,7 @@ export function Sidebar({ items, defaultCollapsed }: { items: readonly NavItem[]
               aria-current={on ? "page" : undefined}
               className={cn(
                 "hover:bg-sidebar-accent flex items-center gap-3 rounded-md px-3 py-2 text-sm",
-                on && "bg-sidebar-accent text-primary font-medium",
+                on && "bg-sidebar-accent text-primary font-medium shadow-[inset_3px_0_0_var(--primary)]",
                 collapsed && "justify-center px-0",
               )}
             >
@@ -82,7 +82,7 @@ export function Sidebar({ items, defaultCollapsed }: { items: readonly NavItem[]
               {collapsed ? null : (
                 <>
                   <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                  {item.phase ? <span className="text-muted-foreground text-[10px]">Fase {item.phase}</span> : null}
+                  {item.phase ? <span className="text-muted-foreground text-xs">Fase {item.phase}</span> : null}
                 </>
               )}
             </Link>

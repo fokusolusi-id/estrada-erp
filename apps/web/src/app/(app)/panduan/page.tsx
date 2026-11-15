@@ -18,12 +18,12 @@ const text = (children: React.ReactNode): string =>
 /** The guide's Markdown in the app's own type and table styles; "[[alur]]" draws the approval flow. */
 const COMPONENTS: Components = {
   h2: ({ children }) => (
-    <h2 id={headingId(text(children))} className="scroll-mt-20 border-t pt-8 text-xl font-semibold tracking-tight first:border-t-0 first:pt-0">
+    <h2 id={headingId(text(children))} className="scroll-mt-20 border-t pt-8 text-section first:border-t-0 first:pt-0">
       {children}
     </h2>
   ),
   h3: ({ children }) => (
-    <h3 id={headingId(text(children))} className="scroll-mt-20 pt-2 text-base font-semibold">
+    <h3 id={headingId(text(children))} className="scroll-mt-20 pt-2 text-sm font-semibold">
       {children}
     </h3>
   ),

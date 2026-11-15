@@ -51,6 +51,7 @@ Orang BCD dengan peran Requestor, Default Owner atau Division Owner juga melihat
 - **Filter aktif**: setiap layar yang dipersempit menulis *Filter aktif: …* di bawah judul, dengan tautan *Tampilkan semua* untuk kembali ke Semua entitas dan Semua divisi. Layar yang tidak memakai salah satunya menyebutkannya, misalnya Divisi di Arus Kas dan Pipeline. Kolom yang isinya sama di setiap baris karena filter (Entitas, atau Pemilik bila divisi hanya punya satu unit) disembunyikan.
 - **Baris baru**: di RKA Saya, baris baru memakai entitas dari Tampilan di kepala halaman dan tetap dapat diubah. Draft Anda selalu tampil semua di editor; filter hanya mempersempit daftar *Sudah dikirim*.
 - **Tema**: tombol di kepala halaman berganti antara Terang, Gelap dan Ikuti sistem.
+- **Menu pengguna**: klik nama Anda di pojok kanan atas untuk melihat nama, email, jabatan dan peran Anda, lalu *Keluar* untuk mengakhiri sesi.
 - **Memuat halaman**: saat pindah halaman, garis tipis di paling atas menunjukkan halaman sedang dimuat.
 - **Ponsel**: di layar kecil menu menjadi tombol *Menu*. Setiap layar muat di ponsel tanpa geser ke samping.
 

@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { Building2, UserRound } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { ROLE_LABEL } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { navFor } from "@/lib/nav";
@@ -16,10 +16,10 @@ import { setView } from "./view-actions";
 import { setFiscalYear } from "./year-actions";
 import { MobileNav } from "./mobile-nav";
 import { PositionSwitcher } from "./position-switcher";
-import { SignOutButton } from "./sign-out-button";
 import { RoleSwitcher } from "./role-switcher";
 import { Sidebar, SIDEBAR_COOKIE } from "./sidebar";
 import { ThemeSwitcher } from "./theme-switcher";
+import { UserMenu } from "@/components/erp/user-menu";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const [user, org, { versions, years }, year, { choices, view }, unit] = await Promise.all([
@@ -78,11 +78,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             ) : null}
             <NotificationBell items={notifications.items} unread={notifications.unread} onRead={markNotificationsRead} />
             <ThemeSwitcher />
-            <span className="text-muted-foreground hidden items-center gap-1.5 lg:flex">
-              <UserRound aria-hidden className="size-4" />
-              {user.name}
-            </span>
-            <SignOutButton />
+            <UserMenu name={user.name} email={user.email} detail={user.viewAs ? ROLE_LABEL[user.realRole] : `${user.positionTitle} · ${ROLE_LABEL[user.realRole]}`} />
           </div>
         </header>
         <main className="flex-1 p-4 md:p-6">{children}</main>

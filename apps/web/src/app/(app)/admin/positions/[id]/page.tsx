@@ -33,7 +33,7 @@ export default async function EditPositionPage({ params }: { params: Promise<{ i
         <Link href="/admin/positions" className="text-muted-foreground text-sm hover:underline">
           ← Struktur Organisasi
         </Link>
-        <h1 className="text-2xl font-semibold">Edit posisi</h1>
+        <h1 className="text-page">Edit posisi</h1>
       </div>
       <Card>
         <CardHeader>

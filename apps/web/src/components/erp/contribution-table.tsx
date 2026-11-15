@@ -1,5 +1,6 @@
 import { sum, unitLabel, type Contribution, type Unit } from "@estrada/domain";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { EntityMark } from "./entity-mark";
 import { FigureCell } from "./money-cell";
 
 const pct = (part: Contribution["cost"], whole: Contribution["cost"]) =>
@@ -27,7 +28,9 @@ export function ContributionTable({ rows, unit = "juta", label }: { rows: Contri
       <TableBody>
         {rows.map((r) => (
           <TableRow key={r.key} data-testid={`contribution-${r.key}`}>
-            <TableCell className="font-medium">{r.key}</TableCell>
+            <TableCell className="font-medium">
+              <EntityMark code={r.key} />
+            </TableCell>
             <TableCell className="text-right">
               <FigureCell value={r.revenue} unit={unit} />
             </TableCell>

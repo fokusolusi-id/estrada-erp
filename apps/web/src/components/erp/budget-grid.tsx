@@ -51,7 +51,7 @@ export function BudgetGrid({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="sticky left-0 bg-background">COA</TableHead>
+          <TableHead className="sticky left-0 shadow-[inset_-1px_0_0_var(--border)] bg-card">COA</TableHead>
           {hide.entity ? null : <TableHead>Entitas</TableHead>}
           <TableHead>Status</TableHead>
           {MONTHS.map((m) => (
@@ -67,12 +67,12 @@ export function BudgetGrid({
       <TableBody>
         {lines.map((l) => (
           <TableRow key={l.id}>
-            <TableCell className="sticky left-0 bg-background">
+            <TableCell className="sticky left-0 shadow-[inset_-1px_0_0_var(--border)] bg-card">
               <div className="font-medium">{l.coaCode}</div>
               <div className="text-muted-foreground text-xs">{l.coaName}</div>
               {discussion ? <DiscussionLink id={l.id} count={l.commentCount} /> : null}
               {l.flags?.length ? (
-                <span title={l.flags.join("; ")} className="bg-warning/15 rounded px-1 text-[10px] font-medium">
+                <span title={l.flags.join("; ")} className="bg-warning/15 rounded px-1 text-xs font-medium">
                   Perlu review
                 </span>
               ) : null}

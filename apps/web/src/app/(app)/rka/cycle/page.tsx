@@ -60,7 +60,7 @@ export default async function CyclePage({ searchParams }: { searchParams: Promis
   return (
     <div className="grid max-w-6xl gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Siklus RKA</h1>
+        <h1 className="text-page">Siklus RKA</h1>
         <p className="text-muted-foreground text-sm">
           Satu versi terbuka per tahun. Versi terkunci tidak pernah diubah; revisi menyalinnya menjadi versi baru.
         </p>

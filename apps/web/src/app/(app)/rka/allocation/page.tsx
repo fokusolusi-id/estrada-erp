@@ -24,7 +24,7 @@ export default async function AllocationPage() {
   if (!version) {
     return (
       <div className="grid gap-2">
-        <h1 className="text-2xl font-semibold">Biaya Bersama</h1>
+        <h1 className="text-page">Biaya Bersama</h1>
         <p className="text-muted-foreground text-sm">Belum ada siklus RKA yang dibuka.</p>
       </div>
     );
@@ -55,7 +55,7 @@ export default async function AllocationPage() {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Biaya Bersama</h1>
+        <h1 className="text-page">Biaya Bersama</h1>
         <p className="text-muted-foreground text-sm">
           {rkaLabel(version)} · {shared.length} baris biaya bersama
           {shared.length ? ` senilai ${formatIdr(sharedTotal, { unit: "rp" })}` : ""}

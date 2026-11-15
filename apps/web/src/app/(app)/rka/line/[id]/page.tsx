@@ -54,7 +54,7 @@ export default async function LinePage({ params }: { params: Promise<{ id: strin
         <Link href="/rka" className="text-muted-foreground text-sm hover:underline">
           ← RKA
         </Link>
-        <h1 className="text-2xl font-semibold">
+        <h1 className="text-page">
           {line.coaCode} {line.item ?? line.coaName}
         </h1>
         <p className="text-muted-foreground text-sm">
