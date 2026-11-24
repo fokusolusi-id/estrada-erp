@@ -9,6 +9,23 @@ const CEILING = 90;
 /** A navigation that never lands (a failed load, a link back to the same view) stops the bar after this long. */
 const GIVE_UP_MS = 10_000;
 
+const START_EVENT = "estrada:progress-start";
+const END_EVENT = "estrada:progress-end";
+
+/** Starts the bar for a change that is not a link click, such as a role switch. Pair it with `endProgress`. */
+export const startProgress = () => window.dispatchEvent(new Event(START_EVENT));
+export const endProgress = () => window.dispatchEvent(new Event(END_EVENT));
+
+/** Shows the bar for as long as `pending` is true. For selects and buttons that navigate through a transition. */
+export function useProgressWhile(pending: boolean) {
+  const was = useRef(false);
+  useEffect(() => {
+    if (pending && !was.current) startProgress();
+    if (!pending && was.current) endProgress();
+    was.current = pending;
+  }, [pending]);
+}
+
 /** True for a plain left click on a link to another page of this app, in this tab. */
 function leadsElsewhere(e: MouseEvent): boolean {
   if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return false;
@@ -42,8 +59,7 @@ export function NavigationProgress() {
   };
 
   useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      if (!leadsElsewhere(e)) return;
+    const begin = () => {
       loading.current = true;
       if (hide.current) clearTimeout(hide.current);
       if (trickle.current) clearInterval(trickle.current);
@@ -53,8 +69,20 @@ export function NavigationProgress() {
       if (giveUp.current) clearTimeout(giveUp.current);
       giveUp.current = setTimeout(finish, GIVE_UP_MS);
     };
+    const onClick = (e: MouseEvent) => {
+      if (leadsElsewhere(e)) begin();
+    };
+    const onEnd = () => {
+      if (loading.current) finish();
+    };
     document.addEventListener("click", onClick, true);
-    return () => document.removeEventListener("click", onClick, true);
+    window.addEventListener(START_EVENT, begin);
+    window.addEventListener(END_EVENT, onEnd);
+    return () => {
+      document.removeEventListener("click", onClick, true);
+      window.removeEventListener(START_EVENT, begin);
+      window.removeEventListener(END_EVENT, onEnd);
+    };
   }, []);
 
   useEffect(() => {

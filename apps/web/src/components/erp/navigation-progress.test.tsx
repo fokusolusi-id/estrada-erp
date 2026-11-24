@@ -7,7 +7,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-const { NavigationProgress } = await import("./navigation-progress");
+const { NavigationProgress, startProgress, endProgress } = await import("./navigation-progress");
 
 const page = () =>
   render(
@@ -84,6 +84,18 @@ describe("NavigationProgress safety stop", () => {
     page();
     click("Summary");
     act(() => vi.advanceTimersByTime(10_000));
+    expect(bar()!.getAttribute("aria-valuenow")).toBe("100");
+    act(() => vi.advanceTimersByTime(600));
+    expect(bar()).toBeNull();
+  });
+
+  it("shows for a switch that is not a link, and finishes when it ends", () => {
+    page();
+    act(() => startProgress());
+    expect(bar()).not.toBeNull();
+    act(() => vi.advanceTimersByTime(1000));
+    expect(bar()).not.toBeNull();
+    act(() => endProgress());
     expect(bar()!.getAttribute("aria-valuenow")).toBe("100");
     act(() => vi.advanceTimersByTime(600));
     expect(bar()).toBeNull();
