@@ -26,7 +26,7 @@ for (const role of Object.keys(E2E_USERS) as E2eRole[]) {
       expect(await overflow(page), `${s.href} scrolls sideways`).toBeLessThanOrEqual(0);
     }
 
-    await page.getByRole("button", { name: "Menu" }).click();
+    await page.getByRole("button", { name: "Menu", exact: true }).click();
     const menu = page.getByRole("navigation", { name: "Menu utama" });
     for (const s of screens) await expect(menu.getByRole("link", { name: s.label })).toBeVisible();
     await menu.getByRole("link", { name: screens.at(-1)!.label }).click();
