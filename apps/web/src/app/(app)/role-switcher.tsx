@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useProgressWhile } from "@/components/erp/navigation-progress";
 import { useRouter } from "next/navigation";
 import { UserCog } from "lucide-react";
 import { actAs } from "./position-actions";
@@ -14,6 +15,7 @@ export interface ActAsOption {
 export function RoleSwitcher({ options, activeId }: { options: ActAsOption[]; activeId: string | null }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  useProgressWhile(pending);
   return (
     <label className="flex items-center gap-1.5">
       <UserCog aria-hidden className="text-muted-foreground size-4 shrink-0" />

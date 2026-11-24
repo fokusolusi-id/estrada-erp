@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useProgressWhile } from "@/components/erp/navigation-progress";
 import { useRouter } from "next/navigation";
 import { switchPosition } from "./position-actions";
 
@@ -16,6 +17,7 @@ export interface PositionOption {
 export function PositionSwitcher({ positions, activeId }: { positions: PositionOption[]; activeId: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  useProgressWhile(pending);
   return (
     <select
       aria-label="Posisi aktif"
