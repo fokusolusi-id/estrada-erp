@@ -1,5 +1,6 @@
+import { Suspense } from "react";
 import { cookies } from "next/headers";
-import { Building2 } from "lucide-react";
+import { Bell, Building2 } from "lucide-react";
 import { ROLE_LABEL } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { navFor } from "@/lib/nav";
@@ -20,6 +21,13 @@ import { RoleSwitcher } from "./role-switcher";
 import { Sidebar, SIDEBAR_COOKIE } from "./sidebar";
 import { ThemeSwitcher } from "./theme-switcher";
 import { UserMenu } from "@/components/erp/user-menu";
+import { Button } from "@/components/ui/button";
+
+/** Streams in after the page shell: the bell is the one header part nothing else waits on. */
+async function Notifications({ userId }: { userId: string }) {
+  const { items, unread } = await loadNotifications(userId);
+  return <NotificationBell items={items} unread={unread} onRead={markNotificationsRead} />;
+}
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const [user, org, { versions, years }, year, { choices, view }, unit] = await Promise.all([
@@ -30,7 +38,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     viewSetup(),
     displayUnit(),
   ]);
-  const notifications = await loadNotifications(user.id);
   const nav = navFor(user.actor.role, (unit) => org.isWithin(user.actor.orgUnit, unit));
   const collapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "1";
 
@@ -76,7 +83,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 onUnit={setDisplayUnit}
               />
             ) : null}
-            <NotificationBell items={notifications.items} unread={notifications.unread} onRead={markNotificationsRead} />
+            <Suspense
+              fallback={
+                <Button type="button" variant="ghost" size="sm" disabled aria-label="Notifikasi">
+                  <Bell aria-hidden />
+                </Button>
+              }
+            >
+              <Notifications userId={user.id} />
+            </Suspense>
             <ThemeSwitcher />
             <UserMenu name={user.name} email={user.email} detail={user.viewAs ? ROLE_LABEL[user.realRole] : `${user.positionTitle} · ${ROLE_LABEL[user.realRole]}`} />
           </div>
