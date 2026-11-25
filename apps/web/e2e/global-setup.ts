@@ -22,6 +22,10 @@ export default async function globalSetup() {
   }
 
   const sql = postgres(E2E_DATABASE_URL, { max: 1, onnotice: () => {} });
+  // The seed stops at departments; the delivery journey needs the PMO and MSO units its people sit in.
+  for (const [code, name, parent] of [["PMO-PM", "Project Manager", "PMO"], ["PMO-DCA", "Delivery Control & Admin", "PMO"], ["MSO-EOS", "Operational EOS", "MSO"]]) {
+    await sql`insert into org_unit (code, name, type, parent_code) values (${code}, ${name}, 'unit', ${parent}) on conflict do nothing`;
+  }
   const password = await hashPassword(E2E_PASSWORD);
   for (const u of Object.values(E2E_USERS)) {
     const id = randomUUID();
