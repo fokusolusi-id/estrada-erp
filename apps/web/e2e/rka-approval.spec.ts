@@ -18,6 +18,8 @@ async function as(role: E2eRole, page: Page, path: string) {
   await page.context().clearCookies();
   await page.context().addCookies(state.cookies);
   await page.goto(path);
+  // Ticking a box or typing before the page hydrates is lost when it does; wait until the page has settled.
+  await page.waitForLoadState("networkidle");
 }
 
 const lineRow = (page: Page, text: string) => page.getByRole("row").filter({ hasText: text });

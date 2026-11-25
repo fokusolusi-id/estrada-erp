@@ -3,7 +3,7 @@ import type { Actor, Role } from "@estrada/domain";
 import { actorOf, outcome, rows, session } from "./action-harness";
 import {
   approveSignoff, assignTeam, baiStep, changeContractSites, declareRfs, deleteSite, dropProject, openProject,
-  prepareBast, recordTelkomDoc, saveSite, setTelkomScheme,
+  prepareBast, recordTelkomDoc, returnBai, saveSite, setTelkomScheme,
 } from "@/app/(app)/implementasi/actions";
 
 // The delivery flow is gated by who sits where on the project: the Head PMO, the three team seats, BCD. Each action is
@@ -26,6 +26,7 @@ vi.mock("@/lib/workflow", async () => {
   const h = await import("./action-harness");
   return { loadOrg: async () => h.ORG };
 });
+const siteState = vi.hoisted(() => ({ status: "BAI_Terbit" }));
 vi.mock("@/lib/implementasi", () => ({
   deliveryPeople: async () => [],
   loadProjects: async () => [
@@ -37,7 +38,7 @@ vi.mock("@/lib/implementasi", () => ({
       team: { pm: "pm-1", deliveryControl: "dc-1", projectAdmin: "pa-1" },
       rfs: { on: null, proposedOn: null },
       bast: { on: null, proposedOn: null },
-      sites: [],
+      sites: [{ id: "22222222-2222-4222-8222-222222222222", status: siteState.status, bai: null }],
     },
   ],
 }));
@@ -82,6 +83,7 @@ const CASES: Case[] = [
 ];
 
 beforeEach(() => {
+  siteState.status = "BAI_Terbit";
   // openProject reads the deal it opens from the database.
   rows.current = [{ entityCode: "ESTRADA", status: "CW" }];
 });
@@ -98,4 +100,21 @@ describe("Implementasi actions check who is asking, whatever the menu shows", ()
       });
     });
   }
+});
+
+describe("returnBai: whoever holds the next step sends the BAI back", () => {
+  const NOTE = "Evidence kurang lengkap, kumpulkan ulang";
+  const run = (status: string, allowed: string[], refusal: string) =>
+    it.each(Object.keys(ACTORS).map((a) => [a]))(`${status} as %s`, async (who) => {
+      siteState.status = status;
+      const { role, over } = ACTORS[who]!;
+      session.current = actorOf(role, over);
+      const out = await outcome(() => returnBai(P, S, NOTE));
+      if (allowed.includes(who)) expect(out).not.toEqual({ message: refusal });
+      else expect(out).toEqual({ message: refusal });
+    });
+
+  // A BAI issued but not yet verified goes back through the Project Admin who compiled it; a verified one through Assurance.
+  run("BAI_Terbit", ["projectAdmin"], "BAI dikompilasi oleh Project Admin proyek ini.");
+  run("BAI_Terverifikasi", ["bcd"], "BAI diverifikasi oleh Assurance (BCD) untuk entitasnya.");
 });
