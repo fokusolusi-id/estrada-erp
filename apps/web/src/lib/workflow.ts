@@ -8,6 +8,7 @@ import {
   handoffs,
   isFullyLocked,
   isParticipant,
+  notificationLink,
   notificationsFor,
   seatFor,
   ROLE_LABEL,
@@ -22,16 +23,6 @@ import {
 } from "@estrada/domain";
 import { env } from "./env";
 import { enqueueEmail } from "./email/outbox";
-
-const TRANSITION_LINK: Record<ApprovalAction, string> = {
-  submit: "/rka/queue",
-  return: "/rka",
-  consolidate: "/rka/division",
-  approve: "/rka/review",
-  clarify: "/rka/division",
-  finalize: "/summary",
-  lock: "/summary",
-};
 
 export const approvalConfig = (): ApprovalConfig => ({ lockRole: env.RKA_LOCK_ROLE as Role });
 
@@ -126,11 +117,14 @@ async function notify(
     box.count += count;
     inbox.set(userId, box);
   };
-  const send = async (template: EmailTemplate, inbox: Inbox, link: string, extra: Record<string, string> = {}) => {
+  const rolesOf = (userId: string) =>
+    positions.filter((p) => p.holderUserId === userId || p.actingUserId === userId).map((p) => p.role);
+  const send = async (template: EmailTemplate, inbox: Inbox, linkFor: (userId: string) => string, extra: Record<string, string> = {}) => {
     if (!inbox.size) return;
     const users = await db.select().from(schema.user).where(inArray(schema.user.id, [...inbox.keys()]));
     for (const u of users) {
       const box = inbox.get(u.id)!;
+      const link = linkFor(u.id);
       await enqueueEmail({
         template,
         to: { userId: u.id, email: u.email, name: u.name },
@@ -166,7 +160,7 @@ async function notify(
       }
     }
 
-    await send(n.template, inbox, TRANSITION_LINK[action], n.comment ? { comment: n.comment } : {});
-    if (role) await send("seat_vacant", vacant, "/admin/positions", { role: ROLE_LABEL[role] });
+    await send(n.template, inbox, (id) => notificationLink(action, rolesOf(id)), n.comment ? { comment: n.comment } : {});
+    if (role) await send("seat_vacant", vacant, () => "/admin/positions", { role: ROLE_LABEL[role] });
   }
 }

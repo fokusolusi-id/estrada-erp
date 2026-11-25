@@ -58,3 +58,29 @@ const PARTICIPANTS: readonly Role[] = ["requestor", "default_owner", "division_o
 export function isParticipant(role: Role): boolean {
   return PARTICIPANTS.includes(role);
 }
+
+/** Who reads the Management Summary and may download it. */
+export const SUMMARY_ROLES: readonly Role[] = ["division_owner", "finance", "director", "auditor"];
+
+/**
+ * The screen a handoff email and its notification open. Each goes to the screen where the recipient acts;
+ * the locked notice goes to everyone in the cycle, so it opens the summary only for roles that may read it
+ * and RKA Saya for the rest, who would otherwise land on a page that does not exist for them.
+ */
+export function notificationLink(action: ApprovalAction, recipientRoles: readonly Role[]): string {
+  switch (action) {
+    case "submit":
+      return "/rka/queue";
+    case "return":
+      return "/rka";
+    case "consolidate":
+    case "clarify":
+      return "/rka/division";
+    case "approve":
+      return "/rka/review";
+    case "finalize":
+      return "/rka/lock";
+    case "lock":
+      return recipientRoles.some((r) => SUMMARY_ROLES.includes(r)) ? "/summary" : "/rka";
+  }
+}

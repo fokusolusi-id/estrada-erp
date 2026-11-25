@@ -346,8 +346,8 @@ Aplikasi mengirim satu email per serah terima, bukan per baris. Email tidak pern
 | Default Owner meneruskan | Division Owner | RKA divisi menunggu persetujuan |
 | Division Owner menyetujui | Finance Reviewer | Menunggu review |
 | Finance meminta klarifikasi | Division Owner | Perlu klarifikasi, dengan catatan |
-| Finance memfinalisasi | Finance Reviewer | Siap dikunci |
-| Finance mengunci | Semua peserta siklus | RKA terkunci |
+| Finance memfinalisasi | Finance Reviewer | Siap dikunci; tautannya membuka Kunci RKA |
+| Finance mengunci | Semua peserta siklus | RKA terkunci; tautannya membuka Management Summary, atau RKA Saya bagi peran yang tidak melihat Summary |
 | Baris diserahkan ke kursi kosong | Admin | Tetapkan pjs |
 | Komentar baru di Diskusi | Pembuat, pemegang, pemberi komentar | Komentar baru (paling banyak satu email per orang per jam) |
 | 7, 3 dan 1 hari sebelum batas | Requestor dengan baris belum dikirim | Batas pengajuan dekat |
