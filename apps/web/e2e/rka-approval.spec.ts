@@ -30,15 +30,22 @@ async function pickView(page: Page, label: string, value: string) {
   await page.keyboard.press("Escape");
 }
 
+/** The draft grid loads a dropdown's options when it is touched, so touch it first, as a person does. */
+async function pickRow(page: Page, label: string, value: string) {
+  const select = page.getByLabel(label);
+  await select.focus();
+  await select.selectOption(value);
+}
+
 test("1. Requestor drafts a line like in Excel and submits to the Default Owner", async ({ page }) => {
   await as("requestor", page, "/rka");
   await page.getByRole("button", { name: "Tambah baris" }).click();
 
   // 6241 for ESTRADA and SCM is already in the draft: the same COA goes in once per entity and owner.
-  await page.getByLabel("COA baris 3").selectOption("6241");
+  await pickRow(page, "COA baris 3", "6241");
   await expect(page.getByText("COA ini sudah ada untuk Entitas dan Pemilik yang sama.")).toBeVisible();
-  await page.getByLabel("COA baris 3").selectOption("6320");
-  await page.getByLabel("Unit pemilik baris 3").selectOption("SCM");
+  await pickRow(page, "COA baris 3", "6320");
+  await pickRow(page, "Unit pemilik baris 3", "SCM");
   await expect(page.getByText("COA ini sudah ada untuk Entitas dan Pemilik yang sama.")).toBeHidden();
   await page.getByLabel("Uraian baris 3").fill("Internet cabang");
   await page.getByLabel("Baris 3 bulan 1", { exact: true }).fill("1.500.000");

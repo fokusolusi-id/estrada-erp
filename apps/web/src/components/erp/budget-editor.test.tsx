@@ -27,6 +27,12 @@ const setup = () => {
   return props;
 };
 const cell = (row: number, month: number) => screen.getByLabelText(`Baris ${row} bulan ${month}`) as HTMLInputElement;
+/** Choose a dropdown value the way a person does: touch it (which loads its options), then pick. */
+const pick = (label: string, value: string) => {
+  const el = screen.getByLabelText(label);
+  fireEvent.mouseDown(el);
+  fireEvent.change(el, { target: { value } });
+};
 const paste = (el: HTMLElement, text: string) =>
   fireEvent.paste(el, { clipboardData: { getData: () => text } });
 
@@ -78,7 +84,7 @@ describe("BudgetEditor", () => {
   it("refuses the same COA twice for one entity and owner, but allows another entity", () => {
     setup();
     expect(screen.queryByText(/sudah ada untuk Entitas dan Pemilik yang sama/)).toBeNull();
-    fireEvent.change(screen.getByLabelText("Entitas baris 2"), { target: { value: "ESTRADA" } });
+    pick("Entitas baris 2", "ESTRADA");
     expect(screen.getAllByText(/sudah ada untuk Entitas dan Pemilik yang sama/).length).toBeGreaterThan(0);
     expect((screen.getByRole("button", { name: "Simpan (1)" }) as HTMLButtonElement).disabled).toBe(true);
   });
@@ -87,14 +93,16 @@ describe("BudgetEditor", () => {
     const props = { lines: [lines[0]!], masters, defaultEntity: "ESTRADA", onSave: ok(), onDelete: ok(), onSubmit: ok() };
     render(<BudgetEditor priorYear={2026} {...props} />);
     fireEvent.click(screen.getByRole("button", { name: "Tambah baris" }));
-    fireEvent.change(screen.getByLabelText("Unit pemilik baris 2"), { target: { value: "SCM" } });
+    pick("Unit pemilik baris 2", "SCM");
+    fireEvent.mouseDown(screen.getByLabelText("COA baris 2"));
+    fireEvent.mouseDown(screen.getByLabelText("COA baris 1"));
     const opt = Array.from((screen.getByLabelText("COA baris 2") as HTMLSelectElement).options).find((o) => o.value === "6241")!;
     expect(opt.disabled).toBe(true);
     expect(opt.textContent).toMatch(/sudah dipakai/);
     const own = Array.from((screen.getByLabelText("COA baris 1") as HTMLSelectElement).options).find((o) => o.value === "6241")!;
     expect(own.disabled).toBe(false);
     // Another owner is another slot, so the same COA is free there.
-    fireEvent.change(screen.getByLabelText("Unit pemilik baris 2"), { target: { value: "HCM" } });
+    pick("Unit pemilik baris 2", "HCM");
     expect(Array.from((screen.getByLabelText("COA baris 2") as HTMLSelectElement).options).find((o) => o.value === "6241")!.disabled).toBe(false);
   });
 
@@ -108,6 +116,19 @@ describe("BudgetEditor", () => {
     // 6241 is taken for ESTRADA / SCM, so the new line takes 6211 and that COA's owner.
     expect((screen.getByLabelText("COA baris 2") as HTMLSelectElement).value).toBe("6211");
     expect((screen.getByLabelText("Unit pemilik baris 2") as HTMLSelectElement).value).toBe("HCM");
+  });
+
+  it("keeps only the chosen option in each dropdown until it is touched, so a long draft stays light", () => {
+    setup();
+    const coa = screen.getByLabelText("COA baris 1") as HTMLSelectElement;
+    const owner = screen.getByLabelText("Unit pemilik baris 1") as HTMLSelectElement;
+    expect([coa.options.length, owner.options.length]).toEqual([1, 1]);
+    expect([coa.value, owner.value]).toEqual(["6241", "SCM"]);
+    fireEvent.mouseDown(coa);
+    expect(coa.options.length).toBe(masters.coa.length);
+    expect(coa.value).toBe("6241");
+    fireEvent.focus(owner);
+    expect(owner.options.length).toBe(masters.units.length);
   });
 
   it("flags text that is not an amount and blocks saving", () => {
@@ -142,7 +163,7 @@ describe("BudgetEditor", () => {
 
   it("defaults the budget owner to the COA's default owner unit", () => {
     setup();
-    fireEvent.change(screen.getByLabelText("COA baris 1"), { target: { value: "6211" } });
+    pick("COA baris 1", "6211");
     expect((screen.getByLabelText("Unit pemilik baris 1") as HTMLSelectElement).value).toBe("HCM");
   });
 

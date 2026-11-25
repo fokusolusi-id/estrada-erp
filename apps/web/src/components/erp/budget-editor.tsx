@@ -51,6 +51,48 @@ interface Row extends Omit<EditorLine, "months"> {
   errors: Record<string, string>;
 }
 
+interface Opt {
+  value: string;
+  label: string;
+  title?: string;
+  disabled?: boolean;
+}
+
+/**
+ * A native select that holds only its chosen option until someone touches it. A draft has dozens of rows and every
+ * row would otherwise carry the whole COA and unit lists: thousands of option elements the page renders for nothing.
+ * Pointer, focus or a key opens the full list before the browser shows it.
+ */
+function LazySelect({ options, value, ...props }: { options: Opt[]; value: string } & Omit<React.ComponentProps<"select">, "value" | "children">) {
+  const [open, setOpen] = useState(false);
+  const shown = open ? options : options.filter((o) => o.value === value);
+  const expand = () => setOpen(true);
+  return (
+    <select
+      {...props}
+      value={value}
+      onMouseDown={(e) => {
+        expand();
+        props.onMouseDown?.(e);
+      }}
+      onFocus={(e) => {
+        expand();
+        props.onFocus?.(e);
+      }}
+      onKeyDown={(e) => {
+        expand();
+        props.onKeyDown?.(e);
+      }}
+    >
+      {shown.map((o) => (
+        <option key={o.value} value={o.value} title={o.title} disabled={o.disabled}>
+          {o.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 const SELECT =
   "border-input h-8 w-full min-w-24 rounded-md border bg-transparent px-2 text-sm outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:border-destructive";
 
@@ -248,6 +290,17 @@ export function BudgetEditor({
     ]);
   };
 
+  const entityOptions: Opt[] = masters.entities.map((e) => ({ value: e, label: e }));
+  const unitOptions: Opt[] = masters.units.map((u) => ({ value: u.code, label: u.code, title: u.name }));
+  // A COA another row already holds for this entity and owner can't be picked again; the row's own stays selectable.
+  const coaOptions = (r: Row): Opt[] => {
+    const taken = takenCoaCodes({ id: r.key, requestorUnit: "", entity: r.entityCode, ownerUnit: r.ownerUnit }, slots);
+    return masters.coa.map((c) => {
+      const used = taken.has(c.code) && c.code !== r.coaCode;
+      return { value: c.code, label: `${c.code} · ${c.name}${used ? " (sudah dipakai)" : ""}`, disabled: used };
+    });
+  };
+
   const grand = sum(totals);
 
   return (
@@ -294,7 +347,7 @@ export function BudgetEditor({
                   />
                 </TableCell>
                 <TableCell className="bg-card sticky left-0 shadow-[inset_-1px_0_0_var(--border)] grid gap-1">
-                  <select
+                  <LazySelect
                     aria-label={`COA baris ${n}`}
                     className={SELECT}
                     disabled={locked}
@@ -304,17 +357,8 @@ export function BudgetEditor({
                       const coa = masters.coa.find((c) => c.code === e.target.value);
                       update(r.key, { coaCode: e.target.value, ...(coa?.defaultOwnerUnit ? { ownerUnit: coa.defaultOwnerUnit } : {}) });
                     }}
-                  >
-                    {masters.coa.map((c) => {
-                      const used = takenCoaCodes({ id: r.key, requestorUnit: "", entity: r.entityCode, ownerUnit: r.ownerUnit }, slots).has(c.code);
-                      return (
-                        <option key={c.code} value={c.code} disabled={used && c.code !== r.coaCode}>
-                          {c.code} · {c.name}
-                          {used && c.code !== r.coaCode ? " (sudah dipakai)" : ""}
-                        </option>
-                      );
-                    })}
-                  </select>
+                    options={coaOptions(r)}
+                  />
                   <Input
                     aria-label={`Uraian baris ${n}`}
                     disabled={locked}
@@ -377,35 +421,25 @@ export function BudgetEditor({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <select
+                  <LazySelect
                     aria-label={`Entitas baris ${n}`}
                     className={cn(SELECT, "min-w-32")}
                     disabled={locked}
                     value={r.entityCode}
                     aria-invalid={!!r.errors.entityCode}
                     onChange={(e) => update(r.key, { entityCode: e.target.value })}
-                  >
-                    {masters.entities.map((e) => (
-                      <option key={e} value={e}>
-                        {e}
-                      </option>
-                    ))}
-                  </select>
+                    options={entityOptions}
+                  />
                 </TableCell>
                 <TableCell>
-                  <select
+                  <LazySelect
                     aria-label={`Unit pemilik baris ${n}`}
                     className={SELECT}
                     disabled={locked}
                     value={r.ownerUnit}
                     onChange={(e) => update(r.key, { ownerUnit: e.target.value })}
-                  >
-                    {masters.units.map((u) => (
-                      <option key={u.code} value={u.code} title={u.name}>
-                        {u.code}
-                      </option>
-                    ))}
-                  </select>
+                    options={unitOptions}
+                  />
                 </TableCell>
                 {r.cells.map((c, j) => (
                   <TableCell key={j}>
@@ -414,7 +448,7 @@ export function BudgetEditor({
                       data-cell={`${i}-${j + 1}`}
                       disabled={locked}
                       inputMode="decimal"
-                      className="tabular hover:border-input focus-visible:border-ring h-8 min-w-28 border-transparent bg-transparent text-right shadow-none"
+                      className="tabular hover:border-input focus-visible:border-ring field-sizing-content h-8 w-auto min-w-28 border-transparent bg-transparent px-2 text-right shadow-none"
                       value={c}
                       aria-invalid={!parsed[i]![j]}
                       onChange={(e) => setCells(r.key, r.cells.map((x, k) => (k === j ? e.target.value : x)))}
