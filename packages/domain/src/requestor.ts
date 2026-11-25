@@ -35,6 +35,20 @@ export function duplicateOf<L extends LineKey>(line: LineKey, others: readonly L
   );
 }
 
+/**
+ * The COA codes the other lines already hold for this requesting unit, entity and owner: what a new or
+ * changed line can no longer pick. The line's own COA stays free, and headcount plan lines are left out.
+ */
+export function takenCoaCodes(line: Omit<LineKey, "coaCode">, others: readonly LineKey[]): Set<string> {
+  const taken = new Set<string>();
+  if (line.planned) return taken;
+  for (const o of others) {
+    if (o.planned || (line.id && o.id === line.id)) continue;
+    if (o.requestorUnit === line.requestorUnit && o.entity === line.entity && o.ownerUnit === line.ownerUnit) taken.add(o.coaCode);
+  }
+  return taken;
+}
+
 export interface RequestorOverview {
   drafts: number;
   /** Drafts that came back with a change request still open. */

@@ -83,6 +83,33 @@ describe("BudgetEditor", () => {
     expect((screen.getByRole("button", { name: "Simpan (1)" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
+  it("greys out a COA another line already holds for the same entity and owner, but never the line's own", () => {
+    const props = { lines: [lines[0]!], masters, defaultEntity: "ESTRADA", onSave: ok(), onDelete: ok(), onSubmit: ok() };
+    render(<BudgetEditor priorYear={2026} {...props} />);
+    fireEvent.click(screen.getByRole("button", { name: "Tambah baris" }));
+    fireEvent.change(screen.getByLabelText("Unit pemilik baris 2"), { target: { value: "SCM" } });
+    const opt = Array.from((screen.getByLabelText("COA baris 2") as HTMLSelectElement).options).find((o) => o.value === "6241")!;
+    expect(opt.disabled).toBe(true);
+    expect(opt.textContent).toMatch(/sudah dipakai/);
+    const own = Array.from((screen.getByLabelText("COA baris 1") as HTMLSelectElement).options).find((o) => o.value === "6241")!;
+    expect(own.disabled).toBe(false);
+    // Another owner is another slot, so the same COA is free there.
+    fireEvent.change(screen.getByLabelText("Unit pemilik baris 2"), { target: { value: "HCM" } });
+    expect(Array.from((screen.getByLabelText("COA baris 2") as HTMLSelectElement).options).find((o) => o.value === "6241")!.disabled).toBe(false);
+  });
+
+  it("starts a new line on the first expense COA still free, not on an asset account", () => {
+    const withAsset = {
+      ...masters,
+      coa: [{ code: "1615", name: "Inventaris Kantor", category: "CAPEX", defaultOwnerUnit: "PST" }, ...masters.coa],
+    };
+    render(<BudgetEditor priorYear={2026} lines={[lines[0]!]} masters={withAsset} defaultEntity="ESTRADA" onSave={ok()} onDelete={ok()} onSubmit={ok()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Tambah baris" }));
+    // 6241 is taken for ESTRADA / SCM, so the new line takes 6211 and that COA's owner.
+    expect((screen.getByLabelText("COA baris 2") as HTMLSelectElement).value).toBe("6211");
+    expect((screen.getByLabelText("Unit pemilik baris 2") as HTMLSelectElement).value).toBe("HCM");
+  });
+
   it("flags text that is not an amount and blocks saving", () => {
     setup();
     fireEvent.change(cell(1, 1), { target: { value: "lima juta" } });
