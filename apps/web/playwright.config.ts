@@ -36,6 +36,6 @@ export default defineConfig({
     // A fresh server each run also resets the in-memory login rate limit.
     reuseExistingServer: false,
     timeout: 120_000,
-    env: { DATABASE_URL: E2E_DATABASE_URL, NEXT_DIST_DIR: ".next-e2e", APP_URL: `http://localhost:${PORT}`, RKA_LOCK_ROLE: "finance" },
+    env: { DATABASE_URL: E2E_DATABASE_URL, NEXT_DIST_DIR: ".next-e2e", APP_URL: `http://localhost:${PORT}`, RKA_LOCK_ROLE: "finance", CRON_SECRET: "e2e-cron-secret-not-real" },
   },
 });
