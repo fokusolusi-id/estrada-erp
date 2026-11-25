@@ -61,12 +61,14 @@ interface Opt {
 /**
  * A native select that holds only its chosen option until someone touches it. A draft has dozens of rows and every
  * row would otherwise carry the whole COA and unit lists: thousands of option elements the page renders for nothing.
- * Pointer, focus or a key opens the full list before the browser shows it.
+ * Pointer, focus or a key loads the full list before the browser shows it. The list is then held as it was when the
+ * select was touched until it loses focus, so a choice that changes which options are greyed out cannot shift the
+ * list under someone still typing a code.
  */
 function LazySelect({ options, value, ...props }: { options: Opt[]; value: string } & Omit<React.ComponentProps<"select">, "value" | "children">) {
-  const [open, setOpen] = useState(false);
-  const shown = open ? options : options.filter((o) => o.value === value);
-  const expand = () => setOpen(true);
+  const [held, setHeld] = useState<Opt[] | null>(null);
+  const shown = held ?? options.filter((o) => o.value === value);
+  const expand = () => setHeld((h) => h ?? options);
   return (
     <select
       {...props}
@@ -82,6 +84,10 @@ function LazySelect({ options, value, ...props }: { options: Opt[]; value: strin
       onKeyDown={(e) => {
         expand();
         props.onKeyDown?.(e);
+      }}
+      onBlur={(e) => {
+        setHeld(null);
+        props.onBlur?.(e);
       }}
     >
       {shown.map((o) => (

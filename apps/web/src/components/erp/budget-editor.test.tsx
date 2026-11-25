@@ -94,6 +94,8 @@ describe("BudgetEditor", () => {
     render(<BudgetEditor priorYear={2026} {...props} />);
     fireEvent.click(screen.getByRole("button", { name: "Tambah baris" }));
     pick("Unit pemilik baris 2", "SCM");
+    // Moving to the owner dropdown leaves the COA one, so each list is judged afresh when it is touched again.
+    fireEvent.blur(screen.getByLabelText("COA baris 2"));
     fireEvent.mouseDown(screen.getByLabelText("COA baris 2"));
     fireEvent.mouseDown(screen.getByLabelText("COA baris 1"));
     const opt = Array.from((screen.getByLabelText("COA baris 2") as HTMLSelectElement).options).find((o) => o.value === "6241")!;
@@ -103,6 +105,8 @@ describe("BudgetEditor", () => {
     expect(own.disabled).toBe(false);
     // Another owner is another slot, so the same COA is free there.
     pick("Unit pemilik baris 2", "HCM");
+    fireEvent.blur(screen.getByLabelText("COA baris 2"));
+    fireEvent.mouseDown(screen.getByLabelText("COA baris 2"));
     expect(Array.from((screen.getByLabelText("COA baris 2") as HTMLSelectElement).options).find((o) => o.value === "6241")!.disabled).toBe(false);
   });
 
@@ -129,6 +133,26 @@ describe("BudgetEditor", () => {
     expect(coa.value).toBe("6241");
     fireEvent.focus(owner);
     expect(owner.options.length).toBe(masters.units.length);
+  });
+
+  it("keeps the greyed-out COAs steady while a dropdown is in use, so typing a code is not cut short", () => {
+    // 6211 is held for ESTRADA / SCM by the third line. A new line starts on 6211 for HCM (its default owner).
+    const held: EditorLine = { id: "33333333-3333-4333-8333-333333333333", coaCode: "6211", entityCode: "ESTRADA", ownerUnit: "SCM", item: "", basis: "", months: zero };
+    render(<BudgetEditor priorYear={2026} lines={[lines[0]!, held]} masters={masters} defaultEntity="ESTRADA" onSave={ok()} onDelete={ok()} onSubmit={ok()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Tambah baris" }));
+    const coa = screen.getByLabelText("COA baris 3") as HTMLSelectElement;
+    const opt = (code: string) => Array.from(coa.options).find((o) => o.value === code)!;
+    fireEvent.mouseDown(coa);
+    expect((screen.getByLabelText("Unit pemilik baris 3") as HTMLSelectElement).value).toBe("HCM");
+    // Picking 6241 moves the owner to SCM, where 6211 is held, but the list must not shift under the typing.
+    fireEvent.change(coa, { target: { value: "6241" } });
+    expect((screen.getByLabelText("Unit pemilik baris 3") as HTMLSelectElement).value).toBe("SCM");
+    expect(opt("6211").disabled).toBe(false);
+    // Once the dropdown is left, the list is judged afresh.
+    fireEvent.blur(coa);
+    fireEvent.mouseDown(coa);
+    expect(opt("6211").disabled).toBe(true);
+    expect(opt("6211").textContent).toMatch(/sudah dipakai/);
   });
 
   it("flags text that is not an amount and blocks saving", () => {
