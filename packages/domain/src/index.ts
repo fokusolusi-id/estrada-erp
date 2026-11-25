@@ -20,6 +20,7 @@ export * from "./cash";
 export * from "./dashboard";
 export * from "./fiscal";
 export * from "./view";
+export * from "./paging";
 export * from "./payment";
 export * from "./requestor";
 export * from "./project";
