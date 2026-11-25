@@ -79,13 +79,13 @@ Di bawahnya ada tiga bagian: **Draft usulan** (baris yang masih bisa diubah), **
 
 **Mengisi baris di Draft usulan**
 
-1. Pilih COA, isi Uraian, Entitas dan Pemilik (unit pemilik biaya; boleh unit lain).
+1. *Tambah baris* membuka baris baru di COA biaya pertama yang masih kosong untuk Entitas Anda, dengan Pemilik sesuai default owner COA itu. Pilih COA, isi Uraian, Entitas dan Pemilik (unit pemilik biaya; boleh unit lain); mengganti COA ikut mengganti Pemilik ke default owner COA tersebut, jadi periksa lagi.
 2. Ketik nominal Jan sampai Des dalam rupiah. Sel bulan tampil seperti spreadsheet: tanpa garis sampai disentuh, dan berbingkai biru saat diisi. Total RKA dihitung otomatis.
 3. Untuk menyalin dari Excel, tempel satu baris atau satu blok ke sel bulan; nilainya mengisi bulan ke kanan dan baris ke bawah.
 4. Tombol *Isi ke kanan* menyalin bulan yang dipilih sampai Des. Panah atas dan bawah berpindah baris.
-5. **Bagi rata 12 bulan**: ketik total setahun sekali di kotak *Bagi rata 12 bln* di kolom Total RKA, lalu tekan Enter. Total dibagi rata ke Jan sampai Des; sisa pembulatan masuk ke Des supaya jumlahnya tepat. Setelah itu tiap bulan tetap bisa diubah satu per satu.
+5. **Bagi rata 12 bulan**: ketik total setahun sekali di kotak *Bagi rata 12 bln* di kolom Total RKA, lalu tekan Enter atau pindah ke kolom lain. Total dibagi rata ke Jan sampai Des; sisa pembulatan masuk ke Des supaya jumlahnya tepat. Setelah itu tiap bulan tetap bisa diubah satu per satu.
 6. Isi Dasar perhitungan. Baris tidak tersimpan bila COA tidak aktif atau tidak dikenal, entitas tidak dikenal, atau ada nominal negatif.
-7. **Satu COA sekali per Entitas dan Pemilik.** COA yang sama tidak bisa dimasukkan dua kali untuk Entitas dan Pemilik yang sama; ubah baris yang sudah ada. COA yang sama boleh untuk Entitas lain atau Pemilik lain. Baris dari Rencana headcount dikecualikan, dan baris ganda yang sudah ada dari impor workbook tetap bisa diubah.
+7. **Satu COA sekali per Entitas dan Pemilik.** COA yang sama tidak bisa dimasukkan dua kali untuk Entitas dan Pemilik yang sama; di daftar COA, kode yang sudah dipakai baris lain tampil abu-abu dengan keterangan *(sudah dipakai)*. Ubah baris yang sudah ada. COA yang sama boleh untuk Entitas lain atau Pemilik lain. Baris dari Rencana headcount dikecualikan, dan baris ganda yang sudah ada dari impor workbook tetap bisa diubah.
 8. Baris yang berubah diberi warna. Bilah di bawah menunjukkan *N baris belum disimpan*; tekan *Simpan (N)* untuk menyimpan semuanya sekaligus. *Hapus baris* menghapus baris yang tidak diperlukan.
 
 Catatan dari workbook dan angka tahun lalu terlipat di tautan kecil di bawah uraian (misalnya *2 catatan*); klik untuk membukanya. Catatan pengembalian dari Default Owner selalu tampil.

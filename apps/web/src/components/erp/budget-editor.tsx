@@ -2,7 +2,7 @@
 
 import { useState, useTransition, type ClipboardEvent, type KeyboardEvent } from "react";
 import { ArrowRightToLine, Info, Plus, Save, Send, Trash2, TriangleAlert } from "lucide-react";
-import { duplicateOf, fillRight, formatIdr, money, parseIdr, parsePaste, spreadEvenly, sum, ZERO, type Money } from "@estrada/domain";
+import { duplicateOf, fillRight, formatIdr, money, parseIdr, parsePaste, spreadEvenly, sum, takenCoaCodes, ZERO, type Money } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -228,7 +228,13 @@ export function BudgetEditor({
     });
 
   const addRow = () => {
-    const first = masters.coa[0];
+    // Start on the first expense COA still free for the default entity and that COA's owner, not on whatever heads the master list.
+    const free = (c: EditorMasters["coa"][number]) => {
+      const owner = c.defaultOwnerUnit ?? masters.units[0]?.code ?? "";
+      return !takenCoaCodes({ requestorUnit: "", entity: defaultEntity, ownerUnit: owner }, slots).has(c.code);
+    };
+    const expense = masters.coa.filter((c) => c.category === "OPEX" || c.category === "COGS");
+    const first = expense.find(free) ?? expense[0] ?? masters.coa[0];
     setRows((rs) => [
       ...rs,
       toRow({
@@ -299,11 +305,15 @@ export function BudgetEditor({
                       update(r.key, { coaCode: e.target.value, ...(coa?.defaultOwnerUnit ? { ownerUnit: coa.defaultOwnerUnit } : {}) });
                     }}
                   >
-                    {masters.coa.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.code} · {c.name}
-                      </option>
-                    ))}
+                    {masters.coa.map((c) => {
+                      const used = takenCoaCodes({ id: r.key, requestorUnit: "", entity: r.entityCode, ownerUnit: r.ownerUnit }, slots).has(c.code);
+                      return (
+                        <option key={c.code} value={c.code} disabled={used && c.code !== r.coaCode}>
+                          {c.code} · {c.name}
+                          {used && c.code !== r.coaCode ? " (sudah dipakai)" : ""}
+                        </option>
+                      );
+                    })}
                   </select>
                   <Input
                     aria-label={`Uraian baris ${n}`}

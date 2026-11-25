@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { OrgTree } from "../src/org";
-import { duplicateOf, requestedWithin, requestorOverview } from "../src/requestor";
+import { duplicateOf, requestedWithin, requestorOverview, takenCoaCodes } from "../src/requestor";
 
 const org = new OrgTree([
   { code: "DIR", parent: null },
@@ -43,6 +43,31 @@ describe("duplicateOf", () => {
 
   it("leaves headcount plan lines out: several positions share one salary COA", () => {
     expect(duplicateOf(line, [{ ...saved[0]!, planned: true }])).toBeNull();
+  });
+});
+
+describe("takenCoaCodes", () => {
+  const rows = [
+    { id: "a", requestorUnit: "SCM", coaCode: "6241", entity: "ESTRADA", ownerUnit: "SCM" },
+    { id: "b", requestorUnit: "SCM", coaCode: "6252", entity: "ESTRADA", ownerUnit: "SCM" },
+    { id: "c", requestorUnit: "SCM", coaCode: "6132", entity: "ESTRADA", ownerUnit: "BCD" },
+    { id: "d", requestorUnit: "SCM", coaCode: "6243", entity: "MATRIK", ownerUnit: "SCM" },
+    { id: "e", requestorUnit: "HCM", coaCode: "6244", entity: "ESTRADA", ownerUnit: "SCM" },
+    { id: "f", requestorUnit: "SCM", coaCode: "6211", entity: "ESTRADA", ownerUnit: "SCM", planned: true },
+  ];
+  const slot = { id: "a", requestorUnit: "SCM", entity: "ESTRADA", ownerUnit: "SCM" };
+
+  it("lists the COAs the other lines already hold for the same requestor, entity and owner", () => {
+    expect([...takenCoaCodes({ requestorUnit: "SCM", entity: "ESTRADA", ownerUnit: "SCM" }, rows)]).toEqual(["6241", "6252"]);
+  });
+
+  it("leaves out the line itself, so its own COA stays selectable", () => {
+    expect([...takenCoaCodes(slot, rows)]).toEqual(["6252"]);
+  });
+
+  it("ignores other entities, owners, requesting units and headcount plan lines", () => {
+    const codes = takenCoaCodes(slot, rows);
+    for (const c of ["6132", "6243", "6244", "6211"]) expect(codes.has(c)).toBe(false);
   });
 });
 
