@@ -228,7 +228,7 @@ export async function deleteLine(id: string): Promise<ActionResult> {
   return { ok: true, message: "Baris dihapus." };
 }
 
-const ACTIONS = ["submit", "return", "consolidate", "approve", "clarify", "finalize", "lock"] as const satisfies readonly ApprovalAction[];
+const ACTIONS = ["submit", "return", "send_back", "consolidate", "approve", "clarify", "finalize", "lock"] as const satisfies readonly ApprovalAction[];
 const MoveInput = z.object({
   ids: z.array(z.string().uuid()).min(1, "Pilih minimal satu baris"),
   action: z.enum(ACTIONS),

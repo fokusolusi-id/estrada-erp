@@ -7,7 +7,7 @@ export default function DivisionPage() {
   return (
     <QueueScreen
       title="RKA Divisi"
-      description="RKA departemen yang sudah dikonsolidasi, termasuk permintaan klarifikasi dari Finance. Setujui untuk mengirim ke Finance."
+      description="RKA departemen yang sudah dikonsolidasi, termasuk permintaan klarifikasi dari Finance. Setujui untuk mengirim ke Finance, atau kembalikan ke Default Owner dengan catatan."
       roles={["division_owner"]}
       states={["division_approval"]}
     />

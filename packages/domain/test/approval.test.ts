@@ -45,6 +45,30 @@ describe("RKA approval state machine (CARA PENGISIAN point 10)", () => {
   });
 });
 
+describe("Division Owner sends a line back to the Default Owner", () => {
+  it("moves a line from Persetujuan Divisi back to Konsolidasi, and only with a note", () => {
+    expect(transition("division_approval", { action: "send_back", role: "division_owner", comment: "Basis kontrak belum jelas" }).to).toBe("consolidation");
+    expect(() => transition("division_approval", { action: "send_back", role: "division_owner" })).toThrow(/requires a comment/);
+    expect(() => transition("division_approval", { action: "send_back", role: "division_owner", comment: "   " })).toThrow(/requires a comment/);
+  });
+
+  it("is the Division Owner's alone, and only while the line waits for the division", () => {
+    expect(allowedActions("division_approval", "division_owner")).toEqual(["approve", "send_back"]);
+    for (const role of ["requestor", "default_owner", "finance", "director"] as const) {
+      expect(allowedActions("division_approval", role)).not.toContain("send_back");
+    }
+    for (const state of ["draft", "consolidation", "finance_review", "awaiting_lock", "locked"] as const) {
+      expect(allowedActions(state, "division_owner")).not.toContain("send_back");
+    }
+  });
+
+  it("puts the note in front of the Default Owner while the line sits in Konsolidasi", () => {
+    const events = [{ action: "send_back" as const, toState: "consolidation" as const, comment: "Basis kontrak belum jelas", at: new Date(Date.UTC(2026, 9, 31, 9, 5)) }];
+    expect(openRemark(events, "consolidation")).toEqual(events[0]);
+    expect(openRemark(events, "division_approval")).toBeNull();
+  });
+});
+
 describe("openRemark: the comment a line is waiting on", () => {
   const at = (minute: number) => new Date(Date.UTC(2026, 9, 31, 9, minute));
   it("shows the latest return or clarification while the line still sits where it sent it", () => {

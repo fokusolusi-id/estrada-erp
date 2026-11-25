@@ -47,6 +47,7 @@ const FORWARD: Partial<Record<ApprovalAction, Notification>> = {
 /** One email per handoff; amounts never go in the email body. */
 export function notificationsFor(e: TransitionEvent): Notification[] {
   if (e.action === "return") return [{ template: "returned", to: "requestor", comment: e.comment ?? "" }];
+  if (e.action === "send_back") return [{ template: "returned", to: "default_owner", comment: e.comment ?? "" }];
   if (e.action === "clarify") return [{ template: "clarification", to: "division_owner", comment: e.comment ?? "" }];
   const n = FORWARD[e.action];
   return n ? [n] : [];
@@ -70,6 +71,7 @@ export const SUMMARY_ROLES: readonly Role[] = ["division_owner", "finance", "dir
 export function notificationLink(action: ApprovalAction, recipientRoles: readonly Role[]): string {
   switch (action) {
     case "submit":
+    case "send_back":
       return "/rka/queue";
     case "return":
       return "/rka";

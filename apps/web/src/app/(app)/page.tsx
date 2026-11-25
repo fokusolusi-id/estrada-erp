@@ -65,6 +65,7 @@ const HOME: Record<Role, { title: string; body: string; cta?: { href: string; la
 const DID: Record<ApprovalAction, string> = {
   submit: "mengirim ke Default Owner",
   return: "mengembalikan",
+  send_back: "mengembalikan ke Default Owner",
   consolidate: "mengirim ke Division Owner",
   approve: "menyetujui ke Finance",
   clarify: "meminta klarifikasi",

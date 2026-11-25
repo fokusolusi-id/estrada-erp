@@ -36,7 +36,7 @@ describe("actionsFor: what this position may do to this line now", () => {
 
   it("division owner approves lines owned anywhere in the division", () => {
     const l = { ...line, state: "division_approval" as const };
-    expect(actionsFor(actor({ role: "division_owner", orgUnit: "PDMS" }), l, org)).toEqual(["approve"]);
+    expect(actionsFor(actor({ role: "division_owner", orgUnit: "PDMS" }), l, org)).toEqual(["approve", "send_back"]);
     expect(actionsFor(actor({ role: "division_owner", orgUnit: "HCM" }), l, org)).toEqual([]);
   });
 

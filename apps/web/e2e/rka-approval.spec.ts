@@ -459,6 +459,22 @@ test("Default Owner consolidates the resubmitted line", async ({ page }) => {
   await expect(page.getByText("1 baris diproses.")).toBeVisible();
 });
 
+test("Division Owner sends the division RKA back to the Default Owner, who sees the note and sends it again", async ({ page }) => {
+  await as("division_owner", page, "/rka/division");
+  await page.getByLabel("Pilih semua SCM").check();
+  await page.getByRole("button", { name: "Kembalikan" }).click();
+  await expect(page.getByText("Catatan wajib diisi untuk aksi ini.")).toBeVisible();
+  await page.getByLabel("Catatan").fill("Rincian kontrak cabang belum jelas");
+  await page.getByRole("button", { name: "Kembalikan" }).click();
+  await expect(page.getByText("3 baris diproses.")).toBeVisible();
+
+  await as("default_owner", page, "/rka/queue");
+  await expect(page.getByText("Sari (Head PDMS): “Rincian kontrak cabang belum jelas”").first()).toBeVisible();
+  await page.getByLabel("Pilih semua SCM").check();
+  await page.getByRole("button", { name: "Kirim ke Division Owner" }).click();
+  await expect(page.getByText("3 baris diproses.")).toBeVisible();
+});
+
 test("Division Owner approves the division RKA to Finance", async ({ page }) => {
   await as("division_owner", page, "/rka/division");
   await page.getByLabel("Pilih semua SCM").check();
