@@ -188,7 +188,7 @@ Admin mengelola orang dan data master, tidak pernah isi anggaran; baris anggaran
   - Bagan mengikuti dokumen *Struktur Organisasi* klien: divisi, departemen, dan bagiannya (misalnya Account Mgmt, PreSales, Sales Ops) yang tampil di dalam kartu departemen. Tim teknis memuat dokumen itu dengan \`pnpm db:struktur\`; nama orang di dalamnya tidak disimpan di GitHub.
   - Nama dari dokumen yang belum punya akun tampil dengan ikon orang bertanda plus (arahkan kursor untuk keterangannya) dan tidak dihitung kosong. Setelah orangnya diundang di Pengguna, buka posisinya dan pilih akunnya di *Pemegang*; nama dari dokumen lalu diganti nama akun. Kolom *Nama di struktur* di *Edit posisi* dapat dipakai untuk mengubah nama itu.
 - **RKA tertahan karena posisi kosong**: kursi yang ditunggu baris tetapi tidak ada pemegangnya. Tetapkan pemegang atau pjs untuk melepaskannya. Saat baris diserahkan ke kursi kosong, Admin menerima email.
-- **Bertindak sebagai** (kepala halaman): Admin dapat bertindak sebagai kursi mana pun untuk melihat aplikasi persis seperti peran itu, misalnya untuk memeriksa laporan masalah. Setiap pergantian tercatat di jejak audit; *Admin (saya sendiri)* kembali.
+- **Bertindak sebagai** (kepala halaman): Admin dapat bertindak sebagai kursi mana pun, dikelompokkan per peran (ketik awal jabatan untuk melompat), untuk melihat aplikasi persis seperti peran itu, misalnya untuk memeriksa laporan masalah. Setiap pergantian tercatat di jejak audit; *Admin (saya sendiri)* kembali.
 
 ## Management Summary
 

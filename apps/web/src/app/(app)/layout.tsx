@@ -67,7 +67,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             {user.viewAs ? (
               <RoleSwitcher
                 activeId={user.viewAs.activeId}
-                options={user.viewAs.options.map((o) => ({ id: o.id, label: `${ROLE_LABEL[o.role]} · ${o.title} · ${o.orgUnit}` }))}
+                options={user.viewAs.options.map((o) => ({ id: o.id, group: ROLE_LABEL[o.role], label: `${o.title} · ${o.orgUnit}` }))}
               />
             ) : null}
             {user.actor.role !== "admin" ? (
