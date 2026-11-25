@@ -38,6 +38,7 @@ export function BudgetGrid({
   unit = "juta",
   discussion = true,
   hide = {},
+  totalOf,
 }: {
   lines: GridLine[];
   priorYear: number;
@@ -45,8 +46,10 @@ export function BudgetGrid({
   discussion?: boolean;
   /** Columns the header has narrowed to one value. */
   hide?: Partial<HiddenColumns>;
+  /** The lines the Total row adds up, when `lines` is only one page of them. */
+  totalOf?: GridLine[];
 }) {
-  const total = summarize(lines, () => "all").get("all");
+  const total = summarize(totalOf ?? lines, () => "all").get("all");
   return (
     <Table>
       <TableHeader>

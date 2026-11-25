@@ -22,6 +22,12 @@ describe("BudgetGrid", () => {
     expect(screen.getByTestId("grand-total").textContent).toBe("Rp 391.381.872");
   });
 
+  it("adds the Total row over every line when only one page is shown", () => {
+    render(<BudgetGrid priorYear={2026} lines={lines.slice(0, 1)} totalOf={lines} unit="rp" />);
+    expect(screen.queryByTestId("total-b")).toBeNull();
+    expect(screen.getByTestId("grand-total").textContent).toBe("Rp 391.381.872");
+  });
+
   it("drops the Entitas column once the header narrows to one entity", () => {
     render(<BudgetGrid priorYear={2026} lines={lines} unit="rp" hide={{ entity: true }} />);
     expect(screen.queryByRole("columnheader", { name: "Entitas" })).toBeNull();

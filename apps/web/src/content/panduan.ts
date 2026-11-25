@@ -75,7 +75,7 @@ RKA Saya hanya menampilkan baris yang diusulkan unit Anda sendiri, dalam entitas
 
 Di bagian atas ada ringkasan: **Sudah dikirim** (jumlah baris yang sudah Anda kirim) dan posisinya per tahap, yaitu Konsolidasi (di Default Owner), Persetujuan Divisi (di Division Owner), Review Finance, Menunggu Kunci dan Terkunci. Bila ada baris yang dikembalikan, tampil *N baris dikembalikan, perlu diubah*; bila ada baris yang punya komentar, tampil *N baris punya diskusi*.
 
-Di bawahnya ada tiga bagian: **Draft usulan** (baris yang masih bisa diubah), **Rencana headcount** (rekrutmen baru yang menjadi baris gaji) dan **Sudah dikirim** (baris yang sudah dikirim beserta tahapnya, hanya baca).
+Di bawahnya ada tiga bagian: **Draft usulan** (baris yang masih bisa diubah), **Rencana headcount** (rekrutmen baru yang menjadi baris gaji) dan **Sudah dikirim** (baris yang sudah dikirim beserta tahapnya, hanya baca). Daftar ini tampil 50 baris per halaman; pindah halaman dengan *Sebelumnya* dan *Berikutnya* di bawah tabel. Baris Total tetap menjumlahkan semua baris, bukan hanya halaman yang tampil.
 
 **Mengisi baris di Draft usulan**
 

@@ -12,7 +12,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { deleteLine, saveHeadcount, saveLine, submitLines } from "./actions";
 import { FileText } from "lucide-react";
 import { EmptyState } from "@/components/erp/empty-state";
-import { ROLE_LABEL, requestedWithin, requestorOverview, rkaLabel } from "@estrada/domain";
+import { ROLE_LABEL, paginate, requestedWithin, requestorOverview, rkaLabel } from "@estrada/domain";
+import { Pager } from "@/components/erp/pager";
 import { RequestorOverview } from "@/components/erp/requestor-overview";
 import { approvalConfig, loadOrg } from "@/lib/workflow";
 
@@ -21,7 +22,11 @@ const HEADCOUNT_COA = "6221";
 
 export const metadata: Metadata = { title: "RKA Saya" };
 
-export default async function RkaPage() {
+/** Rows per page of the read-only list; the Total row still adds up every row. */
+const PAGE_SIZE = 50;
+
+export default async function RkaPage({ searchParams }: { searchParams: Promise<{ hal?: string }> }) {
+  const { hal } = await searchParams;
   const user = await requireUser();
   const [version, scoped, unit, year, view, org] = await Promise.all([openVersion(), loadScopedLines(user), displayUnit(), activeYear(), activeView(), loadOrg()]);
   const prior = (version?.fiscalYear ?? year ?? new Date().getFullYear()) - 1;
@@ -33,6 +38,7 @@ export default async function RkaPage() {
   const drafts = isRequestor ? lines.filter((l) => l.state === "draft" && l.canEdit) : [];
   // The editor keeps every draft so nothing is hidden while editing; the header narrows the read-only list.
   const others = await viewLines(lines.filter((l) => !drafts.includes(l)));
+  const shown = paginate(others, hal, PAGE_SIZE);
   const masters = isRequestor && version ? await editorMasters(user) : null;
 
   const editorLines: EditorLine[] = drafts.map((l) => ({
@@ -134,7 +140,10 @@ export default async function RkaPage() {
         </CardHeader>
         <CardContent>
           {others.length ? (
-            <BudgetGrid lines={others} priorYear={prior} unit={unit} hide={await hiddenColumns(others)} />
+            <>
+              <BudgetGrid lines={shown.items} totalOf={others} priorYear={prior} unit={unit} hide={await hiddenColumns(others)} />
+              <Pager {...shown} />
+            </>
           ) : (
             <EmptyState icon={FileText} title="Belum ada baris anggaran di tahap ini." description="Baris yang sudah Anda kirim tampil di sini beserta tahapnya." />
           )}
