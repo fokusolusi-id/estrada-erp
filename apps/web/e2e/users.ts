@@ -20,6 +20,7 @@ export const E2E_USERS = {
   head_mso: { email: "e2e.head.mso@estrada.test", name: "Maya (Head MSO)", title: "Head of MSO", orgUnit: "MSO", role: "default_owner", entities: ["ESTRADA"] },
   eos: { email: "e2e.eos@estrada.test", name: "Eko (Operational EOS)", title: "Staff Operational EOS", orgUnit: "MSO-EOS", role: "requestor", entities: ["ESTRADA"] },
   head_iso: { email: "e2e.head.iso@estrada.test", name: "Indra (Head ISO)", title: "Head of ISO", orgUnit: "ISO", role: "default_owner", entities: ["ESTRADA"] },
+  admin: { email: "e2e.admin@estrada.test", name: "Admin Uji", title: "Admin", orgUnit: "DIR", role: "admin", entities: ["*"] },
   director: { email: "e2e.direktur@estrada.test", name: "Direktur", title: "Direktur", orgUnit: "DIR", role: "director", entities: ["*"] },
 } satisfies Record<string, { email: string; name: string; title: string; orgUnit: string; role: Role; entities: string[] }>;
 
