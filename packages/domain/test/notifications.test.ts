@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isParticipant, notificationsFor } from "../src/notifications";
+import { isParticipant, notificationLink, notificationsFor, SUMMARY_ROLES } from "../src/notifications";
 
 describe("email notifications", () => {
   it("emails the next role on each forward handoff", () => {
@@ -27,5 +27,31 @@ describe("email notifications", () => {
     expect(["requestor", "default_owner", "division_owner", "finance", "director"].every((r) => isParticipant(r as never))).toBe(true);
     expect(isParticipant("admin")).toBe(false);
     expect(isParticipant("auditor")).toBe(false);
+  });
+});
+
+describe("notificationLink", () => {
+  it("opens the screen where the recipient acts on each handoff", () => {
+    expect(notificationLink("submit", ["default_owner"])).toBe("/rka/queue");
+    expect(notificationLink("consolidate", ["division_owner"])).toBe("/rka/division");
+    expect(notificationLink("approve", ["finance"])).toBe("/rka/review");
+    expect(notificationLink("clarify", ["division_owner"])).toBe("/rka/division");
+    expect(notificationLink("return", ["requestor"])).toBe("/rka");
+  });
+
+  it("sends the lock role to the Kunci RKA screen once the version is final", () => {
+    expect(notificationLink("finalize", ["finance"])).toBe("/rka/lock");
+    expect(notificationLink("finalize", ["director"])).toBe("/rka/lock");
+  });
+
+  it("links the locked notice to the summary only for roles that may open it", () => {
+    for (const role of SUMMARY_ROLES) expect(notificationLink("lock", [role])).toBe("/summary");
+    expect(notificationLink("lock", ["requestor"])).toBe("/rka");
+    expect(notificationLink("lock", ["default_owner"])).toBe("/rka");
+  });
+
+  it("uses the summary when a person holds any role that may open it", () => {
+    expect(notificationLink("lock", ["requestor", "division_owner"])).toBe("/summary");
+    expect(notificationLink("lock", [])).toBe("/rka");
   });
 });

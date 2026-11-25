@@ -1,13 +1,12 @@
 import "server-only";
-import { allocateShared, contribution, entityAllocation, type ApprovalState, type Role } from "@estrada/domain";
+import { allocateShared, contribution, entityAllocation, SUMMARY_ROLES, type ApprovalState } from "@estrada/domain";
 import { loadAllocation } from "./allocation";
 import { loadScopedLines, reportVersions } from "./rka";
 import type { CurrentUser } from "./session";
 import { activeView } from "./view-filter";
 import { loadOrg } from "./workflow";
 
-/** Who reads the Management Summary and may download it. */
-export const SUMMARY_ROLES: readonly Role[] = ["division_owner", "finance", "director", "auditor"];
+export { SUMMARY_ROLES };
 
 export const SUMMARY_STATUS: Record<string, { label: string; states: readonly ApprovalState[] | null }> = {
   all: { label: "Semua status", states: null },

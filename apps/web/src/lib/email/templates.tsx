@@ -50,7 +50,7 @@ export const COPY: Record<EmailTemplate, Copy> = {
     subject: "Versi RKA siap dikunci",
     heading: "Versi final siap dikunci",
     body: (p) => `Finance sudah memfinalisasi ${p.version ?? "RKA"}. Mohon tinjau dan kunci versi ini.`,
-    cta: "Buka Management Summary",
+    cta: "Buka Kunci RKA",
   },
   rka_locked: {
     subject: "RKA sudah dikunci",
