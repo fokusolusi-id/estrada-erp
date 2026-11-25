@@ -57,6 +57,9 @@ function sheetYear(rows: Cell[][]): number {
 /** The "Total RKA 2027" a source sheet row holds; the data sheet only sums that row's months, so a total typed without them is lost there. */
 export type SourceTotal = (sheet: string, row: number) => Money | null;
 
+/** Each of the twelve months is rounded to the cent (half a cent off at most), so a typed total can differ from their sum by up to six cents without anything being wrong. */
+const ROUNDING_SLACK = 0.06;
+
 export function parseRkaData(
   rows: Cell[][],
   units: readonly UnitAlias[],
@@ -95,7 +98,7 @@ export function parseRkaData(
       // A total typed without months is spread evenly; the owner can still change any month (client decision).
       months = spreadEvenly(typed);
       flags.push(`Total ${formatIdr(typed)} tanpa rincian bulan, dibagi rata Jan–Des`);
-    } else if (typed && !typed.minus(sum(months)).abs().lte(0.01)) {
+    } else if (typed && !typed.minus(sum(months)).abs().lte(ROUNDING_SLACK)) {
       flags.push(`Total diketik ${formatIdr(typed)} tidak sama dengan jumlah bulan`);
     }
     const qty = text(r[h.col("Qty (Org)")]);

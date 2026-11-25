@@ -109,6 +109,17 @@ describe("parseRkaData", () => {
     expect(parseRkaData(DATA([row]), UNITS).lines[0]!.flags).toEqual(["Total diketik Rp 45.000.000 tidak sama dengan jumlah bulan"]);
   });
 
+  it("does not flag a total the months miss only by cents, from rounding each month to two decimals", () => {
+    // 320.000.000 / 12 is 26.666.666,6666…: twelve months rounded to cents add up to 320.000.000,04.
+    const rounded = dataRow({ "Total RKA 2027": 320000000 }, months(26666666.666666668));
+    expect(parseRkaData(DATA([rounded]), UNITS).lines[0]!.flags).toEqual([]);
+  });
+
+  it("still flags a total the months miss by a real amount", () => {
+    const off = dataRow({ "Total RKA 2027": 12000001 }, months(1000000));
+    expect(parseRkaData(DATA([off]), UNITS).lines[0]!.flags).toEqual(["Total diketik Rp 12.000.001 tidak sama dengan jumlah bulan"]);
+  });
+
   it("spreads a total typed without months evenly over Jan–Des, and says so (client decision)", () => {
     const row = dataRow({ "Total RKA 2027": 45000000 }, months(0));
     const [line] = parseRkaData(DATA([row]), UNITS).lines;
