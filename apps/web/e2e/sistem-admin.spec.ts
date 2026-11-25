@@ -18,7 +18,6 @@ async function as(role: E2eRole, page: Page, path: string) {
 }
 
 const sql = () => postgres(E2E_DATABASE_URL, { max: 1, onnotice: () => {} });
-const NOT_FOUND = "Halaman tidak ditemukan atau tidak dapat diakses";
 
 test("Only Admin opens the admin screens: everyone else is sent away or told the page does not exist", async ({ page }) => {
   for (const role of ["requestor", "finance", "director"] as const) {
