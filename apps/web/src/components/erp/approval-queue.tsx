@@ -63,6 +63,7 @@ function filterOptions(lines: readonly QueueLine[], coa: readonly CoaBranch[]) {
 export const ACTION_LABEL: Record<ApprovalAction, string> = {
   submit: "Kirim ke Default Owner",
   return: "Kembalikan",
+  send_back: "Kembalikan",
   consolidate: "Kirim ke Division Owner",
   approve: "Setujui & kirim ke Finance",
   clarify: "Minta klarifikasi",
@@ -72,14 +73,15 @@ export const ACTION_LABEL: Record<ApprovalAction, string> = {
 const ACTION_ICON: Record<ApprovalAction, LucideIcon> = {
   submit: Send,
   return: Undo2,
+  send_back: Undo2,
   consolidate: Send,
   approve: CheckCheck,
   clarify: MessageCircleQuestion,
   finalize: BadgeCheck,
   lock: Lock,
 };
-const NEEDS_COMMENT: readonly ApprovalAction[] = ["return", "clarify"];
-const ORDER: readonly ApprovalAction[] = ["submit", "consolidate", "approve", "finalize", "lock", "return", "clarify"];
+const NEEDS_COMMENT: readonly ApprovalAction[] = ["return", "send_back", "clarify"];
+const ORDER: readonly ApprovalAction[] = ["submit", "consolidate", "approve", "finalize", "lock", "return", "send_back", "clarify"];
 
 /**
  * Lines waiting on this position, grouped by budget owner unit. Selected lines move together

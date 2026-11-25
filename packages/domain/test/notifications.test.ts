@@ -30,6 +30,18 @@ describe("email notifications", () => {
   });
 });
 
+describe("a line sent back by the Division Owner", () => {
+  it("tells the Default Owner, with the note, in the same returned email", () => {
+    expect(notificationsFor({ action: "send_back", from: "division_approval", to: "consolidation", comment: "Basis belum jelas" })).toEqual([
+      { template: "returned", to: "default_owner", comment: "Basis belum jelas" },
+    ]);
+  });
+
+  it("opens the consolidation queue, where the Default Owner acts", () => {
+    expect(notificationLink("send_back", ["default_owner"])).toBe("/rka/queue");
+  });
+});
+
 describe("notificationLink", () => {
   it("opens the screen where the recipient acts on each handoff", () => {
     expect(notificationLink("submit", ["default_owner"])).toBe("/rka/queue");

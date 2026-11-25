@@ -10,7 +10,7 @@ export const APPROVAL_STATES = [
 ] as const;
 export type ApprovalState = (typeof APPROVAL_STATES)[number];
 
-export type ApprovalAction = "submit" | "return" | "consolidate" | "approve" | "clarify" | "finalize" | "lock";
+export type ApprovalAction = "submit" | "return" | "send_back" | "consolidate" | "approve" | "clarify" | "finalize" | "lock";
 
 interface Rule {
   from: ApprovalState;
@@ -26,6 +26,8 @@ const RULES: readonly Rule[] = [
   { from: "consolidation", action: "return", to: "draft", role: "default_owner", requiresComment: true },
   { from: "consolidation", action: "consolidate", to: "division_approval", role: "default_owner" },
   { from: "division_approval", action: "approve", to: "finance_review", role: "division_owner" },
+  // One step back, to the Default Owner who consolidated the line; the note says what to fix.
+  { from: "division_approval", action: "send_back", to: "consolidation", role: "division_owner", requiresComment: true },
   { from: "finance_review", action: "clarify", to: "division_approval", role: "finance", requiresComment: true },
   { from: "finance_review", action: "finalize", to: "awaiting_lock", role: "finance" },
   { from: "awaiting_lock", action: "lock", to: "locked", role: "lock_role" },
@@ -76,9 +78,9 @@ export interface ApprovalEventLike {
   at: Date;
 }
 
-/** The latest return or clarification, while the line still sits in the state it was sent back to. */
+/** The latest return, send-back or clarification, while the line still sits in the state it was sent back to. */
 export function openRemark<E extends ApprovalEventLike>(events: readonly E[], current: ApprovalState): E | null {
   const last = [...events].sort((a, b) => a.at.getTime() - b.at.getTime()).at(-1);
   if (!last || last.toState !== current) return null;
-  return last.action === "return" || last.action === "clarify" ? last : null;
+  return last.action === "return" || last.action === "send_back" || last.action === "clarify" ? last : null;
 }

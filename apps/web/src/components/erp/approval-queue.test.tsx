@@ -51,6 +51,20 @@ describe("ApprovalQueue", () => {
     await waitFor(() => expect(onAction).toHaveBeenCalledWith(["a"], "return", "Basis kurang rinci"));
   });
 
+  it("lets a Division Owner send lines back to the Default Owner, and only with a note", async () => {
+    const onAction = vi.fn(async () => ({ ok: true, message: "1 baris diproses." }));
+    const division: QueueLine[] = [{ ...lines[0]!, state: "division_approval", actions: ["approve", "send_back"] }];
+    render(<ApprovalQueue priorYear={2026} lines={division} unit="rp" onAction={onAction} />);
+    fireEvent.click(screen.getByLabelText("Pilih semua SCM"));
+    expect(screen.getByRole("button", { name: "Setujui & kirim ke Finance" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Kembalikan" }));
+    expect(onAction).not.toHaveBeenCalled();
+    expect(screen.getByText("Catatan wajib diisi untuk aksi ini.")).toBeTruthy();
+    fireEvent.change(screen.getByPlaceholderText(/Wajib untuk mengembalikan/), { target: { value: "Basis kontrak belum jelas" } });
+    fireEvent.click(screen.getByRole("button", { name: "Kembalikan" }));
+    await waitFor(() => expect(onAction).toHaveBeenCalledWith(["a"], "send_back", "Basis kontrak belum jelas"));
+  });
+
   it("keeps the result visible after the queue empties", async () => {
     const onAction = vi.fn(async () => ({ ok: true, message: "2 baris diproses." }));
     const { rerender } = render(<ApprovalQueue priorYear={2026} lines={lines} unit="rp" onAction={onAction} />);

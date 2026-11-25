@@ -21,6 +21,7 @@ export interface Remark {
 const DONE: Record<ApprovalAction, string> = {
   submit: "Dikirim ke Default Owner",
   return: "Dikembalikan",
+  send_back: "Dikembalikan ke Default Owner",
   consolidate: "Dikonsolidasi",
   approve: "Disetujui divisi",
   clarify: "Klarifikasi diminta",

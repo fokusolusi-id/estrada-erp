@@ -18,7 +18,7 @@ Hanya peran yang tertulis di kotak yang dapat bertindak atas baris di tahap itu.
 | --- | --- | --- |
 | Draft | Requestor | Kirim ke Default Owner |
 | Konsolidasi | Default Owner | Kirim ke Division Owner, atau Kembalikan ke Draft |
-| Persetujuan Divisi | Division Owner | Setujui & kirim ke Finance |
+| Persetujuan Divisi | Division Owner | Setujui & kirim ke Finance, atau Kembalikan ke Konsolidasi |
 | Review Finance | Finance Reviewer | Finalisasi, atau Minta klarifikasi ke Persetujuan Divisi |
 | Menunggu Kunci | Finance Reviewer | Kunci versi |
 | Terkunci | Semua hanya membaca | Perubahan lewat revisi |
@@ -31,7 +31,7 @@ Setiap pengguna memegang posisi: peran, unit organisasi, dan entitas yang boleh 
 | --- | --- | --- | --- |
 | Requestor | Beranda, RKA Saya, Permintaan Pembayaran | Baris unitnya selama Draft | Kirim ke Default Owner |
 | Default Owner | Beranda, RKA Saya, Antrean Konsolidasi, Permintaan Pembayaran | Baris dalam cakupannya selama Konsolidasi | Kirim ke Division Owner, Kembalikan (catatan wajib) |
-| Division Owner | Beranda, RKA Divisi, Permintaan Pembayaran, Management Summary | Tidak | Setujui & kirim ke Finance |
+| Division Owner | Beranda, RKA Divisi, Permintaan Pembayaran, Management Summary | Tidak | Setujui & kirim ke Finance, Kembalikan ke Default Owner (catatan wajib) |
 | Finance Reviewer | Beranda, Status Board Finance, Kunci RKA, Siklus RKA, Permintaan Pembayaran, Rekap Pembayaran, Implementasi, Management Summary, Pipeline, Arus Kas, Realisasi, Biaya Bersama, COA Master | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
 | Business Finance (BFP) | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Panduan | Tidak | Memeriksa Permintaan Pembayaran (lihat bagian Permintaan Pembayaran) |
 | Cash Management | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Rekening Bank, Panduan | Tidak | Menjadwalkan dan membayar Permintaan Pembayaran |
@@ -114,6 +114,7 @@ Division Owner menyetujui baris departemen di divisinya dan mengirimnya ke Finan
 1. Daftar menampilkan baris di Persetujuan Divisi dari semua unit di divisi Anda, dengan kolom dan *Filter COA* yang sama.
 2. Buka baris untuk membaca bulan, dasar perhitungan dan riwayatnya. Untuk bertanya tanpa memindahkan baris, gunakan Diskusi.
 3. Centang baris lalu tekan *Setujui & kirim ke Finance*.
+4. Bila baris perlu diperbaiki, centang lalu tekan *Kembalikan* dengan catatan wajib. Baris kembali ke Konsolidasi di Default Owner unit pemilik, yang membaca catatan Anda di Antrean Konsolidasi, memperbaikinya (atau mengembalikannya ke Requestor), lalu mengirimnya lagi.
 
 Bila Finance meminta klarifikasi, baris kembali ke RKA Divisi dengan catatan Finance. Jawab di Diskusi atau selesaikan dengan departemen, lalu setujui lagi. Division Owner juga dapat membuka Management Summary untuk angka divisinya.
 
@@ -345,6 +346,7 @@ Aplikasi mengirim satu email per serah terima, bukan per baris. Email tidak pern
 | Default Owner mengembalikan | Requestor | Dikembalikan, dengan catatan |
 | Default Owner meneruskan | Division Owner | RKA divisi menunggu persetujuan |
 | Division Owner menyetujui | Finance Reviewer | Menunggu review |
+| Division Owner mengembalikan | Default Owner unit pemilik | Dikembalikan, dengan catatan |
 | Finance meminta klarifikasi | Division Owner | Perlu klarifikasi, dengan catatan |
 | Finance memfinalisasi | Finance Reviewer | Siap dikunci; tautannya membuka Kunci RKA |
 | Finance mengunci | Semua peserta siklus | RKA terkunci; tautannya membuka Management Summary, atau RKA Saya bagi peran yang tidak melihat Summary |
