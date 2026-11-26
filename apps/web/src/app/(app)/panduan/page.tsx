@@ -56,7 +56,7 @@ export default async function PanduanPage() {
           <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">Daftar isi</p>
           <GuideToc sections={sections} />
         </nav>
-        <article className="grid max-w-3xl content-start gap-4 text-sm">
+        <article className="grid content-start gap-4 text-sm">
           {start ? (
             <Link
               href={`#${start.id}`}

@@ -63,4 +63,19 @@ describe("GuideToc", () => {
     );
     expect(current()).toBe("Peran dan akses");
   });
+
+  it("scrolls the contents list along, so the section being read stays visible in it", () => {
+    const heading = setup();
+    const list = screen.getByRole("list");
+    const rect = (top: number, bottom: number) => () => ({ top, bottom }) as DOMRect;
+    list.getBoundingClientRect = rect(100, 200);
+    const [, middle, last] = screen.getAllByRole("link");
+    middle!.getBoundingClientRect = rect(20, 50);
+    last!.getBoundingClientRect = rect(230, 260);
+
+    act(() => report([{ target: heading("memulai"), isIntersecting: true }]));
+    expect(list.scrollTop).toBe(60);
+    act(() => report([{ target: heading("peran-dan-akses"), isIntersecting: true }]));
+    expect(list.scrollTop).toBe(-20);
+  });
 });

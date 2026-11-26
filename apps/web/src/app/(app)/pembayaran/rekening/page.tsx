@@ -23,7 +23,7 @@ export default async function BankAccountsPage() {
   ]);
 
   return (
-    <div className="grid max-w-5xl gap-6">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <PageHeader
         title="Rekening Bank"
         description="Bank asal pembayaran per entitas. Cash Management memilih dari daftar ini saat menjadwalkan Permintaan Pembayaran. Rekening yang tidak dipakai lagi dinonaktifkan, tidak dihapus."

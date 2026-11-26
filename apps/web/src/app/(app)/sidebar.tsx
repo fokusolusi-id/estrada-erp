@@ -1,11 +1,12 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { NavItem } from "@/lib/nav";
+import { keepInView } from "@/lib/keep-in-view";
 import { cn } from "@/lib/utils";
 import { NavIcon } from "./nav-icon";
 
@@ -22,6 +23,11 @@ function active(pathname: string, href: string, items: readonly NavItem[]) {
 export function Sidebar({ items, defaultCollapsed }: { items: readonly NavItem[]; defaultCollapsed: boolean }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const pathname = usePathname();
+  const menu = useRef<HTMLElement>(null);
+  // In a short window the menu scrolls on its own: bring the page you are on into view.
+  useEffect(() => {
+    keepInView(menu.current, menu.current?.querySelector("[aria-current]"));
+  }, [pathname, collapsed]);
   const toggle = () => {
     const next = !collapsed;
     setCollapsed(next);
@@ -31,11 +37,11 @@ export function Sidebar({ items, defaultCollapsed }: { items: readonly NavItem[]
     <aside
       data-collapsed={collapsed}
       className={cn(
-        "bg-sidebar text-sidebar-foreground border-sidebar-border hidden shrink-0 flex-col border-r transition-[width] duration-200 md:flex",
+        "bg-sidebar text-sidebar-foreground border-sidebar-border sticky top-0 hidden h-dvh shrink-0 flex-col border-r transition-[width] duration-200 md:flex",
         collapsed ? "w-14" : "w-60",
       )}
     >
-      <div className={cn("flex items-center gap-2 px-3", collapsed ? "flex-col py-3" : "h-14")}>
+      <div className={cn("flex shrink-0 items-center gap-2 px-3", collapsed ? "flex-col py-3" : "h-14")}>
         <Image src="/logo.png" alt="ERP Estrada" width={32} height={32} className="size-8 shrink-0" priority />
         {collapsed ? null : (
           <div className="min-w-0 flex-1">
@@ -54,7 +60,7 @@ export function Sidebar({ items, defaultCollapsed }: { items: readonly NavItem[]
           {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
         </button>
       </div>
-      <nav aria-label="Menu utama" className="flex flex-1 flex-col gap-0.5 px-2 py-2">
+      <nav ref={menu} aria-label="Menu utama" className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-2">
         {items.map((item, i) => {
           const on = active(pathname, item.href, items);
           const section = item.group && item.group !== items[i - 1]?.group ? item.group : null;

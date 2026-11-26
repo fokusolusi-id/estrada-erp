@@ -45,7 +45,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-screen">
       <Sidebar items={nav} defaultCollapsed={collapsed} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="relative flex h-14 items-center justify-between gap-2 border-b px-2 md:px-6">
+        <header className="bg-background sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-2 border-b px-2 md:px-6">
           <div className="flex min-w-0 items-center gap-1 text-sm">
             <MobileNav items={nav} />
             <div className="min-w-24 truncate">
@@ -96,7 +96,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <UserMenu name={user.name} email={user.email} detail={user.viewAs ? ROLE_LABEL[user.realRole] : `${user.positionTitle} · ${ROLE_LABEL[user.realRole]}`} />
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="flex-1 p-4 md:p-6">
+          {/* The one column every page sits in: left aligned, same width. Pages set no outer width of their own. */}
+          <div data-page className="max-w-screen-2xl">{children}</div>
+        </main>
       </div>
     </div>
   );

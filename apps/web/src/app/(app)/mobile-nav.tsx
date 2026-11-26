@@ -16,7 +16,7 @@ export function MobileNav({ items }: { items: readonly NavItem[] }) {
         {open ? <X /> : <Menu />}
       </Button>
       {open ? (
-        <nav aria-label="Menu utama" className="bg-sidebar text-sidebar-foreground absolute inset-x-0 top-14 z-50 flex flex-col gap-0.5 border-b p-2 shadow-md">
+        <nav aria-label="Menu utama" className="bg-sidebar text-sidebar-foreground absolute inset-x-0 top-14 z-50 flex max-h-[calc(100dvh-3.5rem)] flex-col overflow-y-auto overscroll-contain gap-0.5 border-b p-2 shadow-md">
           {items.map((item, i) => (
             <Fragment key={item.href}>
               {item.group && item.group !== items[i - 1]?.group ? (

@@ -100,7 +100,7 @@ export default async function HomePage() {
   // Admin keeps people data and sees no budget lines.
   if (user.actor.role === "admin") {
     return (
-      <div className="mx-auto grid max-w-5xl gap-6">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
         {header}
         {action}
       </div>
@@ -118,7 +118,7 @@ export default async function HomePage() {
     .slice(0, 8);
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-6">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       {header}
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard

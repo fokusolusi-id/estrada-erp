@@ -30,7 +30,7 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
   const entityOptions = entityRows.map((e) => ({ value: e.code, label: e.code }));
 
   return (
-    <div className="grid max-w-3xl gap-6">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <div>
         <Link href="/admin/users" className="text-muted-foreground text-sm hover:underline">
           ← Pengguna

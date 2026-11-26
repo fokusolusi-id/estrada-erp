@@ -23,7 +23,7 @@ export default async function UsersPage() {
   ]);
 
   return (
-    <div className="grid max-w-5xl gap-6">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <h1 className="text-page">Pengguna</h1>
       <Card>
         <CardHeader>

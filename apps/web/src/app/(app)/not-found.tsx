@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 /** Shown inside the app shell (sidebar and header stay) when a page is missing or the role has no access. */
 export default function AppNotFound() {
   return (
-    <div className="mx-auto max-w-lg py-16">
+    <div className="py-16">
       <EmptyState
         icon={ShieldAlert}
         title="Halaman tidak ditemukan atau tidak dapat diakses"
