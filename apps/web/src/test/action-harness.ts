@@ -41,6 +41,9 @@ export const signInAs = (role: Role, over: Partial<Actor> = {}) => {
 /** Rows a `select` returns; empty unless a test sets them. */
 export const rows: { current: unknown[] } = { current: [] };
 
+/** For an action whose queries must read differently: one entry per query, in order. Once used up, `rows` answers. */
+export const queued: { current: unknown[][] } = { current: [] };
+
 class DbWrite extends Error {
   constructor(what: string) {
     super(`database ${what} reached`);
@@ -54,7 +57,7 @@ class DbWrite extends Error {
 export function fakeDb() {
   const chain: Record<string, unknown> = {};
   for (const m of ["from", "where", "orderBy", "limit", "groupBy", "innerJoin", "leftJoin"]) chain[m] = () => chain;
-  chain.then = (resolve: (v: unknown[]) => unknown) => resolve(rows.current);
+  chain.then = (resolve: (v: unknown[]) => unknown) => resolve(queued.current.shift() ?? rows.current);
   const refuse = (what: string) => () => {
     throw new DbWrite(what);
   };
