@@ -42,8 +42,9 @@ export default async function RecapPage({ searchParams }: { searchParams: Promis
         }
       />
       <Card>
-        <CardContent>
-          <form className="grid gap-3 sm:grid-cols-[9rem_10rem_10rem_minmax(0,1fr)_auto] sm:items-end" aria-label="Filter rekap">
+        <CardContent className="@container">
+          {/* Columns follow the card's width, not the window's: the menu takes part of a tablet screen. */}
+          <form className="grid gap-3 @lg:grid-cols-2 @3xl:grid-cols-[9rem_10rem_10rem_minmax(0,1fr)_auto] @3xl:items-end" aria-label="Filter rekap">
             <div className="grid gap-2">
               <Label htmlFor="rekap-per">Rekap per</Label>
               <select id="rekap-per" name="per" defaultValue={by === "month" ? "bulan" : "hari"} className={SELECT}>

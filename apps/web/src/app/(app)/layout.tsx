@@ -48,7 +48,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <header className="bg-background sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-2 border-b px-2 md:px-6">
           <div className="flex min-w-0 items-center gap-1 text-sm">
             <MobileNav items={nav} />
-            <div className="min-w-24 truncate">
+            {/* An Admin has no position text here, so the room goes to the controls on a narrow phone. */}
+            <div className={user.viewAs ? undefined : "min-w-24 truncate"}>
             {user.viewAs ? null : user.positions.length > 1 ? (
               <PositionSwitcher
                 activeId={user.activePositionId}
@@ -63,7 +64,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             )}
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2 text-sm xl:gap-3">
+          <div className={`flex items-center gap-2 text-sm xl:gap-3 ${user.viewAs ? "min-w-0" : "shrink-0"}`}>
             {user.viewAs ? (
               <RoleSwitcher
                 activeId={user.viewAs.activeId}

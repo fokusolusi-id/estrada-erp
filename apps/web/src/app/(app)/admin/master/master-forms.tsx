@@ -8,11 +8,11 @@ import { saveEntity, saveUnit, type MasterState } from "./actions";
 
 const SELECT =
   "border-input h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none";
-const ROW = "grid grid-cols-1 items-center gap-2 md:gap-3";
+const ROW = "grid grid-cols-1 items-center gap-2 @3xl:gap-3";
 
 export function ColumnHead({ cols, labels }: { cols: string; labels: string[] }) {
   return (
-    <div className={`text-muted-foreground hidden border-b pb-2 text-xs font-medium uppercase tracking-wide md:grid md:gap-3 ${cols}`}>
+    <div className={`text-muted-foreground hidden border-b pb-2 text-xs font-medium uppercase tracking-wide @3xl:grid @3xl:gap-3 ${cols}`}>
       {labels.map((l, i) => <span key={i}>{l}</span>)}
     </div>
   );
@@ -58,7 +58,7 @@ export function UnitForm({
         {parents.filter((p) => p.value !== unit?.code).map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
       </select>
       <Button type="submit" size="sm" variant={unit ? "outline" : "default"} disabled={pending}>{unit ? "Simpan" : "Tambah"}</Button>
-      {s.message ? <div className="md:col-span-full"><Msg s={s} /></div> : null}
+      {s.message ? <div className="@3xl:col-span-full"><Msg s={s} /></div> : null}
     </form>
   );
 }
@@ -85,7 +85,7 @@ export function EntityForm({ entity }: { entity?: { code: string; name: string; 
         <span />
       )}
       <Button type="submit" size="sm" variant={entity ? "outline" : "default"} disabled={pending}>{entity ? "Simpan" : "Tambah"}</Button>
-      {s.message ? <div className="md:col-span-full"><Msg s={s} /></div> : null}
+      {s.message ? <div className="@3xl:col-span-full"><Msg s={s} /></div> : null}
     </form>
   );
 }

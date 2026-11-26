@@ -22,7 +22,7 @@ export function OpenCycleForm({ fiscalYear, previous }: { fiscalYear: number; pr
   // Follows the year until Finance picks another date.
   const [picked, setPicked] = useState<string | null>(null);
   return (
-    <form action={action} className="grid gap-4 sm:grid-cols-3">
+    <form action={action} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <div className="grid gap-2">
         <Label htmlFor="cycle-year">Tahun anggaran</Label>
         <Input id="cycle-year" name="fiscalYear" type="number" value={year} onChange={(e) => setYear(e.target.value)} required />
@@ -46,7 +46,7 @@ export function OpenCycleForm({ fiscalYear, previous }: { fiscalYear: number; pr
       </div>
       <div className="grid gap-2 sm:col-span-3">
         <Label htmlFor="cycle-start">Mulai dari</Label>
-        <select id="cycle-start" name="start" className={`${SELECT} max-w-xl`} defaultValue={previous ? "previous" : "empty"}>
+        <select id="cycle-start" name="start" className={`${SELECT} w-full max-w-xl`} defaultValue={previous ? "previous" : "empty"}>
           {previous ? <option value="previous">{previous} (terkunci): salin baris sebagai Draft</option> : null}
           <option value="empty">Kosong</option>
         </select>
@@ -57,7 +57,7 @@ export function OpenCycleForm({ fiscalYear, previous }: { fiscalYear: number; pr
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-3 sm:col-span-3">
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending} className="h-auto min-h-9 max-w-full shrink whitespace-normal">
           {pending ? "Membuka…" : "Buka siklus dan kirim email ke requestor"}
         </Button>
         <Result state={state} />

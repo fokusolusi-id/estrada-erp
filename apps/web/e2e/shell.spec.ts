@@ -98,3 +98,43 @@ test("on a phone the header stays and the open menu scrolls to its last link", a
   await last.scrollIntoViewIfNeeded();
   await expect(last).toBeInViewport();
 });
+
+for (const width of [320, 768, 844]) {
+  test(`no page scrolls sideways at ${width} px`, async ({ browser, baseURL }) => {
+    test.setTimeout(240_000);
+    const context = await browser.newContext({ baseURL, viewport: { width, height: 700 }, isMobile: true, hasTouch: true });
+    const page = await context.newPage();
+    const visits = new Map<string, E2eRole>([["/", "admin"], ["/pembayaran/rekening", "admin"], ["/pembayaran/baru", "requestor"]]);
+    for (const role of Object.keys(E2E_USERS) as E2eRole[]) {
+      for (const s of navFor(E2E_USERS[role].role, (unit) => unit === E2E_USERS[role].orgUnit)) {
+        if (!s.phase && !visits.has(s.href)) visits.set(s.href, role);
+      }
+    }
+    const wide: Record<string, number> = {};
+    for (const [href, role] of visits) {
+      await as(role, page, href);
+      await column(page);
+      // A phone browser widens its viewport to fit what overflows, so measure against the device width.
+      const over = (await page.evaluate(() => Math.max(document.documentElement.scrollWidth, window.innerWidth))) - width;
+      if (over > 0) wide[href] = over;
+    }
+    expect(wide).toEqual({});
+    await context.close();
+  });
+}
+
+test("at 320 px the Admin can still open the menu", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await as("admin", page, "/");
+  await column(page);
+  await page.getByRole("button", { name: "Menu", exact: true }).click({ timeout: 5_000 });
+  await expect(page.getByRole("navigation", { name: "Menu utama" })).toBeVisible();
+});
+
+test("on a desktop the master and bank forms keep their column headings", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await as("admin", page, "/admin/master");
+  await expect(page.locator("main").getByText("Induk", { exact: true }).first()).toBeVisible();
+  await as("admin", page, "/pembayaran/rekening");
+  await expect(page.locator("main").getByText("Nomor rekening", { exact: true }).first()).toBeVisible();
+});

@@ -155,7 +155,7 @@ export function ApprovalQueue({
       <Label htmlFor="coa-filter">Filter COA</Label>
       <select
         id="coa-filter"
-        className={SELECT}
+        className={`${SELECT} min-w-0`}
         value={coaFilter}
         onChange={(e) => {
           setCoaFilter(e.target.value);
@@ -183,7 +183,7 @@ export function ApprovalQueue({
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       {filter}
       <Table>
         <TableHeader>
