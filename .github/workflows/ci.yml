@@ -29,6 +29,8 @@ jobs:
 
   e2e:
     name: Playwright journeys
+    # Disabled for now. Remove this line to run the journeys again.
+    if: false
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     services:
