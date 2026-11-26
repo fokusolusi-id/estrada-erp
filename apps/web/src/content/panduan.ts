@@ -294,7 +294,7 @@ Status paket: Disusun, Diajukan, Dikembalikan, Diterima MSO, Diterima ISO, lalu 
 
 ### Garansi dan penutupan
 
-Tautan *Garansi & penutupan* di halaman proyek. Aturan di bagian ini adalah usulan modul yang masih menunggu persetujuan Head PDMS.
+Tautan *Garansi & penutupan* di halaman proyek. Aturan di bagian ini sudah disetujui Head PDMS.
 
 - **Masa peralihan**: selisih hari antara tanggal BAST dan tanggal MSO menerima. Tanggung jawab layanan berpindah pada tanggal MSO menerima, bukan tanggal BAST; masa peralihan tetap tanggung jawab PMO.
 - **Akhir garansi**: BCD mengisi tanggal akhir garansi terakhir dengan *Simpan akhir garansi*, setelah BAST disahkan dan tidak sebelum tanggal BAST. Setelah ISO menerima turunan teknis dan tanggal ini terisi, proyek masuk tahap Garansi.
