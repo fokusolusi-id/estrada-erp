@@ -23,11 +23,11 @@ export function RoleSwitcher({ options, activeId }: { options: ActAsOption[]; ac
   const [pending, startTransition] = useTransition();
   useProgressWhile(pending);
   return (
-    <label className="flex items-center gap-1.5">
+    <label className="flex min-w-0 items-center gap-1.5">
       <UserCog aria-hidden className="text-muted-foreground size-4 shrink-0" />
       <select
         aria-label="Bertindak sebagai"
-        className="border-input bg-background h-8 max-w-44 rounded-md border px-2 text-sm outline-none sm:max-w-64"
+        className="border-input bg-background h-8 w-full min-w-0 max-w-44 rounded-md border px-2 text-sm outline-none sm:max-w-64"
         value={activeId ?? ""}
         disabled={pending}
         onChange={(e) => {

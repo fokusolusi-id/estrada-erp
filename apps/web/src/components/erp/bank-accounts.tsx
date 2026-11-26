@@ -18,7 +18,7 @@ type Result = { ok: boolean; message: string };
 
 const SELECT =
   "border-input h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none";
-const GRID = "grid grid-cols-1 items-center gap-2 md:grid-cols-[7rem_10rem_minmax(0,1fr)_minmax(0,1fr)_4.5rem_5.5rem] md:gap-3";
+const GRID = "grid grid-cols-1 items-center gap-2 @2xl:grid-cols-[7rem_10rem_minmax(0,1fr)_minmax(0,1fr)_4.5rem_5.5rem] @2xl:gap-3";
 
 function AccountForm({ row, entities, onSave }: { row: BankAccountInput; entities: string[]; onSave: (a: BankAccountInput) => Promise<Result> }) {
   const [v, setV] = useState(row);
@@ -52,7 +52,7 @@ function AccountForm({ row, entities, onSave }: { row: BankAccountInput; entitie
           ))}
         </select>
       ) : (
-        <span className="text-muted-foreground text-sm md:invisible">{v.entity}</span>
+        <span className="text-muted-foreground text-sm @2xl:invisible">{v.entity}</span>
       )}
       <Input aria-label="Nama bank" placeholder="mis. BCA" value={v.bankName} onChange={set("bankName")} required />
       <Input aria-label="Nomor rekening" placeholder="Nomor rekening" className="font-mono" value={v.accountNumber} onChange={set("accountNumber")} required />
@@ -67,7 +67,7 @@ function AccountForm({ row, entities, onSave }: { row: BankAccountInput; entitie
       <Button type="submit" size="sm" variant={isNew ? "default" : "outline"} disabled={pending}>
         {isNew ? "Tambah" : "Simpan"}
       </Button>
-      {result ? <p className={`md:col-span-full text-sm ${result.ok ? "text-success" : "text-destructive"}`}>{result.message}</p> : null}
+      {result ? <p className={`@2xl:col-span-full text-sm ${result.ok ? "text-success" : "text-destructive"}`}>{result.message}</p> : null}
     </form>
   );
 }
@@ -76,8 +76,8 @@ function AccountForm({ row, entities, onSave }: { row: BankAccountInput; entitie
 export function BankAccounts({ accounts, entities, onSave }: { accounts: BankAccountRow[]; entities: string[]; onSave: (a: BankAccountInput) => Promise<Result> }) {
   const groups = entities.map((e) => ({ entity: e, rows: accounts.filter((a) => a.entity === e) })).filter((g) => g.rows.length);
   return (
-    <div className="grid gap-4">
-      <div className={`text-muted-foreground hidden border-b pb-2 text-xs font-medium uppercase tracking-wide md:grid ${GRID}`}>
+    <div className="@container grid grid-cols-[minmax(0,1fr)] gap-4">
+      <div className={`text-muted-foreground hidden border-b pb-2 text-xs font-medium uppercase tracking-wide @2xl:grid ${GRID}`}>
         <span>Entitas</span>
         <span>Bank</span>
         <span>Nomor rekening</span>

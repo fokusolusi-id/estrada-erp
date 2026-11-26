@@ -105,7 +105,7 @@ export default async function SummaryPage({
         </p>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader>
             <CardTitle>Pendapatan, biaya dan laba per bulan</CardTitle>
@@ -139,7 +139,7 @@ export default async function SummaryPage({
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Kontribusi Divisi</CardTitle>

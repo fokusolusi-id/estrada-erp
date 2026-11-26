@@ -35,7 +35,7 @@ export default async function MasterPage() {
           <CardTitle>Unit</CardTitle>
           <CardDescription>Tabel org_unit (FRM, HCM, SCM, dst).</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-3">
+        <CardContent className="@container grid gap-3">
           <ColumnHead cols={UNIT_GRID} labels={["Kode", "Nama", "Tipe", "Induk", ""]} />
           <div className="divide-border -mt-3 divide-y border-b *:py-3">
             {units.map((u) => (
@@ -52,7 +52,7 @@ export default async function MasterPage() {
           <CardTitle>Entitas</CardTitle>
           <CardDescription>Tabel company_entity (ESTRADA, MATRIK, DJALU, PAS).</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-3">
+        <CardContent className="@container grid gap-3">
           <ColumnHead cols={ENTITY_GRID} labels={["Kode", "Nama", "Jenis biaya", "Status", ""]} />
           <div className="divide-border -mt-3 divide-y border-b *:py-3">
             {entities.map((e) => (
