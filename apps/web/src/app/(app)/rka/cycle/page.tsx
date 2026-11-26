@@ -58,7 +58,7 @@ export default async function CyclePage({ searchParams }: { searchParams: Promis
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
 
   return (
-    <div className="grid max-w-6xl gap-6">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <div>
         <h1 className="text-page">Siklus RKA</h1>
         <p className="text-muted-foreground text-sm">

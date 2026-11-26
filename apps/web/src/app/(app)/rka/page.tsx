@@ -84,7 +84,7 @@ export default async function RkaPage({ searchParams }: { searchParams: Promise<
       ) : null}
 
       {masters ? (
-        <Card id="draft" className="scroll-mt-4">
+        <Card id="draft" className="scroll-mt-20">
           <CardHeader>
             <CardTitle>Draft usulan</CardTitle>
             <CardDescription>

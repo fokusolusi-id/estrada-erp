@@ -96,7 +96,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
   const bankLabel = (b: typeof schema.companyBankAccount.$inferSelect) => `${b.bankName} ${b.accountNumber} · ${b.accountName}`;
 
   return (
-    <div className="grid max-w-5xl gap-6">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <Link href="/pembayaran" className="text-muted-foreground hover:text-foreground w-fit text-sm">
         ← Permintaan Pembayaran
       </Link>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { keepInView } from "@/lib/keep-in-view";
 import { cn } from "@/lib/utils";
 
 /** A heading counts as the one being read once it is in the top third of the window. */
@@ -9,6 +10,13 @@ const READING_BAND = "0px 0px -66% 0px";
 /** The Panduan contents list; the section being read is highlighted as the reader scrolls. */
 export function GuideToc({ sections }: { sections: { id: string; title: string }[] }) {
   const [active, setActive] = useState(sections[0]?.id ?? "");
+
+  const list = useRef<HTMLOListElement>(null);
+
+  // The list can be taller than the window: keep the section being read in view inside it.
+  useEffect(() => {
+    keepInView(list.current, list.current?.querySelector("[aria-current]"));
+  }, [active]);
 
   useEffect(() => {
     const headings = sections.map((s) => document.getElementById(s.id)).filter((h): h is HTMLElement => !!h);
@@ -32,7 +40,7 @@ export function GuideToc({ sections }: { sections: { id: string; title: string }
   }, [sections]);
 
   return (
-    <ol className="grid gap-0.5 text-sm">
+    <ol ref={list} className="grid gap-0.5 text-sm lg:max-h-[calc(100dvh-8rem)] lg:overflow-y-auto">
       {sections.map((s) => {
         const on = s.id === active;
         return (

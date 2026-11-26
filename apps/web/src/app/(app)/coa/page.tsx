@@ -43,7 +43,7 @@ export default async function CoaPage() {
   const provisionalCount = accounts.filter((a) => a.provisional).length;
 
   return (
-    <div className="grid max-w-6xl gap-6">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <div>
         <h1 className="text-page">COA Master</h1>
         <p className="text-muted-foreground text-sm">

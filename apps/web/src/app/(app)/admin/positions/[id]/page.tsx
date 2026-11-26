@@ -28,7 +28,7 @@ export default async function EditPositionPage({ params }: { params: Promise<{ i
   ]);
 
   return (
-    <div className="grid max-w-3xl gap-6">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <div>
         <Link href="/admin/positions" className="text-muted-foreground text-sm hover:underline">
           ← Struktur Organisasi

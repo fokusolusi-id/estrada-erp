@@ -23,7 +23,7 @@ export default async function MasterPage() {
   const parents = units.map((u) => ({ value: u.code, label: `${u.code} · ${u.name}` }));
 
   return (
-    <div className="grid max-w-5xl gap-6">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <div>
         <h1 className="text-page">Unit & Entitas</h1>
         <p className="text-muted-foreground text-sm">
