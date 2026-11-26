@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { actorOf, everyRole, outcome, rows, session, signInAs } from "./action-harness";
+import { actorOf, everyRole, outcome, queued, rows, session, signInAs } from "./action-harness";
 import { deleteLine, moveLines, saveHeadcount, saveLine } from "@/app/(app)/rka/actions";
 
 // RKA lines are written by the Requestor who owns them, and every approval step is decided by the workflow. Each action
@@ -31,6 +31,7 @@ const draft = (over: Record<string, unknown> = {}) => ({ id: A, state: "draft", 
 
 beforeEach(() => {
   rows.current = [];
+  queued.current = [];
   applyTransition.mockClear();
 });
 
@@ -53,6 +54,49 @@ describe("saveLine: only a Requestor adds a line", () => {
       signInAs(role);
       expect(await outcome(() => saveLine({ ...newLine, id: A })), role).toEqual({ message: "Baris ini diatur dari Rencana headcount." });
     }
+  });
+});
+
+describe("saveLine on an existing line: the seat must hold it now, and still hold it after the change", () => {
+  const REFUSAL = "Anda tidak berwenang mengubah baris ini.";
+  const stored = (over: Record<string, unknown> = {}) => ({ ...draft(), coaCode: "6241", ...over });
+  // The action asks first whether a headcount plan owns the line (it does not), then reads the line itself.
+  const edit = (line: Record<string, unknown>, change: Partial<typeof newLine> = {}) => {
+    queued.current = [[], [line]];
+    return outcome(() => saveLine({ ...newLine, ...change, id: A }));
+  };
+
+  // Who may edit a line of SCM, at each stage. Everyone else is refused.
+  const HOLDER: Record<string, string> = { draft: "requestor", consolidation: "default_owner", finance_review: "finance" };
+
+  for (const state of ["draft", "consolidation", "division_approval", "finance_review", "awaiting_lock", "locked"]) {
+    it.each(everyRole.map((r) => [r]))(`${state} as %s`, async (role) => {
+      signInAs(role);
+      const out = await edit(stored({ state }));
+      if (HOLDER[state] === role) expect(out).not.toEqual({ message: REFUSAL });
+      else expect(out).toEqual({ message: REFUSAL });
+    });
+  }
+
+  it("refuses a Requestor editing another unit's line, even when moving it into their own unit", async () => {
+    signInAs("requestor");
+    expect(await edit(stored({ requestorUnit: "FRM", ownerUnit: "FRM" }), { ownerUnit: "SCM" })).toEqual({ message: REFUSAL });
+  });
+
+  it("refuses editing a line of an entity outside the seat's scope, even when moving it inside", async () => {
+    signInAs("requestor", { entities: ["ESTRADA"] });
+    expect(await edit(stored({ entityCode: "MATRIK" }), { entityCode: "ESTRADA" })).toEqual({ message: REFUSAL });
+  });
+
+  it("refuses moving a held line to an entity outside the seat's scope", async () => {
+    signInAs("requestor", { entities: ["ESTRADA"] });
+    expect(await edit(stored(), { entityCode: "MATRIK" })).toEqual({ message: REFUSAL });
+  });
+
+  it("answers a line that is not in the open version as not found", async () => {
+    signInAs("requestor");
+    queued.current = [[], []];
+    expect(await outcome(() => saveLine({ ...newLine, id: A }))).toEqual({ message: "Baris tidak ditemukan." });
   });
 });
 
