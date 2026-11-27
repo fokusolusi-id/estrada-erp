@@ -57,3 +57,4 @@ export * from "./billing-trigger";
 export * from "./kpi";
 export * from "./kpi-health";
 export * from "./portfolio";
+export * from "./report";

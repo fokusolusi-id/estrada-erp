@@ -12,3 +12,4 @@ if (process.env.NODE_ENV !== "production") globalForDb.__estradaSql = sql;
 
 export const db = drizzle(sql, { schema, casing: "snake_case" });
 export type Db = typeof db;
+export type { ReportContent } from "./schema/report";
