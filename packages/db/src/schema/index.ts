@@ -7,3 +7,4 @@ export * from "./payment";
 export * from "./project";
 export * from "./invoice";
 export * from "./obligo";
+export * from "./tax";
