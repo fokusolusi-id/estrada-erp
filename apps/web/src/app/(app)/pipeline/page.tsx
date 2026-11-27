@@ -41,7 +41,7 @@ export default async function PipelinePage() {
       </div>
     );
   }
-  const [{ deals: allDeals, targets, recovery }, entities, coa] = await Promise.all([
+  const [{ deals: allDeals, targets, recovery }, entities, coa, customers] = await Promise.all([
     loadPipeline(year),
     db.select({ code: schema.companyEntity.code }).from(schema.companyEntity).where(eq(schema.companyEntity.active, true)),
     db
@@ -49,6 +49,10 @@ export default async function PipelinePage() {
       .from(schema.coaAccount)
       .where(and(eq(schema.coaAccount.category, "Revenue"), eq(schema.coaAccount.active, true)))
       .orderBy(asc(schema.coaAccount.code)),
+    db
+      .select({ id: schema.customer.id, nickname: schema.customer.nickname, legalName: schema.customer.legalName, active: schema.customer.active })
+      .from(schema.customer)
+      .orderBy(asc(schema.customer.nickname), asc(schema.customer.id)),
   ]);
   const deals = allDeals.filter((d) => !view.entity || d.entity === view.entity);
   const editableEntities = entities.map((e) => e.code).filter((e) => canPipeline(user.actor, "edit", e, org));
@@ -64,6 +68,7 @@ export default async function PipelinePage() {
   const carried = sum(billing.rows.map((r) => r.carried));
   const noCoa = deals.filter((d) => !d.coaCode).length;
   const duplicates = duplicateProjects(deals);
+  const unlinked = deals.filter((d) => !d.customerId).sort((a, b) => a.customer.localeCompare(b.customer, "id"));
   const canPlan = canRecoveryPlan(user.actor, org);
 
   return (
@@ -90,6 +95,40 @@ export default async function PipelinePage() {
             {" "}Deal tersebut tidak dapat disimpan ulang sebelum diperbaiki.
           </AlertDescription>
         </Alert>
+      ) : null}
+
+      {unlinked.length ? (
+        <Card data-testid="pipeline-unlinked">
+          <CardHeader>
+            <CardTitle>Perlu dirapikan: customer</CardTitle>
+            <CardDescription>
+              {unlinked.length} deal belum terhubung ke Master Customer. BCD memilih customer-nya lewat Ubah di Daftar deal; customer yang belum ada perlu ditambahkan ke Master Customer.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <details>
+              <summary className="cursor-pointer text-sm font-medium">Lihat daftar</summary>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer di deal</TableHead>
+                    <TableHead>Project</TableHead>
+                    <TableHead>Entitas</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {unlinked.map((d) => (
+                    <TableRow key={d.id}>
+                      <TableCell className="font-medium">{d.customer}</TableCell>
+                      <TableCell className="whitespace-normal">{d.project}</TableCell>
+                      <TableCell>{d.entity}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </details>
+          </CardContent>
+        </Card>
       ) : null}
 
       <Card>
@@ -322,7 +361,12 @@ export default async function PipelinePage() {
         <CardContent>
           <PipelineRegister
             deals={deals.map((d) => ({ ...d, editable: canPipeline(user.actor, "edit", d.entity, org) }))}
-            options={{ entities: editableEntities, coa }}
+            options={{
+              entities: editableEntities,
+              coa,
+              // Active customers, and retired ones a listed deal still names.
+              customers: customers.filter((c) => c.active || deals.some((d) => d.customerId === c.id)),
+            }}
             canAdd={editableEntities.length > 0}
             onSave={saveDeal}
             onDelete={deleteDeal}

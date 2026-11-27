@@ -41,6 +41,7 @@ export async function loadPipeline(
       id: r.id,
       entity: r.entityCode,
       customer: r.customer,
+      customerId: r.customerId,
       endCustomer: r.endCustomer,
       segment: r.segment,
       project: r.project,

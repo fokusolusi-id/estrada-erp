@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { and, asc, eq, inArray, like, ne, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, like, ne, or, sql } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import {
   budgetHeadroom,
@@ -290,4 +290,13 @@ export async function lineOptions(actor: Actor, year: number | null) {
         versionId: version.id,
       })),
   };
+}
+
+/** Master Mitra choices for the payment form: active partners, plus `current` when a request already names a retired one. */
+export async function partnerOptions(current?: string | null) {
+  return db
+    .select({ id: schema.partner.id, name: schema.partner.name, npwp: schema.partner.npwp })
+    .from(schema.partner)
+    .where(current ? or(eq(schema.partner.active, true), eq(schema.partner.id, current)) : eq(schema.partner.active, true))
+    .orderBy(asc(schema.partner.name), asc(schema.partner.id));
 }

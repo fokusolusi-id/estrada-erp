@@ -6,7 +6,7 @@ import type { Role } from "@estrada/domain";
  * "[[alur]]" on its own line draws the approval flow diagram.
  */
 export const PANDUAN = String.raw`
-ERP Estrada menggantikan workbook RKA 2027. Setiap baris anggaran melewati enam tahap, dari Draft sampai Terkunci, dan di setiap tahap hanya satu peran yang dapat bertindak. Panduan ini mengikuti aplikasi yang berjalan sekarang.
+ERP Estrada adalah ERP Estrada Group: anggaran (RKA), pipeline penjualan, implementasi proyek, pembayaran, arus kas dan COA dalam satu aplikasi. Modul RKA menggantikan workbook RKA 2027: setiap baris anggaran melewati enam tahap, dari Draft sampai Terkunci, dan di setiap tahap hanya satu peran yang dapat bertindak. Panduan ini mengikuti aplikasi yang berjalan sekarang.
 
 ## Alur RKA
 
@@ -22,6 +22,10 @@ Hanya peran yang tertulis di kotak yang dapat bertindak atas baris di tahap itu.
 | Review Finance | Finance Reviewer | Finalisasi, atau Minta klarifikasi ke Persetujuan Divisi |
 | Menunggu Kunci | Finance Reviewer | Kunci versi |
 | Terkunci | Semua hanya membaca | Perubahan lewat revisi |
+
+## COA pada baris RKA
+
+Akun induk (yang punya akun turunan) tidak menerima baris RKA baru, dan baris tidak dapat dipindahkan ke sana. Baris lama dari workbook yang sudah berada di akun induk tetap dapat disunting sampai dipindahkan ke akun turunan. Kode di luar COA Structured RKA 2027 yang masih dipakai baris ditandai sementara dan nonaktif; Finance Reviewer memindahkan barisnya di *COA Master*.
 
 ## Peran dan akses
 
@@ -211,6 +215,26 @@ Ringkasan RKA untuk Division Owner, Finance Reviewer, Direktur dan Auditor.
 - **Ringkasan per bulan**, **Kontribusi Divisi** dan **Per entitas** dalam tabel. Per entitas menampilkan alokasi biaya bersama bila ada.
 - Pipeline tertimbang tampil sebagai satu baris terpisah di bawah kartu, di luar RKA.
 
+## Master Data
+
+Menu *Master Data* memuat satu tab per master. Semua peran dapat membaca Customer, Mitra dan Produk Mitra; yang mengubah hanya pengelolanya:
+
+| Master | Pengelola |
+| --- | --- |
+| Customer | Sales (staf dan kepala di BCD) |
+| Mitra dan Produk Mitra | SCM (staf dan kepala di SCM) |
+| Karyawan | HCM (staf dan kepala di HCM) |
+| COA | Finance Reviewer, di menu *COA Master* |
+
+Admin juga dapat mengubah Customer, Mitra, Produk Mitra dan Karyawan.
+
+- **Tambah dan Ubah**: *Tambah customer*, *Tambah mitra*, *Tambah produk* atau *Tambah karyawan*, atau *Ubah* pada barisnya, lalu *Simpan*. ID baru diberi aplikasi (karyawan memakai NIP yang diketik sekali) dan setiap perubahan tercatat di jejak audit.
+- **Karyawan dan akun**: menyimpan karyawan tidak membuat akun. Admin mengundang akun di menu *Pengguna*; akun dengan email yang sama terhubung ke karyawannya. Menonaktifkan karyawan tidak menonaktifkan akunnya.
+- **Tidak ada hapus**: data yang tidak dipakai lagi dimatikan lewat *Aktif*. Yang nonaktif tidak dapat dipilih pada deal atau permintaan pembayaran baru, tetapi tetap tampil di data lama.
+- **NPWP customer** tidak boleh sama dengan customer lain, kecuali nomor sementara. NPWP mitra boleh kosong, dengan peringatan, tetapi wajib sebelum bertransaksi.
+- **Perlu ditinjau**: nilai yang meragukan (NPWP kosong atau sementara, email tidak valid atau dipakai bersama, nama ganda) ditulis di bawah namanya. Centang *Hanya yang perlu ditinjau* untuk melihatnya saja.
+- **Karyawan** hanya dapat dibuka HCM, Admin, Direktur dan Auditor.
+
 ## Pipeline
 
 Register deal yang dikelola BCD; Finance Reviewer, Direktur dan Auditor membacanya. Pipeline tidak pernah dijumlahkan ke pendapatan RKA. Layar ini juga memasang kontrol atas selisih angka penjualan yang ditemukan di RKA 2027.
@@ -220,10 +244,12 @@ Register deal yang dikelola BCD; Finance Reviewer, Direktur dan Auditor membacan
 - **Coverage** = pipeline tertimbang dibagi target segmen. Segmen dengan coverage di bawah 1,0x ditandai merah dan wajib memiliki **rencana pemulihan** tertulis. Rencana ditulis oleh Sales Head (Division Owner BCD) lewat *Simpan rencana*, tercatat nama dan tanggalnya di jejak audit; peran lain hanya membacanya.
 - **Per COA pendapatan**: jumlah deal, nilai dan tertimbang per COA, yaitu angka yang dibaca RKA sebagai pendapatan per COA.
 - **Daftar deal** mengikuti Entitas di kepala halaman, dengan filter segmen dan status serta pencarian customer atau project.
-- **BCD menambah atau mengubah deal** dengan *Tambah deal* atau *Ubah*: entitas, customer, end customer, segmen, project, COA pendapatan, nilai tanpa PPN, status, probabilitas, jenis (New atau Renewal), bulan mulai dan selesai, lead time dan Billing Termin. *Simpan deal* menyimpan dengan jejak audit; *Hapus deal* menghapus.
+- **BCD menambah atau mengubah deal** dengan *Tambah deal* atau *Ubah*: entitas, customer (dipilih dari Master Customer), end customer, segmen, project, COA pendapatan, nilai tanpa PPN, status, probabilitas, jenis (New atau Renewal), bulan mulai dan selesai, lead time dan Billing Termin. *Simpan deal* menyimpan dengan jejak audit; *Hapus deal* menghapus.
 - **COA pendapatan wajib** dan harus akun pendapatan yang aktif di COA Master.
 - **Nama project harus unik** per tahun dan entitas, karena menjadi Kode Proyek saat deal menang. Huruf besar kecil dan spasi diabaikan.
 - **Lead time (bulan)**, 0 sampai 24: jarak dari bulan mulai ke belanja PDMS. Boleh dikosongkan.
+- **Customer dari Master Customer**: wajib dipilih di *Customer (Master Customer)*; nama customer mengikuti nama panggilan di master. Bila belum ada, tambahkan dulu di menu *Master Data*. Deal lama yang belum terhubung tidak dapat disimpan ulang sebelum customer-nya dipilih.
+- **Perlu dirapikan: customer**: kartu ini mendaftar deal yang belum terhubung ke Master Customer, termasuk nama yang dipakai dua customer. BCD menghubungkannya lewat *Ubah*.
 - **Perlu dirapikan**: deal hasil impor yang belum memiliki COA atau memakai nama project yang sama dihitung di peringatan di atas tabel. Deal itu tetap tampil, tetapi tidak dapat disimpan ulang sebelum diperbaiki.
 
 ### Billing Termin dan Closed Won
@@ -406,7 +432,7 @@ Menu **Permintaan Pembayaran** memuat semua permintaan yang boleh Anda lihat, da
 ### Membuat dan mengirim
 
 1. Klik *Buat permintaan*. Pilih jenis (Pembayaran atau Cash Advance), entitas, proyek/perusahaan, dan baris RKA. Baris yang tersedia berasal dari RKA tahun yang dipilih di Tampilan, untuk entitas posisi Anda dan unit di divisi Anda; selama RKA belum dikunci, baris dari versi yang sedang berjalan dipakai dan ditandai begitu.
-2. Isi deskripsi, penerima (nama, bank dan nomor rekening tujuan), jatuh tempo, Nominal (DPP), PPN dan PPh dipotong. Angka diketik seperti biasa, misalnya 10.000.000. *Simpan draft*.
+2. Bila penerimanya mitra, pilih di *Mitra (Master Mitra)*: nama penerima terisi dari master, sedangkan bank dan nomor rekening tujuan tetap Anda isi (mengganti mitra mengosongkan keduanya). Mitra tanpa NPWP ditandai peringatan. Penerima di luar master diketik seperti biasa. Isi deskripsi, penerima (nama, bank dan nomor rekening tujuan), jatuh tempo, Nominal (DPP), PPN dan PPh dipotong. Angka diketik seperti biasa, misalnya 10.000.000. *Simpan draft*.
 3. Di halaman permintaan, lampirkan dokumen satu per satu: pilih jenisnya (Invoice, PO/WO/PKS, Faktur Pajak, BAST/Kwitansi, Delivery Note, atau Permohonan CA), pilih file PDF atau foto (JPG, PNG, WEBP) maksimal 4 MB, lalu *Lampirkan*. Pembayaran perlu minimal satu dokumen tagihan; Cash Advance perlu Permohonan CA.
 4. Kotak *Tindakan Anda* menyebut apa yang belum lengkap. Setelah lengkap, *Kirim ke atasan*. Permintaan mendapat nomor PP/ENTITAS/TAHUN/BULAN/URUT saat pertama dikirim.
 5. Bila dikembalikan, alasannya tampil di atas halaman. Perbaiki isian atau dokumen, lalu kirim lagi.

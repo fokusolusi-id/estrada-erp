@@ -34,13 +34,15 @@ type Result = { ok: boolean; message: string };
 interface Options {
   entities: readonly string[];
   coa: readonly { code: string; name: string }[];
+  /** Active Master Customer records. */
+  customers?: readonly { id: string; nickname: string; legalName: string }[];
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 const SELECT =
   "border-input h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none";
 const FIELD_LABEL: Record<string, string> = {
-  customer: "Customer wajib diisi",
+  customer: "Customer wajib dipilih",
   project: "Project wajib diisi",
   segment: "Segmen tidak dikenal",
   value: "Nilai harus lebih dari 0",
@@ -100,6 +102,7 @@ export function PipelineRegister({
     id: null,
     entity: entity && options.entities.includes(entity) ? entity : (options.entities[0] ?? ""),
     customer: "",
+    customerId: null,
     endCustomer: "",
     segment: SEGMENTS[0],
     project: "",
@@ -305,7 +308,31 @@ function DealForm({
           ))}
         </select>,
       )}
-      {field("Customer", <Input aria-label="Customer" value={d.customer} onChange={(e) => set({ customer: e.target.value })} />)}
+      {field(
+        "Customer (Master Customer)",
+        <select
+          aria-label="Customer (Master Customer)"
+          className={SELECT}
+          value={d.customerId ?? ""}
+          onChange={(e) => {
+            const picked = options.customers?.find((c) => c.id === e.target.value);
+            set(picked ? { customerId: picked.id, customer: picked.nickname } : { customerId: null, customer: initial.customer });
+          }}
+        >
+          <option value="">— Pilih customer —</option>
+          {options.customers?.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.nickname} · {c.legalName} ({c.id})
+            </option>
+          ))}
+        </select>,
+        true,
+      )}
+      {!d.customerId ? (
+        <p className="text-warning-foreground self-end pb-2 text-xs sm:col-span-4">
+          {initial.customer ? `Tertulis di deal: ${initial.customer}. ` : ""}Pilih customer dari Master Customer; bila belum ada, tambahkan di menu Master Data.
+        </p>
+      ) : null}
       {field("End customer", <Input aria-label="End customer" value={d.endCustomer ?? ""} onChange={(e) => set({ endCustomer: e.target.value })} />)}
       {field(
         "Segmen",
@@ -427,7 +454,7 @@ function DealForm({
         <Button type="button" variant="ghost" onClick={onCancel}>
           Batal
         </Button>
-        <Button type="submit" disabled={!!blocking.length || pending}>
+        <Button type="submit" disabled={!!blocking.length || !d.customerId || pending}>
           Simpan deal
         </Button>
       </div>

@@ -1,7 +1,7 @@
 import { boolean, date, index, integer, numeric, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { budgetLine } from "./budget";
-import { companyEntity, orgUnit, position, roleEnum } from "./master";
+import { companyEntity, orgUnit, partner, position, roleEnum } from "./master";
 
 export const paymentStateEnum = pgEnum("payment_state", [
   "draft",
@@ -49,6 +49,8 @@ export const paymentRequest = pgTable(
     project: text("project"),
     budgetLineId: uuid("budget_line_id").references(() => budgetLine.id),
     description: text("description").notNull().default(""),
+    /** The payee in Master Mitra; null for anyone outside it, e.g. a cash advance. */
+    partnerId: text("partner_id").references(() => partner.id),
     payeeName: text("payee_name"),
     payeeBank: text("payee_bank"),
     payeeAccount: text("payee_account"),

@@ -19,6 +19,7 @@ export type RemapProblem =
   | "same_code"
   | "target_inactive"
   | "target_provisional"
+  | "target_not_postable"
   | "category_mismatch"
   | "locked_lines";
 
@@ -29,7 +30,7 @@ export type RemapProblem =
  */
 export function remapProblem(
   source: { code: string; category: Category; provisional: boolean },
-  target: { code: string; category: Category; active: boolean; provisional: boolean } | undefined,
+  target: { code: string; category: Category; active: boolean; provisional: boolean; postable?: boolean } | undefined,
   lockedLines: number,
 ): RemapProblem | null {
   if (!source.provisional) return "source_not_provisional";
@@ -37,6 +38,7 @@ export function remapProblem(
   if (target.code === source.code) return "same_code";
   if (!target.active) return "target_inactive";
   if (target.provisional) return "target_provisional";
+  if (target.postable === false) return "target_not_postable";
   if (target.category !== source.category) return "category_mismatch";
   if (lockedLines > 0) return "locked_lines";
   return null;

@@ -17,6 +17,7 @@ const Deal = z.object({
   id: z.string().uuid().nullable(),
   entity: z.string().min(1).max(20),
   customer: z.string().max(200),
+  customerId: z.string().max(50).nullable().optional(),
   endCustomer: z.string().max(200).nullable().optional(),
   segment: z.string().max(100),
   project: z.string().max(500),
@@ -56,9 +57,16 @@ export async function saveDeal(input: Omit<z.input<typeof Deal>, "termins"> & { 
     .where(and(eq(schema.pipelineDeal.fiscalYear, year), eq(schema.pipelineDeal.entityCode, deal.entity), id ? ne(schema.pipelineDeal.id, id) : undefined));
   if (duplicateProject(deal, others)) return { ok: false, message: "Nama project sudah dipakai deal lain di entitas dan tahun ini." };
 
+  // The customer comes from Master Customer (BR-SP-002, client decision); the deal takes its name from there.
+  const master = await db.select().from(schema.customer);
+  const picked = deal.customerId ? master.find((c) => c.id === deal.customerId) : undefined;
+  if (!deal.customerId) return { ok: false, message: "Pilih customer dari Master Customer." };
+  if (!picked) return { ok: false, message: "Customer tidak ada di Master Customer." };
+
   const values = {
     entityCode: deal.entity,
-    customer: deal.customer.trim(),
+    customer: picked.nickname,
+    customerId: picked.id,
     endCustomer: deal.endCustomer?.trim() || null,
     segment: deal.segment,
     project: deal.project.trim(),
@@ -75,6 +83,7 @@ export async function saveDeal(input: Omit<z.input<typeof Deal>, "termins"> & { 
   const termins = (deal.termins ?? []).map((t, i) => ({ no: i + 1, description: t.description?.trim() || null, amount: t.amount, plannedOn: t.plannedDate }));
   const [before] = id ? await db.select().from(schema.pipelineDeal).where(eq(schema.pipelineDeal.id, id)) : [];
   if (id && (!before || !canPipeline(user.actor, "edit", before.entityCode, org))) return { ok: false, message: "Anda tidak berwenang mengubah deal ini." };
+  if (!picked.active && before?.customerId !== picked.id) return { ok: false, message: "Customer sudah nonaktif di Master Customer." };
   // A deal with a project is a signed contract in delivery: it stays Closed Won.
   if (id && deal.status !== "CW" && (await hasProject(id))) return { ok: false, message: "Deal ini sudah memiliki proyek di Implementasi; statusnya tetap Closed Won." };
   await db.transaction(async (tx) => {

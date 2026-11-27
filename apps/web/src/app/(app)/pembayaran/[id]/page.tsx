@@ -16,7 +16,7 @@ import {
 } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { activeYear } from "@/lib/fiscal-year";
-import { asLike, formatDate, lineHeadroom, lineOptions, todayJakarta } from "@/lib/payment";
+import { asLike, formatDate, lineHeadroom, lineOptions, partnerOptions, todayJakarta } from "@/lib/payment";
 import { loadOrg } from "@/lib/workflow";
 import { PaymentStatusBadge, PaymentStepper } from "@/components/erp/payment-status";
 import { PaymentForm } from "@/components/erp/payment-form";
@@ -85,6 +85,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
   const headroom = r.budgetLineId && r.state !== "draft" ? await lineHeadroom(r.budgetLineId, r.id, r.gross) : null;
   const lineLabel = line ? `${line.line.coaCode} · ${line.coaName}${line.line.item || line.line.basis ? ` · ${line.line.item || line.line.basis}` : ""} (${line.line.ownerUnit}, RKA ${line.year})` : null;
   const options = editable ? await lineOptions(user.actor, await activeYear()) : null;
+  const partners = editable ? await partnerOptions(r.partnerId) : [];
   const covers = (e: string) => user.actor.entities.includes("*") || user.actor.entities.includes(e);
   const entityChoices = !editable
     ? []
@@ -164,6 +165,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
                 project: r.project ?? "",
                 budgetLineId: r.budgetLineId ?? "",
                 description: r.description,
+                partnerId: r.partnerId ?? "",
                 payeeName: r.payeeName ?? "",
                 payeeBank: r.payeeBank ?? "",
                 payeeAccount: r.payeeAccount ?? "",
@@ -174,6 +176,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
               }}
               entities={entityChoices}
               lines={options.lines}
+              partners={partners}
               versionNote={options.note}
               onSave={savePayment.bind(null, r.id)}
             />

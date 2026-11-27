@@ -1,42 +1,61 @@
 /**
- * Loads the default master data from CSVs kept out of git (they name people and hold the client's ledger):
- *   pnpm db:master [--coa fixtures/coa-structured-rka-2027.csv] [--karyawan fixtures/data-karyawan.csv] [--replace] [--dry-run]
- * A file that is missing is skipped, so `pnpm db:seed` still runs without them. Nothing is deleted.
+ * Loads the default master data from the client's three workbooks, kept out of git (they name people and hold the client's ledger):
+ *   pnpm db:master [--brd "fixtures/BRD_MasterData_rini v5.xlsx"] [--coa "fixtures/COA Structured RKA 2027.xlsx"]
+ *                  [--karyawan "fixtures/Data Karyawan Estrada Group (1).xlsx"] [--replace] [--only-file] [--dry-run]
+ * Sheets read: "Sheet2" of the COA, "Data Karyawan (Okt)" of Data Karyawan, and "M Customer", "Master Mitra", "Master Produk Mitra" of the BRD.
+ * A file that is missing is skipped, so `pnpm db:seed` still runs without them. Nothing is deleted without --only-file.
+ * --only-file: COA codes the file lacks are removed when unused, else retired (inactive, provisional) for Finance to move on COA Master.
  * COA: adds new codes and sets every code's tree and ledger attributes; a provisional code the file lists is confirmed. Name, category, default owner and active
  * stay as Finance set them, unless --replace (refused for a category change on a code that has RKA lines).
- * Karyawan: upserts by NIP and links an existing account with the same email.
+ * Karyawan: adds new NIPs (the app keeps them afterwards; --replace follows the file) and links an existing account with the same email.
+ * Customer: adds new IDs; existing ones stay as the steward left them, unless --replace (sheet columns only). A second customer with the same NPWP is
+ * reported and not loaded; doubtful values are listed for review and loaded as written.
+ * Mitra: adds new IDs, existing ones only change with --replace. Produk: adds combinations the app lacks and numbers them; a row for an unknown partner
+ * stops the load. Doubtful values are listed for review.
+ * Then pipeline deals without a customer are linked by nickname or legal name; the unmatched ones are listed.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { and, inArray, isNull, sql } from "drizzle-orm";
+import ExcelJS from "exceljs";
 import { db, schema } from "@estrada/db";
-import { parseCsv } from "./csv";
-import { parseCoaStructured } from "./coa-structured";
+import { customerIssues, nextProductId, partnerIssues, splitDuplicateNpwp } from "@estrada/domain";
+import { codesOutsideFile, parseCoaStructured } from "./coa-structured";
+import { parseCustomers } from "./customers";
 import { parseEmployees } from "./employees";
+import { parsePartnerProducts, parsePartners } from "./partners";
+import { sheetRows } from "./workbook";
+import type { Cell } from "./cells";
+import { linkDealCustomers, linkSummary } from "./link-customers";
 
 const { values } = parseArgs({
   args: process.argv.slice(2).filter((a) => a !== "--"),
   options: {
-    coa: { type: "string", default: "fixtures/coa-structured-rka-2027.csv" },
-    karyawan: { type: "string", default: "fixtures/data-karyawan.csv" },
+    brd: { type: "string", default: "fixtures/BRD_MasterData_rini v5.xlsx" },
+    coa: { type: "string", default: "fixtures/COA Structured RKA 2027.xlsx" },
+    karyawan: { type: "string", default: "fixtures/Data Karyawan Estrada Group (1).xlsx" },
     replace: { type: "boolean", default: false },
+    "only-file": { type: "boolean", default: false },
     "dry-run": { type: "boolean", default: false },
   },
 });
 
 // pnpm runs the script inside packages/importers; paths are relative to where the command was typed.
 const root = process.env.INIT_CWD ?? resolve(import.meta.dirname, "../../..");
-const read = (path: string) => {
+/** Opens a workbook; null (and said so) when the file is not there, so its sheets are skipped. */
+async function open(path: string) {
   const full = resolve(root, path);
   if (!existsSync(full)) {
     console.log(`Lewati ${path}: file tidak ada.`);
     return null;
   }
-  return parseCsv(readFileSync(full, "utf8"));
-};
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.readFile(full);
+  return wb;
+}
 
-async function loadCoa(rows: string[][]) {
+async function loadCoa(rows: Cell[][]) {
   const units = await db.select({ code: schema.orgUnit.code, aliases: schema.orgUnit.aliases }).from(schema.orgUnit);
   const { accounts, segments } = parseCoaStructured(rows, units);
 
@@ -81,9 +100,26 @@ async function loadCoa(rows: string[][]) {
     }
   });
   console.log(`COA: ${accounts.length} akun, ${segments.length} segmen dimuat.`);
+  if (values["only-file"]) await dropOutsideCodes(accounts.map((a) => a.code));
 }
 
-async function loadEmployees(rows: string[][]) {
+async function dropOutsideCodes(file: string[]) {
+  const existing = (await db.select({ code: schema.coaAccount.code }).from(schema.coaAccount)).map((a) => a.code);
+  const lines = await db.selectDistinct({ code: schema.budgetLine.coaCode }).from(schema.budgetLine);
+  const deals = await db.selectDistinct({ code: schema.pipelineDeal.coaCode }).from(schema.pipelineDeal);
+  const cash = await db.select({ a: schema.cashSetting.interestCoa, b: schema.cashSetting.nonCashCoa }).from(schema.cashSetting);
+  const used = new Set([...lines, ...deals].flatMap((r) => (r.code ? [r.code] : [])).concat(cash.flatMap((c) => [c.a, c.b].flat().filter((x): x is string => !!x))));
+  const { remove, retire } = codesOutsideFile(existing, file, used);
+
+  await db.transaction(async (tx) => {
+    if (retire.length) await tx.update(schema.coaAccount).set({ active: false, provisional: true, updatedAt: new Date() }).where(inArray(schema.coaAccount.code, retire));
+    if (remove.length) await tx.delete(schema.coaAccount).where(inArray(schema.coaAccount.code, remove));
+    if (remove.length || retire.length) await tx.insert(schema.auditLog).values({ action: "coa.only_file", subjectType: "coa_account", after: { remove, retire } });
+  });
+  console.log(`COA di luar file: dihapus ${remove.join(", ") || "tidak ada"}; dinonaktifkan karena masih dipakai ${retire.join(", ") || "tidak ada"}.`);
+}
+
+async function loadEmployees(rows: Cell[][]) {
   const entities = (await db.select({ code: schema.companyEntity.code }).from(schema.companyEntity)).map((e) => e.code);
   const units = new Set((await db.select({ code: schema.orgUnit.code }).from(schema.orgUnit)).map((u) => u.code));
   const employees = parseEmployees(rows, { entities });
@@ -94,10 +130,8 @@ async function loadEmployees(rows: string[][]) {
   await db.transaction(async (tx) => {
     for (const e of employees) {
       const { nip, ...rest } = e;
-      await tx
-        .insert(schema.employee)
-        .values(e)
-        .onConflictDoUpdate({ target: schema.employee.nip, set: { ...rest, updatedAt: new Date() } });
+      const insert = tx.insert(schema.employee).values(e);
+      await (values.replace ? insert.onConflictDoUpdate({ target: schema.employee.nip, set: { ...rest, updatedAt: new Date() } }) : insert.onConflictDoNothing({ target: schema.employee.nip }));
     }
     await tx
       .update(schema.employee)
@@ -108,11 +142,92 @@ async function loadEmployees(rows: string[][]) {
   console.log(`Karyawan: ${employees.length} orang dimuat, ${linked?.n ?? 0} terhubung ke akun.`);
 }
 
+async function loadCustomers(rows: Cell[][]) {
+  const parsed = parseCustomers(rows);
+  const existing = await db.select({ id: schema.customer.id, npwp: schema.customer.npwp }).from(schema.customer);
+  const known = new Set(existing.map((c) => c.id));
+  const incoming = values.replace ? parsed : parsed.filter((c) => !known.has(c.id));
+  const { accepted, rejected } = splitDuplicateNpwp(incoming, existing);
+
+  if (!values["dry-run"]) {
+    await db.transaction(async (tx) => {
+      for (const c of accepted) {
+        const { id, ...rest } = c;
+        await tx
+          .insert(schema.customer)
+          .values(c)
+          .onConflictDoUpdate({ target: schema.customer.id, set: { ...rest, updatedAt: new Date() } });
+      }
+    });
+  }
+  const added = accepted.filter((c) => !known.has(c.id)).length;
+  console.log(`Customer: ${parsed.length} di file, ${added} ${values["dry-run"] ? "akan ditambahkan" : "ditambahkan"}, ${accepted.length - added} diperbarui.`);
+  for (const r of rejected) console.log(`  Ditolak ${r.id}: NPWP ${r.npwp} sudah dipakai ${r.takenBy}.`);
+  const skipped = new Set(rejected.map((r) => r.id));
+  const issues = customerIssues(parsed.filter((c) => !skipped.has(c.id)));
+  if (issues.length) console.log(`  Perlu ditinjau:\n${issues.map((i) => `    ${i.id}: ${i.message}`).join("\n")}`);
+}
+
+async function loadPartners(rows: Cell[][]) {
+  const parsed = parsePartners(rows);
+  const known = new Set((await db.select({ id: schema.partner.id }).from(schema.partner)).map((p) => p.id));
+  const accepted = values.replace ? parsed : parsed.filter((p) => !known.has(p.id));
+
+  if (!values["dry-run"]) {
+    await db.transaction(async (tx) => {
+      for (const p of accepted) {
+        const { id, ...rest } = p;
+        await tx
+          .insert(schema.partner)
+          .values(p)
+          .onConflictDoUpdate({ target: schema.partner.id, set: { ...rest, updatedAt: new Date() } });
+      }
+    });
+  }
+  const added = accepted.filter((p) => !known.has(p.id)).length;
+  console.log(`Mitra: ${parsed.length} di file, ${added} ${values["dry-run"] ? "akan ditambahkan" : "ditambahkan"}, ${accepted.length - added} diperbarui.`);
+  const issues = partnerIssues(parsed);
+  if (issues.length) console.log(`  Perlu ditinjau:\n${issues.map((i) => `    ${i.id}: ${i.message}`).join("\n")}`);
+}
+
+async function loadPartnerProducts(rows: Cell[][]) {
+  const parsed = parsePartnerProducts(rows);
+  const partners = new Map((await db.select({ id: schema.partner.id, name: schema.partner.name }).from(schema.partner)).map((p) => [p.id, p.name]));
+  const unknown = [...new Set(parsed.map((p) => p.partnerId).filter((id) => !partners.has(id)))];
+  // A dry run has not written the partners the same run would add.
+  if (unknown.length && !values["dry-run"]) throw new Error(`Produk Mitra: mitra ${unknown.join(", ")} belum ada di Master Mitra.`);
+
+  const existing = await db.select().from(schema.partnerProduct);
+  const key = (p: { partnerId: string; category: string; type: string; brand: string }) => JSON.stringify([p.partnerId, p.category, p.type, p.brand]).toLowerCase();
+  const have = new Set(existing.map(key));
+  const ids = existing.map((p) => p.id);
+  const added = parsed
+    .filter((p) => !have.has(key(p)))
+    .map(({ partnerName: _, ...p }) => {
+      const id = nextProductId(ids);
+      ids.push(id);
+      return { id, ...p };
+    });
+  if (added.length && !values["dry-run"]) await db.insert(schema.partnerProduct).values(added);
+  console.log(`Produk Mitra: ${parsed.length} di file, ${added.length} ${values["dry-run"] ? "akan ditambahkan" : "ditambahkan"}.`);
+  for (const p of parsed) {
+    const name = partners.get(p.partnerId);
+    if (name && p.partnerName && name.toLowerCase() !== p.partnerName.toLowerCase()) console.log(`  Perlu ditinjau ${p.partnerId}: nama di sheet produk "${p.partnerName}" berbeda dari Master Mitra "${name}".`);
+  }
+}
+
 async function main() {
-  const coa = read(values.coa);
-  if (coa) await loadCoa(coa);
-  const karyawan = read(values.karyawan);
-  if (karyawan) await loadEmployees(karyawan);
+  const coa = await open(values.coa);
+  if (coa) await loadCoa(sheetRows(coa, "Sheet2"));
+  const karyawan = await open(values.karyawan);
+  if (karyawan) await loadEmployees(sheetRows(karyawan, "Data Karyawan (Okt)"));
+  const brd = await open(values.brd);
+  if (brd) {
+    await loadCustomers(sheetRows(brd, "M Customer"));
+    await loadPartners(sheetRows(brd, "Master Mitra"));
+    await loadPartnerProducts(sheetRows(brd, "Master Produk Mitra"));
+  }
+  if (!values["dry-run"]) console.log(linkSummary(await linkDealCustomers(db)));
   process.exit(0);
 }
 

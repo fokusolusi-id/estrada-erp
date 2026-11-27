@@ -26,7 +26,7 @@ export const ORG_UNITS = [
   { code: "FRM-FIN", name: "Finance", type: "department", parentCode: "FRM", aliases: [] },
   { code: "TRANS", name: "Tim Transisi", type: "division", parentCode: "DIR", aliases: [] },
   { code: "TRANS-TP", name: "Tim Pendamping", type: "department", parentCode: "TRANS", aliases: [] },
-  { code: "DEVOPS", name: "DevOps Application", type: "division", parentCode: "DIR", aliases: [] },
-  { code: "PDA", name: "Project Delivery Admin", type: "division", parentCode: "DIR", aliases: [] },
-  { code: "PITS", name: "Project Implementation & Technical Support", type: "division", parentCode: "DIR", aliases: [] },
+  { code: "DEVOPS", name: "DevOps Application", type: "department", parentCode: "PST", aliases: [] },
+  { code: "PDA", name: "Project Delivery Admin", type: "department", parentCode: "PST", aliases: [] },
+  { code: "PITS", name: "Project Implementation & Technical Support", type: "department", parentCode: "PST", aliases: [] },
 ] as const;

@@ -1,22 +1,28 @@
 import Image from "next/image";
-import { APPROVAL_STATES } from "@estrada/domain";
-import { STATE_LABEL } from "@/components/erp/status-badge";
 
-/** The RKA's route from draft to lock, drawn as the sign-in page's one picture: a line with a stop for each approval state. */
-function ApprovalRoute() {
+const MODULES = [
+  { name: "RKA", about: "Anggaran, persetujuan dan realisasi" },
+  { name: "Pipeline", about: "Peluang penjualan dan termin" },
+  { name: "Implementasi", about: "Proyek, serah terima dan garansi" },
+  { name: "Pembayaran", about: "Permintaan sampai bukti bayar" },
+  { name: "Arus Kas", about: "Proyeksi kas dan fasilitas pinjaman" },
+  { name: "COA Master", about: "Daftar akun perusahaan" },
+];
+
+/** What the ERP covers today, as the sign-in page's one picture. */
+function ModuleList() {
   return (
-    <ol aria-label="Tahapan persetujuan RKA" className="relative grid gap-5">
-      <span aria-hidden className="absolute top-2 bottom-2 left-[5px] w-px bg-white/25" />
-      {APPROVAL_STATES.map((state, i) => {
-        const last = i === APPROVAL_STATES.length - 1;
-        return (
-          <li key={state} className="relative flex items-center gap-4 text-sm">
-            <span aria-hidden className={last ? "size-[11px] rounded-full bg-white" : "bg-brand size-[11px] rounded-full border-2 border-white/60"} />
-            <span className={last ? "font-semibold text-white" : "text-white/75"}>{STATE_LABEL[state]}</span>
-          </li>
-        );
-      })}
-    </ol>
+    <ul aria-label="Modul ERP" className="grid gap-4">
+      {MODULES.map((m) => (
+        <li key={m.name} className="flex items-baseline gap-4 text-sm">
+          <span aria-hidden className="bg-brand size-[11px] shrink-0 rounded-full border-2 border-white/60" />
+          <span className="grid">
+            <span className="font-semibold text-white">{m.name}</span>
+            <span className="text-white/70">{m.about}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -34,10 +40,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
         <div className="grid max-w-sm gap-8">
-          <p className="text-page text-balance">Dari draft sampai terkunci, setiap RKA punya jalurnya.</p>
-          <ApprovalRoute />
+          <p className="text-page text-balance">Satu ERP untuk seluruh Estrada Group.</p>
+          <ModuleList />
         </div>
-        <p className="text-sm text-white/60">Perencanaan anggaran, realisasi dan arus kas Estrada Group.</p>
+        <p className="text-sm text-white/60">Anggaran, penjualan, proyek dan keuangan dalam satu aplikasi.</p>
       </aside>
       <div className="bg-background flex items-center justify-center p-6">
         <div className="w-full max-w-sm">

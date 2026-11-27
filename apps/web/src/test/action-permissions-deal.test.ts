@@ -26,6 +26,7 @@ const deal = {
   id: null,
   entity: "ESTRADA",
   customer: "PT Uji",
+  customerId: "Cust-001",
   segment: "Telco Business",
   project: "Proyek Uji",
   coaCode: "4101",
@@ -37,8 +38,8 @@ const deal = {
   endMonth: 12,
 };
 const REFUSAL = "Anda tidak berwenang mengubah pipeline untuk entitas ini.";
-// What the fake database returns for the COA lookup, the other deals and the deal being edited, all in one.
-const REVENUE_COA = { category: "Revenue", active: true, entityCode: "MATRIK", project: "Proyek Lain" };
+// What the fake database returns for the COA lookup, the customers, the other deals and the deal being edited, all in one.
+const REVENUE_COA = { id: "Cust-001", category: "Revenue", active: true, entityCode: "MATRIK", project: "Proyek Lain", nickname: "PT Lain", legalName: "PT Lain" };
 
 beforeEach(() => {
   rows.current = [REVENUE_COA];
@@ -66,6 +67,16 @@ describe("saveDeal: BCD alone, within its entities", () => {
     expect(await outcome(() => saveDeal({ ...deal, id: ID }))).toEqual({ message: "Anda tidak berwenang mengubah deal ini." });
     session.current = actorOf("requestor", { orgUnit: "BCD", entities: ["MATRIK"] });
     expect(await outcome(() => saveDeal({ ...deal, id: ID, entity: "MATRIK" }))).not.toEqual({ message: "Anda tidak berwenang mengubah deal ini." });
+  });
+
+  it("BR-SP-002: refuses a deal without a customer from the master", async () => {
+    signInAs("requestor", { orgUnit: "BCD", entities: ["ESTRADA"] });
+    expect(await outcome(() => saveDeal({ ...deal, customerId: null }))).toEqual({ message: "Pilih customer dari Master Customer." });
+  });
+
+  it("refuses a customer that is not in Master Customer", async () => {
+    signInAs("requestor", { orgUnit: "BCD", entities: ["ESTRADA"] });
+    expect(await outcome(() => saveDeal({ ...deal, customerId: "Cust-999" }))).toEqual({ message: "Customer tidak ada di Master Customer." });
   });
 
   it("refuses a deal that is incomplete or not a revenue COA before any write", async () => {

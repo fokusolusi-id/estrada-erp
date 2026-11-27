@@ -33,7 +33,7 @@ export interface EditorLine {
 }
 
 export interface EditorMasters {
-  coa: { code: string; name: string; category: string; defaultOwnerUnit: string | null }[];
+  coa: { code: string; name: string; category: string; defaultOwnerUnit: string | null; postable?: boolean }[];
   entities: string[];
   units: { code: string; name: string }[];
 }
@@ -281,8 +281,9 @@ export function BudgetEditor({
       const owner = c.defaultOwnerUnit ?? masters.units[0]?.code ?? "";
       return !takenCoaCodes({ requestorUnit: "", entity: defaultEntity, ownerUnit: owner }, slots).has(c.code);
     };
-    const expense = masters.coa.filter((c) => c.category === "OPEX" || c.category === "COGS");
-    const first = expense.find(free) ?? expense[0] ?? masters.coa[0];
+    const postable = masters.coa.filter((c) => c.postable !== false);
+    const expense = postable.filter((c) => c.category === "OPEX" || c.category === "COGS");
+    const first = expense.find(free) ?? expense[0] ?? postable[0];
     setRows((rs) => [
       ...rs,
       toRow({
@@ -301,7 +302,8 @@ export function BudgetEditor({
   // A COA another row already holds for this entity and owner can't be picked again; the row's own stays selectable.
   const coaOptions = (r: Row): Opt[] => {
     const taken = takenCoaCodes({ id: r.key, requestorUnit: "", entity: r.entityCode, ownerUnit: r.ownerUnit }, slots);
-    return masters.coa.map((c) => {
+    // Parent accounts are offered only to the row that already sits on one.
+    return masters.coa.filter((c) => c.postable !== false || c.code === r.coaCode).map((c) => {
       const used = taken.has(c.code) && c.code !== r.coaCode;
       return { value: c.code, label: `${c.code} · ${c.name}${used ? " (sudah dipakai)" : ""}`, disabled: used };
     });

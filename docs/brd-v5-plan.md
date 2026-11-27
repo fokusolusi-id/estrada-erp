@@ -7,8 +7,13 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 
 | Item | State |
 |---|---|
-| COA Structured RKA 2027 + Data Karyawan seed (`pnpm db:master`, migration `0020`, `employee` and `coa_segment` tables, TAX / BALANCE_SHEET categories) | Built and checked on a fresh and the main local DB; **not committed yet** — commit it before starting A1 |
-| Phase A (A1–A11) | Not started |
+| COA Structured RKA 2027 + Data Karyawan seed (`pnpm db:master`, migration `0020`, `employee` and `coa_segment` tables, TAX / BALANCE_SHEET categories) | Done (merged in PR #34) |
+| A1 Customer master (`customer` table, migration `0021`, loaded by `pnpm db:master` from sheet `M Customer`) | Built and checked on the local DB. Cust-002 (XL) is rejected: it shares Telkom's NPWP in `M Customer`; client to correct |
+| A2 Pipeline uses the customer (`pipeline_deal.customer_id`, migration `0022`; linked by `pnpm db:master` and `db:import`; "Perlu dirapikan: customer" list on `/pipeline`) | Built and checked on the local DB. Text column kept until every deal is matched |
+| A3 Mitra and Produk Mitra (`partner`, `partner_product`, migration `0023`, loaded by `pnpm db:master` from sheets `Master Mitra`, `Master Produk Mitra`) | Built and checked on the local DB. Product IDs are app-numbered `Produk-001…`; the empty-NPWP warning on save arrives with the A5 screens (`partnerIssues`) |
+| A4 Payments use the partner (`payment_request.partner_id`, migration `0024`; picker on the payment form) | Built and checked on the local DB. The sheet has no bank accounts, so bank and account stay typed; a partner without NPWP is warned, not blocked |
+| A5 Master screens (`/master/customer`, `mitra`, `produk`, `karyawan`; `customer.manage`, `partner.manage`, `employee.view` in `policy.ts`) | Built and checked on the local DB. Direct save with audit; approval workflow comes in A6. COA stays on `/coa` |
+| Phase A (A6–A11) | Not started |
 | Phase B (B1–B8) | Not started |
 | Phase C (C1–C5) | Not started |
 | Phase D (D0–D6) | Not started; D0 can start after Phase A |
@@ -18,11 +23,15 @@ Overall order: **Phase A → E4, E7 → D0 → E1, E2, E3 → Phase B → E5, E6
 
 ## 1. Sources
 
-| Source | Where | Notes |
+The client gives three workbooks. **They are the only references**; use no other file or export, and name the sheet when citing one.
+
+| Workbook (in `/Volumes/EXTREMESSD/FokuSolusi/[NEW] BRD-ERP/`) | Sheets `pnpm db:master` loads | Notes |
 |---|---|---|
-| BRD workbook | `/Volumes/EXTREMESSD/FokuSolusi/[NEW] BRD-ERP/BRD_MasterData_rini v5.xlsx` | 101 sheets. Outside the repo, never commit it. |
-| BRD CSV exports | `/Volumes/EXTREMESSD/FokuSolusi/[NEW] BRD-ERP/v5/*.csv` | Older exports of some of the same sheets. |
-| Seed CSVs in the repo | `fixtures/coa-structured-rka-2027.csv`, `fixtures/data-karyawan.csv` | Git-ignored (`fixtures/*.csv`). Loaded by `pnpm db:master`. |
+| `BRD_MasterData_rini v5.xlsx` | `M Customer`, `Master Mitra`, `Master Produk Mitra` | The BRD, 100+ sheets |
+| `COA Structured RKA 2027.xlsx` | `Sheet2` | The chart of accounts (`Sheet1` lacks the units) |
+| `Data Karyawan Estrada Group (1).xlsx` | `Data Karyawan (Okt)` | Employees |
+
+The loader reads copies under the same names in `fixtures/` (git-ignored, `fixtures/*.xlsx`); never commit them. The copies carry the user's data fixes (section 6); the originals are untouched. `pnpm db:import` still loads RKA lines, Pipeline and cash from the RKA 2027 workbook (see README): it is import data, not a reference.
 
 To read a sheet, export the workbook to text once (exceljs is already a dependency of `@estrada/importers`):
 
@@ -63,6 +72,23 @@ Then read only the sheets a step names (`grep`, `head`), not the whole set: toge
 8. **Employees are not logins.** `employee` (keyed by NIP) links to `user` by email; Admin still invites users.
 9. **Out of scope:** full GL, AI recommendations (`P3-M6`), HR features that belong in HRMS (BPJS, leave, overtime, attendance).
 
+Answered by the user on 2026-11-27:
+
+10. **Finance Controller (A6)** = the FRM Division Owner.
+11. **Approval amounts (A10)** are shown and typed in the display unit chosen in the header (Satuan). Which amounts apply is still open (section 7).
+12. **Mitra without NPWP:** warn only.
+13. **Customer** on a deal must come from Master Customer. Payment payees may still be typed.
+14. **Masters:** Admin may edit them too; every role reads Customer, Mitra and Produk Mitra.
+15. **CFO** = Head of FRM. **Komisaris** uses the Direktur's view.
+16. **DEVOPS, PDA, PITS** are departments under PST.
+17. **Parent (non-postable) COA** takes no new RKA lines; existing ones stay until Finance moves them. Pipeline revenue COA is not restricted.
+18. **Employees and accounts** are managed in this app; no HRMS sync.
+19. **COA** is `COA Structured RKA 2027` only (`pnpm db:master --only-file`).
+20. A1–A5 go in one commit.
+21. **Old RKA lines** on parent codes and on codes outside the structured COA were removed from the local open version on 2026-11-27 (82 lines, all revenue and all CAPEX included; the six outside codes deleted). Backup: `fixtures/removed-rka-lines-2026-11-27.json` (git-ignored). Re-importing the workbook brings them back; no deployment was changed.
+22. **Ministries** are segment K/L. Dummy NPWPs may stay for now.
+23. A deployment's master data may be overwritten from the patched workbook copies (`pnpm db:master --coa none --replace`).
+
 ## 3. What the app already has
 
 Know this before adding anything; extend before you create.
@@ -78,7 +104,7 @@ Know this before adding anything; extend before you create.
 | Cash | `cash_setting`, `cash_opening`, `loan_facility`, `loan_move` | `/cash` |
 | Cross-cutting | `audit_log`, `email_outbox` (`enqueueEmail`), `notification`, `reminder_log` | `/panduan` |
 
-Seeding: `pnpm db:seed` = `packages/db/src/seed.ts` (entities, org units, starter COA when no CSV) → `pnpm db:master` (`packages/importers/src/master.ts`: COA and Karyawan CSVs) → `seed:demo`. New default data follows the same pattern: a parser in `packages/importers/src` with tests in `packages/importers/test`, loaded by `master.ts`, the file kept in `fixtures/` and git-ignored when it names people or holds client figures.
+Seeding: `pnpm db:seed` = `packages/db/src/seed.ts` (entities, org units, starter COA when the COA workbook is absent) → `pnpm db:master` (`packages/importers/src/master.ts`: COA, Karyawan, Customer, Mitra and Produk Mitra sheets) → `seed:demo`. New default data follows the same pattern: a parser in `packages/importers/src` with tests in `packages/importers/test`, loaded by `master.ts`, the workbook copy kept in `fixtures/` and git-ignored.
 
 ## 4. How to work each step
 
@@ -222,7 +248,7 @@ Suggested order for the "Now" items: E4 and E7 (small), then E1 → E2 → E3 (o
 
 ## 6. Data-quality issues to handle on import
 
-- `M Customer`: eight customers share NPWP `010611200093000` (placeholder); Cust-005 and Cust-007 are the same ministry; ministries tagged segment "Telco" instead of K/L; invalid emails (`email@korlantas..id`, `email@tpi soetta.co.id`).
+- `M Customer`: Cust-001 Telkom and Cust-002 XL share NPWP `010000131093000`, so XL is not loaded until the client corrects it; eight customers share NPWP `010611200093000` (placeholder); Cust-005 and Cust-007 are the same ministry; ministries tagged segment "Telco" instead of K/L; invalid emails (`email@korlantas..id`, `email@tpi soetta.co.id`).
 - `Master Mitra`: Mitra-002 NPWP contains hidden Unicode; Mitra-004..008 have no NPWP and the placeholder email `@lixabluepower.id`; Mitra-003 email copied from Mitra-002.
 - `Master Produk Mitra`: rows reuse the Mitra ID as product ID.
 - `M Organisasi`: NIP `E20190088 ` has a trailing space.
@@ -231,12 +257,8 @@ Suggested order for the "Now" items: E4 and E7 (small), then E1 → E2 → E3 (o
 
 Report these in the importer output or a review list; never silently fix a value the client owns.
 
+On the user's instruction (2026-11-27) the workbook copies in `fixtures/` were patched (the three sheets `M Customer`, `Master Mitra`, `Data Karyawan (Okt)`); the client's originals were not. XL and Mitra-004..008 got dummy NPWPs starting `999999999000` (replace with real ones before production), invalid or copied Mitra emails were blanked, Cust-005 / Cust-007 were told apart with "(1)" / "(2)", Cust-013..016 (Korpolrairud, Kemhan, Icon, Kemenhub) were added, and "Engeener" became "Engineer".
+
 ## 7. Open points to confirm with the user when the step comes up
 
-- Which roles approve at which amounts (A10): the BRD gives the idea, not the numbers.
-- Unit placement of DEVOPS, PDA and PITS (seeded under DIR; their staff are partly DJALU).
-- Whether `postable = false` COA codes may still carry RKA lines (current lines sit on parents such as 4100).
-- EXEC sheets name CEO, CFO, VP Sales and VP HR. The app's roles map VP Sales to BCD's division_owner and VP HR to HCM's, but no seat is "CFO" yet (probably Head FRM): confirm before D0.
-- `EXEC_19` is for Board and Komisaris; the app has no Komisaris role. Add a read-only role, or let them use the director's view?
-- A6 needs a "Finance Controller" approver for sensitive masters; the app has no such role. Is it the auditor seat (Audit & Finance Control), the FRM division owner, or a new role?
-- HRMS sync (BR-MD-003): is there an API on `hrms.estrada.co.id`, or does HCM keep sending the Data Karyawan CSV?
+- Which approval amounts A10 follows. The sheets disagree: `21_Process_Flow_Design` D-05 (PO: Dir PT <= 500 juta, BOD above, Komisaris above 2 miliar), `P1_Module_Spec` (bill above 100 juta Finance Head, above 1 miliar + CFO, above 10 miliar + BOD), `BRD_Redesign_v2` (above 100 juta two approvers), `33_Master_CostCenter` (a limit per cost center), `P0_Module_Spec` MOD-F7 (the engine, no amounts).

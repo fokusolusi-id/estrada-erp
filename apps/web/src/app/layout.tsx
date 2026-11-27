@@ -8,7 +8,7 @@ import { NavigationProgress } from "@/components/erp/navigation-progress";
 
 export const metadata: Metadata = {
   title: { default: "ERP Estrada", template: "%s · ERP Estrada" },
-  description: "Perencanaan anggaran (RKA), realisasi dan arus kas Estrada Group",
+  description: "ERP Estrada Group: anggaran, penjualan, proyek dan keuangan",
 };
 
 const THEME_INIT = `try{var t=localStorage.getItem("theme")||"system";var d=t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d)}catch(e){}`;

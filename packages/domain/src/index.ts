@@ -28,3 +28,5 @@ export * from "./handover";
 export * from "./warranty";
 export * from "./project-notices";
 export * from "./planning";
+export * from "./customer";
+export * from "./partner";
