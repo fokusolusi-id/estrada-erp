@@ -5,6 +5,7 @@ import { CATEGORIES, CATEGORY_LABEL } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ChangeFields } from "@/components/erp/change-fields";
 import { saveCoa, type CoaState } from "./actions";
 
 const SELECT =
@@ -97,12 +98,15 @@ export function CoaForm({ accounts, units }: { accounts: CoaRecord[]; units: { c
         <Label htmlFor="coa-guidance">Panduan pengisian</Label>
         <Input id="coa-guidance" name="guidance" defaultValue={r.guidance ?? ""} />
       </div>
+      <div className="flex flex-wrap items-end gap-3 sm:col-span-2">
+        <ChangeFields />
+      </div>
       <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="active" defaultChecked={r.active} /> Aktif (kode nonaktif tidak bisa dipakai untuk baris baru)
         </label>
         <Button type="submit" disabled={pending}>
-          {pending ? "Menyimpan…" : picked ? "Simpan perubahan" : "Tambah COA"}
+          {pending ? "Mengirim…" : picked ? "Ajukan perubahan" : "Ajukan COA baru"}
         </Button>
         {state.message ? <p className={state.ok ? "text-success text-sm" : "text-destructive text-sm"}>{state.message}</p> : null}
       </div>

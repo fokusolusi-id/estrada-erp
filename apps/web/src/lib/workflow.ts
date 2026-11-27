@@ -23,6 +23,7 @@ import {
 } from "@estrada/domain";
 import { env } from "./env";
 import { enqueueEmail } from "./email/outbox";
+import { SENDS_BACK, assertSeparated } from "./sod";
 
 export const approvalConfig = (): ApprovalConfig => ({ lockRole: env.RKA_LOCK_ROLE as Role });
 
@@ -62,6 +63,11 @@ export async function applyTransition(actor: Actor, lineIds: string[], action: A
       }
     }
 
+    if (!SENDS_BACK.includes(action)) {
+      const events = await tx.select().from(schema.approvalEvent).where(inArray(schema.approvalEvent.lineId, lineIds));
+      for (const history of Map.groupBy(events, (e) => e.lineId).values()) assertSeparated(actor, history);
+    }
+
     const from = lines[0]!.state;
     const t = transition(from, { action, role: actor.role, ...(comment ? { comment } : {}) }, cfg);
 
@@ -74,6 +80,7 @@ export async function applyTransition(actor: Actor, lineIds: string[], action: A
         action,
         actorUserId: actor.userId,
         actorRole: actor.role,
+        actorUnit: actor.orgUnit,
         comment: comment ?? null,
       })),
     );

@@ -140,6 +140,8 @@ export const approvalEvent = pgTable("approval_event", {
     .notNull()
     .references(() => user.id),
   actorRole: roleEnum("actor_role").notNull(),
+  /** The seat's unit, for the segregation-of-duties check. */
+  actorUnit: text("actor_unit"),
   comment: text("comment"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

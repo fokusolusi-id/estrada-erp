@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import type { Category } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
+import { ChangeFields, todayInput } from "./change-fields";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export interface CoaOption {
@@ -30,10 +31,11 @@ export function ProvisionalCoa({
   onRemap,
 }: {
   accounts: CoaOption[];
-  onConfirm: (code: string) => Promise<Result>;
-  onRemap: (source: string, target: string) => Promise<Result>;
+  onConfirm: (code: string, reason: string, effectiveOn: string) => Promise<Result>;
+  onRemap: (source: string, target: string, reason: string, effectiveOn: string) => Promise<Result>;
 }) {
   const [target, setTarget] = useState<Record<string, string>>({});
+  const [change, setChange] = useState(() => ({ reason: "", effectiveOn: todayInput() }));
   const [message, setMessage] = useState<Result | null>(null);
   const [pending, startTransition] = useTransition();
   const provisional = accounts.filter((a) => a.provisional);
@@ -43,6 +45,10 @@ export function ProvisionalCoa({
 
   return (
     <div className="grid gap-3">
+      <div className="flex flex-wrap items-end gap-3">
+        <ChangeFields value={change} onChange={setChange} />
+      </div>
+      <p className="text-muted-foreground text-xs">Konfirmasi dan pemindahan diterapkan setelah disetujui Finance Controller.</p>
       <Table>
         <TableHeader>
           <TableRow>
@@ -64,7 +70,7 @@ export function ProvisionalCoa({
                 <TableCell className="text-right">{a.lines}</TableCell>
                 <TableCell>
                   <div className="flex flex-wrap items-center gap-2">
-                    <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => run(() => onConfirm(a.code))}>
+                    <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => run(() => onConfirm(a.code, change.reason, change.effectiveOn))}>
                       Konfirmasi
                     </Button>
                     <span className="text-muted-foreground text-xs">atau</span>
@@ -85,7 +91,7 @@ export function ProvisionalCoa({
                       type="button"
                       size="sm"
                       disabled={pending || !target[a.code]}
-                      onClick={() => run(() => onRemap(a.code, target[a.code]!))}
+                      onClick={() => run(() => onRemap(a.code, target[a.code]!, change.reason, change.effectiveOn))}
                     >
                       Pindahkan
                     </Button>

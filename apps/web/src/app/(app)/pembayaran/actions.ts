@@ -177,19 +177,20 @@ export async function runPaymentAction(form: FormData): Promise<Result> {
   }
   const [r] = await db.select().from(schema.paymentRequest).where(eq(schema.paymentRequest.id, id));
   if (!r || !paymentActions(user.actor, asLike(r), await loadOrg()).includes(action)) return { ok: false, message: "Anda tidak berwenang atas permintaan ini sekarang." };
+  let warning: string | null = null;
   try {
-    await applyPaymentTransition(user.actor, id, action, {
+    ({ warning } = await applyPaymentTransition(user.actor, id, action, {
       comment: String(form.get("comment") ?? "") || undefined,
       scheduledOn: String(form.get("scheduledOn") ?? "") || undefined,
       bankAccountId: String(form.get("bankAccountId") ?? "") || undefined,
       paidOn: String(form.get("paidOn") ?? "") || undefined,
       proof: proof instanceof File && proof.size ? proof : undefined,
-    });
+    }));
   } catch (e) {
     if (e instanceof WorkflowError) return { ok: false, message: e.message };
     throw e;
   }
   revalidatePath("/pembayaran");
   revalidatePath(`/pembayaran/${id}`);
-  return { ok: true, message: DONE[action] };
+  return { ok: true, message: warning ? `${DONE[action]} ${warning}` : DONE[action] };
 }

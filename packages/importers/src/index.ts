@@ -11,3 +11,5 @@ export * from "./coa-structured";
 export * from "./employees";
 export * from "./customers";
 export * from "./partners";
+export * from "./companies";
+export * from "./cost-centers";

@@ -110,7 +110,7 @@ export function EditPositionForm({
   entities,
   holders,
 }: {
-  position: { id: string; orgUnit: string; title: string; role: string; entities: string[]; holderUserId: string | null; holderName?: string | null };
+  position: { id: string; orgUnit: string; title: string; role: string; entities: string[]; holderUserId: string | null; holderName?: string | null; level?: number | null; functionCodes?: string[] };
   units: Option[];
   roles: Option[];
   entities: EntityOption[];
@@ -166,6 +166,22 @@ export function EditPositionForm({
           <p className="text-muted-foreground text-xs">Nama dari dokumen struktur organisasi, tampil di bagan sampai orangnya punya akun dan dipilih sebagai Pemegang.</p>
         </div>
       ) : null}
+      <div className="grid gap-2">
+        <Label htmlFor={`${id}-level`}>Level organisasi</Label>
+        <select id={`${id}-level`} name="level" className={SELECT} defaultValue={position.level ?? ""}>
+          <option value="">—</option>
+          {[1, 2, 3, 4].map((l) => (
+            <option key={l} value={l}>
+              Level {l}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor={`${id}-functions`}>Kode fungsi</Label>
+        <Input id={`${id}-functions`} name="functionCodes" defaultValue={position.functionCodes?.join(", ") ?? ""} placeholder="mis. F5 atau F1, F2" />
+        {state.errors?.functionCodes ? <p className="text-destructive text-xs">{state.errors.functionCodes[0]}</p> : null}
+      </div>
       <div className="grid gap-2 sm:col-span-2">
         <Label>Entitas</Label>
         <EntityMultiSelect options={entities} defaultValue={position.entities} />

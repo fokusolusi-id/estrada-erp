@@ -215,6 +215,50 @@ Ringkasan RKA untuk Division Owner, Finance Reviewer, Direktur dan Auditor.
 - **Ringkasan per bulan**, **Kontribusi Divisi** dan **Per entitas** dalam tabel. Per entitas menampilkan alokasi biaya bersama bila ada.
 - Pipeline tertimbang tampil sebagai satu baris terpisah di bawah kartu, di luar RKA.
 
+## Persetujuan perubahan master
+
+Perubahan **COA** dan **Perusahaan** (entitas) tidak langsung berlaku. Setiap perubahan menjadi permintaan yang disetujui **Finance Controller**, yaitu Division Owner FRM.
+
+| Langkah | Siapa | Yang terjadi |
+| --- | --- | --- |
+| Ajukan | Finance Reviewer (COA, di *COA Master*) atau Admin (Perusahaan, di *Unit & Entitas*) | Isi perubahan, *Alasan perubahan* dan *Tanggal berlaku* (hari ini atau sesudahnya), lalu kirim. Data master belum berubah; Finance Controller menerima email |
+| Setujui atau tolak | Division Owner FRM, di *Persetujuan Master* | Menolak wajib disertai catatan. Pemohon tidak dapat memutuskan permintaannya sendiri. Pemohon menerima email keputusan |
+| Terapkan | Aplikasi | Bila tanggal berlaku sudah tiba, perubahan diterapkan saat disetujui. Bila belum, diterapkan oleh jadwal harian pada tanggal itu |
+
+- **Status**: Menunggu persetujuan, Disetujui menunggu tanggal berlaku, Diterapkan, Ditolak, Dibatalkan, atau Gagal diterapkan (data master sudah berubah sehingga permintaan tidak lagi bisa dilakukan; ajukan ulang).
+- **Batalkan**: hanya pemohon, selama permintaan belum diterapkan.
+- **Satu permintaan terbuka** per kode COA atau entitas.
+- *Persetujuan Master* dapat dibaca Division Owner FRM, Finance Reviewer, Direktur, Auditor dan Admin. Setiap langkah dan nilai sebelum dan sesudah tercatat di jejak audit.
+- **Tidak ada hapus**: kode sementara yang barisnya dipindahkan dinonaktifkan, tidak dihapus.
+
+## Data perusahaan
+
+Di *Unit & Entitas*, tiap entitas punya bagian *Data perusahaan*: NPWP, NIB, modal dasar, kedudukan, alamat, telepon, email, direktur dan komisaris (dari sheet M Perusahaan). Perubahannya mengikuti persetujuan yang sama seperti di atas: isi, tulis alasan dan tanggal berlaku, lalu *Ajukan*.
+
+## Cost center dan level organisasi
+
+Cost center adalah unit organisasi. Di *Master Data*, tab **Cost Center** menampilkan *Function group* (Revenue, Delivery, Support, Governance) dan *Limit persetujuan* tiap unit. Finance Reviewer dan Admin mengubahnya lewat *Ubah*; Direktur dan Auditor hanya membaca. Nilai awal berasal dari sheet 33_Master_CostCenter, dan kode CC lamanya tercatat sebagai nama lain unit. CC-008 IT & Infrastructure tidak punya unit.
+
+Di *Struktur Organisasi*, Admin mengisi *Level organisasi* (1 sampai 4) dan *Kode fungsi* (F0 sampai F6) pada halaman edit posisi. Aplikasi hanya mengisi sendiri posisi yang jelas cocok dengan sheet M Organisasi dan 07_Org_Chart.
+
+## Periode bulanan
+
+Di *Master Data*, tab **Periode** menampilkan status tiap bulan per PT: **Terbuka**, **Penutupan** atau **Ditutup**.
+
+| Langkah | Siapa | Akibat |
+| --- | --- | --- |
+| Mulai penutupan, Batalkan penutupan | Finance Reviewer atau Division Owner FRM | Selama Penutupan, pembayaran masih dapat dicatat dengan peringatan |
+| Tutup | Finance Reviewer atau Division Owner FRM | Tanggal jadwal bayar dan tanggal bayar di bulan itu ditolak untuk PT tersebut |
+| Buka kembali | Admin atau Division Owner FRM | Wajib alasan; bulan kembali Terbuka |
+
+Setiap langkah tercatat di jejak audit. Finance Reviewer, Direktur, Auditor, Admin dan Division Owner FRM dapat membuka tab ini. Rencana (pinjaman di *Arus Kas*, termin di *Pipeline*) tidak dikunci.
+
+## Pemisahan tugas (SoD)
+
+Aplikasi menolak langkah yang menurut matriks SoD (sheet 05_SoD_Matrix) tidak boleh dilakukan orang yang sama atas satu data, walaupun ia memegang dua posisi atau berpindah lewat *Bertindak sebagai*. Berlaku pada baris RKA dan Permintaan Pembayaran. Mengembalikan atau meminta klarifikasi tidak dibatasi.
+
+Pasangan yang wajib dipisah: Head BusDev dan Sales; PM dan SCM; PM atau SCM dengan Cash Management atau AR/Tax; antara Pricing, Cash Management, AR/Tax dan Accounting; serta Audit dengan Data Steward. Contoh: orang yang sudah memeriksa pembayaran sebagai Business Finance tidak dapat menjadwalkan atau membayarnya sebagai Cash Management.
+
 ## Master Data
 
 Menu *Master Data* memuat satu tab per master. Semua peran dapat membaca Customer, Mitra dan Produk Mitra; yang mengubah hanya pengelolanya:
@@ -224,7 +268,7 @@ Menu *Master Data* memuat satu tab per master. Semua peran dapat membaca Custome
 | Customer | Sales (staf dan kepala di BCD) |
 | Mitra dan Produk Mitra | SCM (staf dan kepala di SCM) |
 | Karyawan | HCM (staf dan kepala di HCM) |
-| COA | Finance Reviewer, di menu *COA Master* |
+| COA | Finance Reviewer, di menu *COA Master*, dengan persetujuan Finance Controller |
 
 Admin juga dapat mengubah Customer, Mitra, Produk Mitra dan Karyawan.
 

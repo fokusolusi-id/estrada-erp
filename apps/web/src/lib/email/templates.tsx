@@ -22,6 +22,18 @@ export const COPY: Record<EmailTemplate, Copy> = {
     body: () => "Kami menerima permintaan atur ulang kata sandi. Abaikan email ini jika Anda tidak memintanya.",
     cta: "Atur ulang kata sandi",
   },
+  master_change_submitted: {
+    subject: "Perubahan master menunggu persetujuan",
+    heading: "Permintaan perubahan master",
+    body: (p) => `${p.requester ?? "Seorang pengguna"} meminta perubahan ${p.subject ?? "master"}, berlaku ${p.effective ?? ""}. Periksa lalu setujui atau tolak.`,
+    cta: "Buka persetujuan",
+  },
+  master_change_decided: {
+    subject: "Keputusan atas perubahan master",
+    heading: "Perubahan master Anda diputuskan",
+    body: (p) => `Permintaan perubahan ${p.subject ?? "master"}: ${p.status ?? ""}.${p.comment ? ` Catatan: "${p.comment}"` : ""}`,
+    cta: "Lihat permintaan",
+  },
   cycle_opened: {
     subject: "Siklus RKA dibuka",
     heading: "Siklus RKA sudah dibuka",

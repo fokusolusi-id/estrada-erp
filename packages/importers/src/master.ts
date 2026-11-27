@@ -2,11 +2,14 @@
  * Loads the default master data from the client's three workbooks, kept out of git (they name people and hold the client's ledger):
  *   pnpm db:master [--brd "fixtures/BRD_MasterData_rini v5.xlsx"] [--coa "fixtures/COA Structured RKA 2027.xlsx"]
  *                  [--karyawan "fixtures/Data Karyawan Estrada Group (1).xlsx"] [--replace] [--only-file] [--dry-run]
- * Sheets read: "Sheet2" of the COA, "Data Karyawan (Okt)" of Data Karyawan, and "M Customer", "Master Mitra", "Master Produk Mitra" of the BRD.
+ * Sheets read: "Sheet2" of the COA, "Data Karyawan (Okt)" of Data Karyawan, and "M Perusahaan", "33_Master_CostCenter", "M Organisasi", "M Customer", "Master Mitra", "Master Produk Mitra" of the BRD.
  * A file that is missing is skipped, so `pnpm db:seed` still runs without them. Nothing is deleted without --only-file.
  * --only-file: COA codes the file lacks are removed when unused, else retired (inactive, provisional) for Finance to move on COA Master.
  * COA: adds new codes and sets every code's tree and ledger attributes; a provisional code the file lists is confirmed. Name, category, default owner and active
  * stay as Finance set them, unless --replace (refused for a category change on a code that has RKA lines).
+ * Perusahaan: fills the company fields still empty on existing entities (--replace follows the sheet, name included); an unknown ID stops the load.
+ * Cost center: sets approval limit and function group on the mapped unit where empty (--replace follows the sheet) and adds the CC code as an alias.
+ * Positions: level (M Organisasi) and function code (07_Org_Chart) where a unit plainly matches and the field is empty; the rest are listed.
  * Karyawan: adds new NIPs (the app keeps them afterwards; --replace follows the file) and links an existing account with the same email.
  * Customer: adds new IDs; existing ones stay as the steward left them, unless --replace (sheet columns only). A second customer with the same NPWP is
  * reported and not loaded; doubtful values are listed for review and loaded as written.
@@ -17,11 +20,13 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { and, inArray, isNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import ExcelJS from "exceljs";
 import { db, schema } from "@estrada/db";
-import { customerIssues, nextProductId, partnerIssues, splitDuplicateNpwp } from "@estrada/domain";
+import { COST_CENTER_UNITS, companyIssues, customerIssues, functionCodeFor, organisationUnitFor, nextProductId, partnerIssues, splitDuplicateNpwp } from "@estrada/domain";
 import { codesOutsideFile, parseCoaStructured } from "./coa-structured";
+import { parseCompanies } from "./companies";
+import { parseCostCenters, parseOrganisationLevels } from "./cost-centers";
 import { parseCustomers } from "./customers";
 import { parseEmployees } from "./employees";
 import { parsePartnerProducts, parsePartners } from "./partners";
@@ -142,6 +147,86 @@ async function loadEmployees(rows: Cell[][]) {
   console.log(`Karyawan: ${employees.length} orang dimuat, ${linked?.n ?? 0} terhubung ke akun.`);
 }
 
+async function loadCompanies(rows: Cell[][]) {
+  const parsed = parseCompanies(rows);
+  const existing = new Map((await db.select().from(schema.companyEntity)).map((e) => [e.code, e]));
+  const unknown = parsed.filter((c) => !existing.has(c.code)).map((c) => c.code);
+  if (unknown.length) throw new Error(`Perusahaan ${unknown.join(", ")} belum ada di Unit & Entitas.`);
+
+  let changed = 0;
+  await db.transaction(async (tx) => {
+    for (const { code, ...fields } of parsed) {
+      const before = existing.get(code)!;
+      const patch = Object.fromEntries(Object.entries(fields).filter(([k, v]) => v !== null && (values.replace ? before[k as keyof typeof before] !== v : before[k as keyof typeof before] === null)));
+      if (!Object.keys(patch).length) continue;
+      changed++;
+      if (values["dry-run"]) continue;
+      await tx.update(schema.companyEntity).set(patch).where(eq(schema.companyEntity.code, code));
+      await tx.insert(schema.auditLog).values({ action: "entity.import", subjectType: "company_entity", subjectId: code, before, after: patch });
+    }
+  });
+  console.log(`Perusahaan: ${parsed.length} di file, ${changed} ${values["dry-run"] ? "akan diperbarui" : "diperbarui"}.`);
+  const issues = companyIssues(parsed);
+  if (issues.length) console.log(`  Perlu ditinjau:\n${issues.map((i) => `    ${i.code}: ${i.message}`).join("\n")}`);
+}
+
+async function loadCostCenters(rows: Cell[][]) {
+  const parsed = parseCostCenters(rows);
+  const units = new Map((await db.select().from(schema.orgUnit)).map((u) => [u.code, u]));
+  const skipped: string[] = [];
+  let changed = 0;
+  await db.transaction(async (tx) => {
+    for (const c of parsed) {
+      const unit = units.get(COST_CENTER_UNITS[c.code] ?? "");
+      if (!unit) {
+        skipped.push(`${c.code} ${c.name} (limit ${c.approvalLimit})`);
+        continue;
+      }
+      const patch: Partial<typeof schema.orgUnit.$inferInsert> = {};
+      if (unit.approvalLimit === null || (values.replace && unit.approvalLimit !== c.approvalLimit)) patch.approvalLimit = c.approvalLimit;
+      if (unit.functionGroup === null || (values.replace && unit.functionGroup !== c.functionGroup)) patch.functionGroup = c.functionGroup;
+      if (!unit.aliases.includes(c.code)) patch.aliases = [...unit.aliases, c.code];
+      if (!Object.keys(patch).length) continue;
+      changed++;
+      if (values["dry-run"]) continue;
+      await tx.update(schema.orgUnit).set(patch).where(eq(schema.orgUnit.code, unit.code));
+      await tx.insert(schema.auditLog).values({ action: "unit.import_cost_center", subjectType: "org_unit", subjectId: unit.code, before: unit, after: patch });
+    }
+  });
+  console.log(`Cost center: ${parsed.length} di file, ${changed} unit ${values["dry-run"] ? "akan diperbarui" : "diperbarui"}.`);
+  for (const s of skipped) console.log(`  Tanpa unit: ${s}.`);
+}
+
+async function loadPositionTags(rows: Cell[][]) {
+  const levels = parseOrganisationLevels(rows);
+  const positions = await db.select().from(schema.position);
+  const levelOf = new Map<string, number>();
+  const skipped: string[] = [];
+  for (const row of levels) {
+    const unit = organisationUnitFor(row.job);
+    // A division head sits in the unit's division_owner or director seat; otherwise the unit must have one seat.
+    const inUnit = positions.filter((p) => p.orgUnitCode === unit);
+    const heads = inUnit.filter((p) => p.role === "division_owner" || p.role === "director");
+    const seat = heads.length === 1 ? heads[0] : inUnit.length === 1 ? inUnit[0] : undefined;
+    if (seat) levelOf.set(seat.id, row.level);
+    else skipped.push(`${row.name} (${row.job}, level ${row.level})`);
+  }
+  let changed = 0;
+  await db.transaction(async (tx) => {
+    for (const p of positions) {
+      const code = functionCodeFor(p.orgUnitCode);
+      const patch: Partial<typeof schema.position.$inferInsert> = {};
+      if (p.level === null && levelOf.has(p.id)) patch.level = levelOf.get(p.id)!;
+      if (!p.functionCodes.length && code) patch.functionCodes = [code];
+      if (!Object.keys(patch).length) continue;
+      changed++;
+      if (!values["dry-run"]) await tx.update(schema.position).set(patch).where(eq(schema.position.id, p.id));
+    }
+  });
+  console.log(`Posisi: ${changed} ${values["dry-run"] ? "akan diberi" : "diberi"} level atau kode fungsi.`);
+  if (skipped.length) console.log(`  M Organisasi tanpa posisi yang pasti: ${skipped.join("; ")}.`);
+}
+
 async function loadCustomers(rows: Cell[][]) {
   const parsed = parseCustomers(rows);
   const existing = await db.select({ id: schema.customer.id, npwp: schema.customer.npwp }).from(schema.customer);
@@ -223,6 +308,9 @@ async function main() {
   if (karyawan) await loadEmployees(sheetRows(karyawan, "Data Karyawan (Okt)"));
   const brd = await open(values.brd);
   if (brd) {
+    await loadCompanies(sheetRows(brd, "M Perusahaan"));
+    await loadCostCenters(sheetRows(brd, "33_Master_CostCenter"));
+    await loadPositionTags(sheetRows(brd, "M Organisasi"));
     await loadCustomers(sheetRows(brd, "M Customer"));
     await loadPartners(sheetRows(brd, "Master Mitra"));
     await loadPartnerProducts(sheetRows(brd, "Master Produk Mitra"));

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@estrada/db";
-import { ROLES, can } from "@estrada/domain";
+import { ROLES, can, parseFunctionCodes } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { entityList } from "@/lib/entity-scope";
 import { loadOrg } from "@/lib/workflow";
@@ -104,6 +104,8 @@ const UpdateSchema = z.object({
   role: z.enum(ROLES),
   holderUserId: z.string().optional(),
   holderName: z.string().trim().max(120).optional(),
+  level: z.enum(["", "1", "2", "3", "4"]).optional(),
+  functionCodes: z.string().max(60).optional(),
 });
 
 /** Edits a position's unit, title, role, entities and (optionally) holder. */
@@ -118,6 +120,12 @@ export async function updatePosition(_prev: PositionState, form: FormData): Prom
   if (!entities.length) return { ok: false, message: "Pilih minimal satu entitas.", errors: { entities: ["Pilih minimal satu entitas"] } };
   const hasHolderField = form.has("holderUserId");
   const holderUserId = input.holderUserId || null;
+  const functionCodes = input.functionCodes === undefined ? undefined : parseFunctionCodes(input.functionCodes);
+  if (functionCodes === null) return { ok: false, message: "Periksa isian.", errors: { functionCodes: ["Isi F0 sampai F6, dipisah koma"] } };
+  const tags = {
+    ...(input.level === undefined ? {} : { level: input.level ? Number(input.level) : null }),
+    ...(functionCodes === undefined ? {} : { functionCodes }),
+  };
 
   const [pos] = await db.select().from(schema.position).where(eq(schema.position.id, input.positionId));
   if (!pos) return { ok: false, message: "Posisi tidak ditemukan." };
@@ -146,6 +154,7 @@ export async function updatePosition(_prev: PositionState, form: FormData): Prom
         holderName: nextHolder ? null : form.has("holderName") ? input.holderName || null : pos.holderName,
         // A held position has no pjs.
         actingUserId: nextHolder ? null : pos.actingUserId,
+        ...tags,
       })
       .where(eq(schema.position.id, pos.id));
     await tx.delete(schema.positionEntityScope).where(eq(schema.positionEntityScope.positionId, pos.id));
@@ -155,8 +164,8 @@ export async function updatePosition(_prev: PositionState, form: FormData): Prom
       action: "position.update",
       subjectType: "position",
       subjectId: pos.id,
-      before: { orgUnit: pos.orgUnitCode, title: pos.title, role: pos.role, holderUserId: pos.holderUserId, holderName: pos.holderName, entities: before.map((b) => b.e) },
-      after: { orgUnit: input.orgUnit, title: input.title, role: input.role, holderUserId: hasHolderField ? holderUserId : pos.holderUserId, holderName: input.holderName ?? null, entities },
+      before: { orgUnit: pos.orgUnitCode, title: pos.title, role: pos.role, holderUserId: pos.holderUserId, holderName: pos.holderName, level: pos.level, functionCodes: pos.functionCodes, entities: before.map((b) => b.e) },
+      after: { orgUnit: input.orgUnit, title: input.title, role: input.role, holderUserId: hasHolderField ? holderUserId : pos.holderUserId, holderName: input.holderName ?? null, ...tags, entities },
     });
   });
 

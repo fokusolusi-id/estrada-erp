@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ENTITY_GRID, UNIT_GRID } from "./grid";
+import { ChangeFields } from "@/components/erp/change-fields";
 import { saveEntity, saveUnit, type MasterState } from "./actions";
 
 const SELECT =
@@ -63,7 +64,21 @@ export function UnitForm({
   );
 }
 
-export function EntityForm({ entity }: { entity?: { code: string; name: string; costType: string; active: boolean } }) {
+const COMPANY_FIELDS = [
+  { name: "npwp", label: "NPWP" },
+  { name: "nib", label: "NIB" },
+  { name: "authorisedCapital", label: "Modal dasar (Rp)" },
+  { name: "domicile", label: "Kedudukan" },
+  { name: "address", label: "Alamat" },
+  { name: "phone", label: "Telepon" },
+  { name: "email", label: "Email" },
+  { name: "director", label: "Direktur" },
+  { name: "commissioner", label: "Komisaris" },
+] as const;
+
+export type EntityRecord = { code: string; name: string; costType: string; active: boolean } & Partial<Record<(typeof COMPANY_FIELDS)[number]["name"], string | null>>;
+
+export function EntityForm({ entity }: { entity?: EntityRecord }) {
   const [s, action, pending] = useActionState<MasterState, FormData>(saveEntity, { ok: false, message: "" });
   return (
     <form action={action} className={`${ROW} ${ENTITY_GRID}`}>
@@ -84,7 +99,23 @@ export function EntityForm({ entity }: { entity?: { code: string; name: string; 
       ) : (
         <span />
       )}
-      <Button type="submit" size="sm" variant={entity ? "outline" : "default"} disabled={pending}>{entity ? "Simpan" : "Tambah"}</Button>
+      <Button type="submit" size="sm" variant={entity ? "outline" : "default"} disabled={pending}>{entity ? "Ajukan" : "Ajukan baru"}</Button>
+      <details className="col-span-full">
+        <summary className="cursor-pointer text-sm font-medium">
+          Data perusahaan<span className="text-muted-foreground font-normal">{entity?.npwp ? ` · NPWP ${entity.npwp}` : ""}</span>
+        </summary>
+        <div className="mt-2 grid gap-3 @xl:grid-cols-3">
+          {COMPANY_FIELDS.map((f) => (
+            <label key={f.name} className="grid gap-1 text-sm">
+              <span className="text-muted-foreground text-xs">{f.label}</span>
+              <Input name={f.name} aria-label={f.label} defaultValue={entity?.[f.name] ?? ""} />
+            </label>
+          ))}
+        </div>
+      </details>
+      <div className="col-span-full flex flex-wrap items-end gap-3">
+        <ChangeFields />
+      </div>
       {s.message ? <div className="@3xl:col-span-full"><Msg s={s} /></div> : null}
     </form>
   );
