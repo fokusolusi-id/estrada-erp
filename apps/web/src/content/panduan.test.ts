@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { APPROVAL_STATES, ROLES, ROLE_LABEL } from "@estrada/domain";
-import { NAV } from "@/lib/nav";
+import { NAV, navFor } from "@/lib/nav";
 import { STATE_LABEL } from "@/components/erp/status-badge";
 import { PANDUAN, ROLE_SECTION, guideSections } from "./panduan";
 
@@ -12,6 +12,14 @@ describe("Panduan", () => {
   it("describes every screen in the menu", () => {
     const missing = NAV.filter((n) => n.href !== "/panduan" && !n.phase && !PANDUAN.includes(n.label)).map((n) => n.label);
     expect(missing).toEqual([]);
+  });
+
+  it("lists each role's own menus in the access table", () => {
+    for (const role of ROLES) {
+      const row = PANDUAN.split("\n").find((l) => l.startsWith(`| ${ROLE_LABEL[role]} |`));
+      const menus = [...new Set(navFor(role).filter((n) => !n.phase).map((n) => n.label))];
+      expect(row?.split("|")[2]?.trim(), role).toBe(menus.join(", "));
+    }
   });
 
   it("names every approval state and every role", () => {
