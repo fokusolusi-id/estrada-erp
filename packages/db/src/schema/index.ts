@@ -15,3 +15,4 @@ export * from "./telkom";
 export * from "./kpi";
 export * from "./dashboard";
 export * from "./report";
+export * from "./early-warning";

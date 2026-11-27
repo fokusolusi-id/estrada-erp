@@ -44,6 +44,8 @@ export const NOTIFICATION_TEXT: Record<EmailTemplate, string> = {
   kpi_submitted: "Target KPI menunggu persetujuan BOD",
   kpi_decided: "Target KPI diputuskan BOD",
   report_step: "Laporan menunggu tindakan Anda",
+  ew_alert: "Peringatan dini baru",
+  ew_escalated: "Peringatan dini dieskalasi",
   report_returned: "Laporan dikembalikan",
   report_distributed: "Laporan didistribusikan",
   payment_submitted: "Permintaan Pembayaran menunggu persetujuan Anda",
