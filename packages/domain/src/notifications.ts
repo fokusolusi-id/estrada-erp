@@ -4,6 +4,12 @@ import type { ProjectTemplate } from "./project-notices";
 import type { Role } from "./roles";
 
 export type EmailTemplate =
+  | "pr_review"
+  | "pr_approved"
+  | "pr_rejected"
+  | "po_approval"
+  | "po_approved"
+  | "po_returned"
   | "sph_review"
   | "sph_approval"
   | "sph_approved"

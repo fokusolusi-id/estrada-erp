@@ -36,14 +36,14 @@ Setiap pengguna memegang posisi: peran, unit organisasi, dan entitas yang boleh 
 | Requestor | Beranda, RKA Saya, Permintaan Pembayaran, Master Data, Panduan | Baris unitnya selama Draft | Kirim ke Default Owner |
 | Default Owner | Beranda, RKA Saya, Antrean Konsolidasi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Master Data, Panduan | Baris dalam cakupannya selama Konsolidasi | Kirim ke Division Owner, Kembalikan (catatan wajib) |
 | Division Owner | Beranda, RKA Divisi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Management Summary, Master Data, Panduan | Tidak | Setujui & kirim ke Finance, Kembalikan ke Default Owner (catatan wajib) |
-| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Laba Rugi, Tutup Buku, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Realisasi, Biaya Bersama, COA Master, Kepatuhan, Panduan | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
-| Business Finance (BFP) | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, SPH, Master Data, Panduan | Tidak | Memeriksa Permintaan Pembayaran (lihat bagian Permintaan Pembayaran) |
+| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Realisasi, Biaya Bersama, COA Master, Kepatuhan, Panduan | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
+| Business Finance (BFP) | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pengadaan, SPH, Master Data, Panduan | Tidak | Memeriksa Permintaan Pembayaran (lihat bagian Permintaan Pembayaran) |
 | Cash Management | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Rekening Bank, Invoice, Piutang, Kas Mingguan, Obligo Bank, Master Data, Panduan | Tidak | Menjadwalkan dan membayar Permintaan Pembayaran |
-| Direktur | Beranda, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Laba Rugi, Tutup Buku, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, hanya membaca |
-| Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Laba Rugi, Tutup Buku, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
+| Direktur | Beranda, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, hanya membaca |
+| Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
 | Admin | Beranda, Rekening Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Pengguna, Unit & Entitas, Struktur Organisasi, Panduan | Tidak | Tidak ada; tidak melihat angka anggaran |
 
-Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner) juga melihat Pipeline dan SPH; orang BCD, PDMS (PMO, SCM, ISO, MSO) dan Legal & Contract Management (FRM-LCM) dengan peran yang sama juga melihat Implementasi. Unit Accounting & Tax Management (FRM-FIN-ATM) dengan peran yang sama melihat Invoice, Piutang, Pajak, Laba Rugi dan Tutup Buku, dan Requestor-nya juga Monitor Anggaran. Orang PMO dengan peran Requestor, Default Owner atau Division Owner juga melihat Obligo Bank. Division Owner FRM juga melihat Invoice, Piutang, Pajak, Laba Rugi, Tutup Buku, Kas Mingguan, Obligo Bank, Persetujuan Master dan Kepatuhan. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
+Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner) juga melihat Pipeline dan SPH; orang BCD, PDMS (PMO, SCM, ISO, MSO) dan Legal & Contract Management (FRM-LCM) dengan peran yang sama juga melihat Implementasi; orang PDMS juga Pengadaan. Unit Accounting & Tax Management (FRM-FIN-ATM) dengan peran yang sama melihat Invoice, Piutang, Pajak, Laba Rugi dan Tutup Buku, dan Requestor-nya juga Monitor Anggaran. Orang PMO dengan peran Requestor, Default Owner atau Division Owner juga melihat Obligo Bank. Division Owner FRM juga melihat Pengadaan, Invoice, Piutang, Pajak, Laba Rugi, Tutup Buku, Kas Mingguan, Obligo Bank, Persetujuan Master dan Kepatuhan. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
 
 ## Memulai
 
@@ -425,6 +425,19 @@ Menu **Laporan → Laba Rugi** menyusun realisasi dari Pendapatan sampai Laba Be
 - Perusahaan grup dikenali dari isian **Perusahaan grup** pada Master Customer dan Master Mitra.
 - Invoice baru wajib memilih **Akun pendapatan** (COA 4xxx). Invoice lama tampil sebagai *Pendapatan (tanpa akun)*.
 - **Unduh Excel** mengunduh laporan yang sama beserta rincian akunnya.
+
+## Pengadaan
+
+Menu **Proyek → Pengadaan** dari kebutuhan proyek sampai penerimaan barang.
+
+1. **PM proyek atau PMO** mengajukan permintaan: proyek, baris RKA, spesifikasi dan perkiraan nilai (nomor PR/PT/YY/NNNN).
+2. **BFP atau Finance Reviewer** memeriksa budget: setujui atau tolak dengan alasan.
+3. **SCM** membuat **PO** atas permintaan yang disetujui: mitra, produk, kuantitas, harga satuan (nomor NNN/PT-PO/MM/YYYY). Total PO tidak boleh melebihi permintaannya; mitra tanpa NPWP diberi peringatan.
+4. **Head SCM** menyetujui (Head PDMS bila Head SCM yang membuat). Di atas *Limit persetujuan* unit peminta, dilanjutkan **Head FRM** lalu **Direktur**. Pembuat dan peminta tidak bisa menyetujui.
+5. **PM atau PMO** mencatat **BAST** penerimaan (bisa bertahap), tidak melebihi nilai PO.
+6. Pada **Permintaan Pembayaran** ke mitra, pilih *Purchase order*; baris RKA mengikuti permintaannya. **BFP** tidak bisa meneruskan tagihan bila total tagihan PO melebihi nilai yang sudah diterima. Tagihan tanpa PO tetap boleh.
+
+PO yang disetujui dan belum ditagih dihitung sebagai **komitmen** pada sisa anggaran baris RKA dan Monitor Anggaran; Realisasi tetap tercatat saat dibayar.
 
 ## Master Data
 

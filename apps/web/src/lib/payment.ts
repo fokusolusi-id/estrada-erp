@@ -4,6 +4,9 @@ import { and, asc, eq, inArray, like, ne, or, sql } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import {
   budgetHeadroom,
+  COMMITTED_STATES,
+  matchProblem,
+  openCommitment,
   canViewPayment,
   limitFor,
   paysOwnRequest,
@@ -31,6 +34,13 @@ import { putFile } from "./storage";
 import { assertOpenPeriod } from "./period";
 import { SENDS_BACK, assertSeparated } from "./sod";
 import { loadOrg, WorkflowError } from "./workflow";
+
+const MATCH_MESSAGE = {
+  state: "PO tagihan ini tidak (lagi) disetujui.",
+  partner: "Mitra tagihan berbeda dengan mitra PO.",
+  entity: "Entitas tagihan berbeda dengan entitas PO.",
+  over: "Tidak cocok: total tagihan atas PO ini melebihi nilai yang sudah diterima (BAST).",
+};
 
 export const paymentLink = (id: string) => `/pembayaran/${id}`;
 
@@ -87,6 +97,40 @@ export async function isOverLimit(tx: Pick<typeof db, "select">, r: Pick<Request
   return !!limit && money(r.gross).gt(limit);
 }
 
+/** Approved purchase orders a vendor bill may be matched to. */
+export async function orderOptions() {
+  return db
+    .select({ id: schema.purchaseOrder.id, entity: schema.purchaseOrder.entityCode, partnerId: schema.purchaseOrder.partnerId, number: schema.purchaseOrder.number, budgetLineId: schema.purchaseRequest.budgetLineId })
+    .from(schema.purchaseOrder)
+    .innerJoin(schema.purchaseRequest, eq(schema.purchaseRequest.id, schema.purchaseOrder.requestId))
+    .where(eq(schema.purchaseOrder.state, "approved"))
+    .orderBy(asc(schema.purchaseOrder.number));
+}
+
+/**
+ * What approved purchase orders still hold of their RKA lines: ordered less the bills already counted in `billed`
+ * states. Shaped as commitment rows beside the payment requests.
+ */
+export async function poCommitments(lineIds: string[], billed: readonly RequestRow["state"][], tx: Pick<typeof db, "select"> = db) {
+  if (!lineIds.length) return [];
+  const orders = await tx
+    .select({ id: schema.purchaseOrder.id, amount: schema.purchaseOrder.amount, lineId: schema.purchaseRequest.budgetLineId })
+    .from(schema.purchaseOrder)
+    .innerJoin(schema.purchaseRequest, eq(schema.purchaseRequest.id, schema.purchaseOrder.requestId))
+    .where(and(eq(schema.purchaseOrder.state, "approved"), inArray(schema.purchaseRequest.budgetLineId, lineIds)));
+  if (!orders.length) return [];
+  const bills = await tx
+    .select({ orderId: schema.paymentRequest.purchaseOrderId, gross: schema.paymentRequest.gross })
+    .from(schema.paymentRequest)
+    .where(and(inArray(schema.paymentRequest.purchaseOrderId, orders.map((o) => o.id)), inArray(schema.paymentRequest.state, [...billed])));
+  return orders.map((o) => ({
+    lineId: o.lineId,
+    state: "approved" as const,
+    gross: openCommitment(money(o.amount), sum(bills.filter((b) => b.orderId === o.id).map((b) => money(b.gross)))).toFixed(2),
+    paidOn: null,
+  }));
+}
+
 /** The next PP number for the entity and month, from the highest already given. */
 async function nextNumber(tx: Pick<typeof db, "select">, entity: string, date: string) {
   const prefix = paymentNumber(entity, date, 0).slice(0, -4);
@@ -130,6 +174,23 @@ export async function applyPaymentTransition(actor: Actor, requestId: string, ac
         billDate: r.billDate,
       });
       if (missing.length) throw new WorkflowError(`Belum lengkap: ${missing.join(", ")}.`);
+    }
+    // Three-way match: a bill on a PO passes BFP only up to what has been received (sheet FC05_SCM_Pengadaan).
+    if (action === "verify" && r.purchaseOrderId) {
+      const [po] = await tx.select().from(schema.purchaseOrder).where(eq(schema.purchaseOrder.id, r.purchaseOrderId)).for("update");
+      if (!po) throw new WorkflowError("PO tagihan ini tidak ditemukan.");
+      const receipts = await tx.select({ amount: schema.goodsReceipt.amount }).from(schema.goodsReceipt).where(eq(schema.goodsReceipt.orderId, po.id));
+      const others = await tx
+        .select({ gross: schema.paymentRequest.gross })
+        .from(schema.paymentRequest)
+        .where(and(eq(schema.paymentRequest.purchaseOrderId, po.id), ne(schema.paymentRequest.id, r.id), inArray(schema.paymentRequest.state, [...COMMITTED_STATES, "paid"])));
+      const problem = matchProblem({
+        po: { state: po.state, partnerId: po.partnerId, entity: po.entityCode },
+        bill: { partnerId: r.partnerId, entity: r.entityCode, gross: money(r.gross) },
+        received: sum(receipts.map((x) => money(x.amount))),
+        billed: sum(others.map((x) => money(x.gross))),
+      });
+      if (problem) throw new WorkflowError(MATCH_MESSAGE[problem]);
     }
     if (action === "schedule" && extra.bankAccountId) {
       const [bank] = await tx.select().from(schema.companyBankAccount).where(eq(schema.companyBankAccount.id, extra.bankAccountId));
@@ -234,7 +295,9 @@ export async function lineHeadroom(lineId: string, requestId: string, gross: str
       .where(and(eq(schema.paymentRequest.budgetLineId, lineId), ne(schema.paymentRequest.id, requestId))),
   ]);
   const planned = sum(amounts.map((a) => money(a.amount)));
-  const used = realisasiByLine(others.map((o) => ({ ...o, gross: money(o.gross) }))).get(lineId);
+  // Ordered and not yet billed counts as held too.
+  const held = await poCommitments([lineId], [...COMMITTED_STATES, "paid"]);
+  const used = realisasiByLine([...others, ...held].map((o) => ({ ...o, gross: money(o.gross) }))).get(lineId);
   const realised = used ? used.paid.plus(used.outsideYear) : ZERO;
   const committed = used?.committed ?? ZERO;
   return { planned, realised, committed, ...budgetHeadroom({ planned, realised, committed, request: money(gross) }) };

@@ -5,7 +5,7 @@ import { asc, eq } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import { requireUser } from "@/lib/session";
 import { activeYear } from "@/lib/fiscal-year";
-import { billProjects, lineOptions, partnerOptions } from "@/lib/payment";
+import { billProjects, orderOptions, lineOptions, partnerOptions } from "@/lib/payment";
 import { PageHeader } from "@/components/erp/page-header";
 import { EMPTY_PAYMENT, PaymentForm } from "@/components/erp/payment-form";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,6 +36,7 @@ export default async function NewPaymentPage() {
       <Card>
         <CardContent>
           <PaymentForm
+            orders={await orderOptions()}
             initial={EMPTY_PAYMENT}
             entities={entities.map((e) => e.code).filter(covers)}
             lines={options.lines}

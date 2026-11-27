@@ -20,6 +20,7 @@ export interface PaymentFormValues {
   vendorInvoiceNo: string;
   billDate: string;
   projectId: string;
+  purchaseOrderId?: string;
   /** "" on a request saved before PPh types: its amount is typed. */
   pphType: PphType | "";
   pphRate: string;
@@ -61,6 +62,7 @@ export const EMPTY_PAYMENT: PaymentFormValues = {
   vendorInvoiceNo: "",
   billDate: "",
   projectId: "",
+  purchaseOrderId: "",
   pphType: "none",
   pphRate: "0",
   payeeName: "",
@@ -89,6 +91,7 @@ export function PaymentForm({
   entities,
   lines,
   partners = [],
+  orders = [],
   projects = [],
   versionNote,
   onSave,
@@ -98,6 +101,8 @@ export function PaymentForm({
   lines: LineOption[];
   /** Active Master Mitra records, plus the one this request already names. */
   partners?: PartnerOption[];
+  /** Approved purchase orders, to match a vendor bill against. */
+  orders?: { id: string; entity: string; partnerId: string; number: string; budgetLineId: string }[];
   /** Projects a vendor bill may be charged to, by entity. */
   projects?: { id: string; entity: string; name: string }[];
   /** Said beside the RKA line choice, e.g. that the RKA is not locked yet. */
@@ -109,7 +114,7 @@ export function PaymentForm({
   const [result, setResult] = useState<Result | null>(null);
   const [pending, startTransition] = useTransition();
   const set = (k: keyof PaymentFormValues) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
-    setV((p) => ({ ...p, [k]: e.target.value, ...(k === "entity" ? { budgetLineId: "", projectId: "" } : {}) }));
+    setV((p) => ({ ...p, [k]: e.target.value, ...(k === "entity" ? { budgetLineId: "", projectId: "", purchaseOrderId: "" } : {}) }));
 
   const partner = partners.find((p) => p.id === v.partnerId);
   const pickPartner = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -117,6 +122,7 @@ export function PaymentForm({
     setV((p) => ({
       ...p,
       partnerId: picked?.id ?? "",
+      purchaseOrderId: "",
       payeeName: picked?.name ?? p.payeeName,
       // Another partner's account must not follow the new name.
       ...(picked && p.partnerId && p.partnerId !== picked.id ? { payeeBank: "", payeeAccount: "" } : {}),
@@ -248,6 +254,30 @@ export function PaymentForm({
                 ))}
             </select>
           </div>
+          {orders.some((o) => o.entity === v.entity && o.partnerId === v.partnerId) ? (
+            <div className="grid gap-2">
+              <Label htmlFor="pay-order">Purchase order</Label>
+              <select
+                id="pay-order"
+                className={SELECT}
+                value={v.purchaseOrderId ?? ""}
+                onChange={(e) => {
+                  const order = orders.find((o) => o.id === e.target.value);
+                  // The bill is charged to the line the purchase was requested against.
+                  setV((p) => ({ ...p, purchaseOrderId: e.target.value, ...(order ? { budgetLineId: order.budgetLineId } : {}) }));
+                }}
+              >
+                <option value="">— Tanpa PO —</option>
+                {orders
+                  .filter((o) => o.entity === v.entity && o.partnerId === v.partnerId)
+                  .map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.number}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          ) : null}
         </div>
       ) : null}
 

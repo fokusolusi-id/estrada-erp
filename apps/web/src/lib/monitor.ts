@@ -1,3 +1,4 @@
+import { poCommitments } from "./payment";
 import "server-only";
 import { asc, between, inArray } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
@@ -41,7 +42,7 @@ export async function loadMonitor(user: CurrentUser, org: OrgTree, at: { asOf: s
   const adjustments = adjusted.filter((a) => everything || scope.has(`${a.entityCode}|${a.unitCode}`));
   const monitor = budgetMonitor(
     lines.map((l) => ({ id: l.id, unit: l.ownerUnit, coaCode: l.coaCode, coaName: l.coaName, category: l.category, months: l.months })),
-    payments.map((p) => ({ ...p, gross: money(p.gross) })),
+    [...payments, ...(await poCommitments(lines.map((l) => l.id), ["submitted", "under_review", "pending_approval", "frm_approval", "director_approval", "approved", "scheduled", "paid"]))].map((p) => ({ ...p, gross: money(p.gross) })),
     adjustments.map((a) => ({ unit: a.unitCode, coaCode: a.coaCode, date: a.datedOn, amount: money(a.amount) })),
     { year: version.fiscalYear, ...at },
   );

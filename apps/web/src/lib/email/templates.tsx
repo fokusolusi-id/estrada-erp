@@ -288,6 +288,42 @@ export const COPY: Record<EmailTemplate, Copy> = {
     body: (p) => `SPH ${p.number ?? ""} dikembalikan. Catatan: "${p.comment ?? ""}"`,
     cta: "Perbaiki SPH",
   },
+  pr_review: {
+    subject: "Permintaan pengadaan menunggu cek budget",
+    heading: "Cek budget pengadaan",
+    body: (p) => `Permintaan pengadaan ${p.number ?? ""} (${p.entity ?? ""}) menunggu cek budget Anda.`,
+    cta: "Buka Pengadaan",
+  },
+  pr_approved: {
+    subject: "Permintaan pengadaan siap dibuatkan PO",
+    heading: "Budget disetujui",
+    body: (p) => `Budget permintaan ${p.number ?? ""} (${p.entity ?? ""}) disetujui. Buat PO-nya.`,
+    cta: "Buka Pengadaan",
+  },
+  pr_rejected: {
+    subject: "Permintaan pengadaan ditolak",
+    heading: "Permintaan ditolak",
+    body: (p) => `Permintaan ${p.number ?? ""} ditolak. Catatan: "${p.comment ?? ""}"`,
+    cta: "Lihat permintaan",
+  },
+  po_approval: {
+    subject: "PO menunggu persetujuan Anda",
+    heading: "Persetujuan PO",
+    body: (p) => `PO ${p.number ?? ""} (${p.entity ?? ""}) menunggu persetujuan Anda.`,
+    cta: "Buka PO",
+  },
+  po_approved: {
+    subject: "PO disetujui",
+    heading: "PO disetujui",
+    body: (p) => `PO ${p.number ?? ""} (${p.entity ?? ""}) disetujui dan dapat dikirim ke mitra.`,
+    cta: "Lihat PO",
+  },
+  po_returned: {
+    subject: "PO dikembalikan",
+    heading: "PO dikembalikan",
+    body: (p) => `PO ${p.number ?? ""} dikembalikan. Catatan: "${p.comment ?? ""}"`,
+    cta: "Perbaiki PO",
+  },
   deadline_near: {
     subject: "Batas waktu RKA mendekat",
     heading: "Batas waktu mendekat",
