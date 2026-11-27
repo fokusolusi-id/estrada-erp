@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, count, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@estrada/db";
-import { can, coaParentProblem, remapProblem, type CoaParentProblem, type RemapProblem } from "@estrada/domain";
+import { CATEGORIES, can, coaParentProblem, remapProblem, type CoaParentProblem, type RemapProblem } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
 
@@ -16,7 +16,6 @@ async function requireCoaOwner() {
   return can(user.actor, "coa.manage", null, await loadOrg()) ? user : null;
 }
 
-const CATEGORIES = ["Revenue", "COGS", "OPEX", "OTHERS", "CAPEX"] as const;
 const CoaSchema = z.object({
   mode: z.enum(["create", "update"]),
   code: z.string().trim().regex(/^[0-9A-Za-z][0-9A-Za-z-]{1,19}$/, "Kode 2–20 karakter: angka, huruf, tanda hubung"),

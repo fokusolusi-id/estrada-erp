@@ -8,6 +8,8 @@ const coa = new Map([
   ["6241", { code: "6241", category: "OPEX" as const, status: "active" as const }],
   ["5100", { code: "5100", category: "COGS" as const, status: "active" as const }],
   ["4100", { code: "4100", category: "Revenue" as const, status: "active" as const }],
+  ["1110", { code: "1110", category: "BALANCE_SHEET" as const, status: "active" as const }],
+  ["8100", { code: "8100", category: "TAX" as const, status: "active" as const }],
 ]);
 const entities = new Set(["ESTRADA", "MATRIK", "DJALU", "PAS"]);
 
@@ -35,6 +37,11 @@ describe("budget line", () => {
   it("rejects a COA code missing from the master (e.g. 4300, 5100-1)", () => {
     const errors = validateLine(line({ coaCode: "5100-1" }), { coa, entities });
     expect(errors).toContainEqual({ field: "coaCode", code: "coa_unknown" });
+  });
+
+  it("rejects balance-sheet and tax accounts, which RKA never budgets (COA Structured: 1110 Kas, 8100 PPh Badan)", () => {
+    expect(validateLine(line({ coaCode: "1110" }), { coa, entities })).toContainEqual({ field: "coaCode", code: "coa_not_budgetable" });
+    expect(validateLine(line({ coaCode: "8100" }), { coa, entities })).toContainEqual({ field: "coaCode", code: "coa_not_budgetable" });
   });
 
   it("rejects an unknown entity", () => {

@@ -84,7 +84,7 @@ Di bawahnya ada tiga bagian: **Draft usulan** (baris yang masih bisa diubah), **
 3. Untuk menyalin dari Excel, tempel satu baris atau satu blok ke sel bulan; nilainya mengisi bulan ke kanan dan baris ke bawah.
 4. Tombol *Isi ke kanan* menyalin bulan yang dipilih sampai Des. Panah atas dan bawah berpindah baris.
 5. **Bagi rata 12 bulan**: ketik total setahun sekali di kotak *Bagi rata 12 bln* di kolom Total RKA, lalu tekan Enter atau pindah ke kolom lain. Total dibagi rata ke Jan sampai Des; sisa pembulatan masuk ke Des supaya jumlahnya tepat. Setelah itu tiap bulan tetap bisa diubah satu per satu.
-6. Isi Dasar perhitungan. Baris tidak tersimpan bila COA tidak aktif atau tidak dikenal, entitas tidak dikenal, atau ada nominal negatif.
+6. Isi Dasar perhitungan. Baris tidak tersimpan bila COA tidak aktif atau tidak dikenal, COA itu akun Neraca atau Pajak (RKA hanya menganggarkan Revenue, COGS, OPEX, OTHERS dan CAPEX), entitas tidak dikenal, atau ada nominal negatif.
 7. **Satu COA sekali per Entitas dan Pemilik.** COA yang sama tidak bisa dimasukkan dua kali untuk Entitas dan Pemilik yang sama; di daftar COA, kode yang sudah dipakai baris lain tampil abu-abu dengan keterangan *(sudah dipakai)*. Ubah baris yang sudah ada. COA yang sama boleh untuk Entitas lain atau Pemilik lain. Baris dari Rencana headcount dikecualikan, dan baris ganda yang sudah ada dari impor workbook tetap bisa diubah.
 8. Baris yang berubah diberi warna. Bilah di bawah menunjukkan *N baris belum disimpan*; tekan *Simpan (N)* untuk menyimpan semuanya sekaligus. *Hapus baris* menghapus baris yang tidak diperlukan.
 
@@ -173,8 +173,8 @@ Management Summary dan unduhan Excel lalu menampilkan biaya sendiri, alokasi bia
 
 ### COA Master
 
-- *Daftar COA* tampil sebagai pohon per kategori. Kode induk punya panah untuk membuka atau menutup cabangnya; *Buka semua* dan *Tutup semua* membuka atau menutup semua cabang; *Cari kode atau nama* menemukan kode dan tetap menampilkan induknya.
-- *Tambah atau ubah COA*: kode, nama, kategori, default owner, induk dan status. Induk harus berkategori sama dan tidak boleh membentuk lingkaran.
+- *Daftar COA* tampil sebagai pohon per kategori: Revenue, COGS, OPEX, OTHERS, CAPEX, lalu Pajak dan Neraca (aset, kewajiban dan ekuitas). Pajak dan Neraca ada di COA Master tetapi tidak muncul di pilihan COA baris RKA. Kode induk punya panah untuk membuka atau menutup cabangnya; *Buka semua* dan *Tutup semua* membuka atau menutup semua cabang; *Cari kode atau nama* menemukan kode dan tetap menampilkan induknya.
+- *Tambah atau ubah COA*: kode, nama, kategori, default owner, induk dan status. Induk harus berkategori sama dan tidak boleh membentuk lingkaran; pengecualiannya aset tetap (CAPEX) yang boleh berada di bawah atau di atas akun Neraca, misalnya 1500 Aset Tetap di bawah 1000.
 - *Kode sementara dari workbook*: kode yang dipakai baris tetapi belum ada di COA Master. *Konfirmasi* menjadikannya akun tetap, atau pindahkan barisnya ke kode lain dengan kategori yang sama.
 - Kode Nonaktif tidak bisa dipakai baris baru; baris lama tetap memakainya.
 

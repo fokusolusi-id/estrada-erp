@@ -11,9 +11,10 @@
     "lint": "pnpm --filter web lint",
     "db:generate": "pnpm --filter @estrada/db generate",
     "db:migrate": "pnpm --filter @estrada/db migrate",
-    "db:seed": "pnpm --filter @estrada/db seed",
+    "db:seed": "pnpm --filter @estrada/db seed && pnpm db:master && pnpm --filter @estrada/db seed:demo",
     "e2e": "pnpm --filter web e2e",
     "db:import": "pnpm --filter @estrada/importers load",
+    "db:master": "pnpm --filter @estrada/importers master",
     "db:struktur": "pnpm --filter @estrada/importers struktur"
   },
   "devDependencies": {

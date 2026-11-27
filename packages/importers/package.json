@@ -9,7 +9,8 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "load": "tsx src/load.ts",
-    "struktur": "tsx src/structure.ts"
+    "struktur": "tsx src/structure.ts",
+    "master": "tsx src/master.ts"
   },
   "dependencies": {
     "@estrada/db": "workspace:*",

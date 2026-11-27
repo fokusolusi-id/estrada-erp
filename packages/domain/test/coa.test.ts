@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { coaParentProblem, coaSubtree, coaTree, inferCoaParent, remapProblem, variance } from "../src/coa";
 import { money } from "../src/money";
+import type { Category } from "../src/budget";
 
 describe("variance: 2027 plan against a 2026 figure", () => {
   it("gives the change in rupiah and percent", () => {
@@ -37,7 +38,7 @@ describe("remapProblem: moving lines off a provisional COA code", () => {
 });
 
 // Codes and categories from the workbook's COA Master.
-const acc = (code: string, category: "COGS" | "OPEX" | "CAPEX" = "OPEX", parentCode: string | null = null) => ({ code, category, parentCode });
+const acc = (code: string, category: Category = "OPEX", parentCode: string | null = null) => ({ code, category, parentCode });
 const MASTER = [
   acc("5500", "COGS"), acc("5510", "COGS"), acc("5520", "COGS"), acc("5100", "COGS"), acc("5100-1", "CAPEX"),
   acc("6100"), acc("6131"), acc("6130-S2"), acc("6210"), acc("6211"), acc("6220"), acc("6221"),
@@ -76,6 +77,20 @@ describe("coaParentProblem: what Finance may set as a parent", () => {
     expect(coaParentProblem("5520", "5999", tree, "COGS")).toBe("missing");
     expect(coaParentProblem("5520", "6210", tree, "COGS")).toBe("category_mismatch");
     expect(coaParentProblem("5500", "5511", tree, "COGS")).toBe("cycle");
+  });
+});
+
+describe("coaParentProblem on the balance sheet (COA Structured RKA 2027)", () => {
+  const tree = [acc("1000", "BALANCE_SHEET"), acc("1500", "CAPEX", "1000"), acc("1590", "BALANCE_SHEET", "1500"), acc("6210")];
+
+  it("lets balance-sheet accounts sit over or under CAPEX: 1500 Aset Tetap under 1000, 1590 Akumulasi under 1500", () => {
+    expect(coaParentProblem("1500", "1000", tree, "CAPEX")).toBeNull();
+    expect(coaParentProblem("1590", "1500", tree, "BALANCE_SHEET")).toBeNull();
+  });
+
+  it("still keeps P&L rows apart from the balance sheet", () => {
+    expect(coaParentProblem("6211", "1000", tree, "OPEX")).toBe("category_mismatch");
+    expect(coaParentProblem("1110", "6210", tree, "BALANCE_SHEET")).toBe("category_mismatch");
   });
 });
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
-import { coaTree, type Category } from "@estrada/domain";
+import { CATEGORIES, CATEGORY_LABEL, coaTree, type Category } from "@estrada/domain";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,6 @@ export interface CoaTreeAccount {
   lines: number;
 }
 
-const CATEGORIES: readonly Category[] = ["Revenue", "COGS", "OPEX", "OTHERS", "CAPEX"];
 const INDENT = 20;
 
 /** COA Master as a tree: grouped by category, children under their parent, each branch folding open or shut. */
@@ -81,13 +80,13 @@ export function CoaTree({ accounts }: { accounts: CoaTreeAccount[] }) {
                 <TableCell colSpan={4} className="py-1.5">
                   <button
                     type="button"
-                    aria-label={`${open ? "Tutup" : "Buka"} ${category}`}
+                    aria-label={`${open ? "Tutup" : "Buka"} ${CATEGORY_LABEL[category]}`}
                     aria-expanded={open}
                     className="flex items-center gap-1.5 text-sm font-semibold"
                     onClick={() => toggle(category)}
                   >
                     {open ? <ChevronDown className="size-4" aria-hidden /> : <ChevronRight className="size-4" aria-hidden />}
-                    {category}
+                    {CATEGORY_LABEL[category]}
                     <span className="text-muted-foreground font-normal">· {rows.length} kode</span>
                   </button>
                 </TableCell>

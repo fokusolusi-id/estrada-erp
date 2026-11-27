@@ -18,4 +18,15 @@ export const ORG_UNITS = [
   { code: "MSO", name: "Managed Service Operation", type: "department", parentCode: "PDMS", aliases: [] },
   { code: "BCD", name: "Business Commercial Division", type: "division", parentCode: "DIR", aliases: ["CBD", "SPA", "Sales"] },
   { code: "PST", name: "Product Solution & Technology", type: "division", parentCode: "DIR", aliases: ["BSD"] },
+  // Units Data Karyawan (Okt) staffs that the RKA workbook does not budget for; BCD-* and FRM-FIN use Struktur Organisasi's codes.
+  { code: "BCD-TEL", name: "Telco Business Dept.", type: "department", parentCode: "BCD", aliases: [] },
+  { code: "BCD-ENT", name: "Enterprise & Business Dept.", type: "department", parentCode: "BCD", aliases: [] },
+  { code: "BCD-GOV", name: "Government Business Dept.", type: "department", parentCode: "BCD", aliases: [] },
+  { code: "BCD-TER", name: "Territory Business Dept.", type: "department", parentCode: "BCD", aliases: [] },
+  { code: "FRM-FIN", name: "Finance", type: "department", parentCode: "FRM", aliases: [] },
+  { code: "TRANS", name: "Tim Transisi", type: "division", parentCode: "DIR", aliases: [] },
+  { code: "TRANS-TP", name: "Tim Pendamping", type: "department", parentCode: "TRANS", aliases: [] },
+  { code: "DEVOPS", name: "DevOps Application", type: "division", parentCode: "DIR", aliases: [] },
+  { code: "PDA", name: "Project Delivery Admin", type: "division", parentCode: "DIR", aliases: [] },
+  { code: "PITS", name: "Project Implementation & Technical Support", type: "division", parentCode: "DIR", aliases: [] },
 ] as const;

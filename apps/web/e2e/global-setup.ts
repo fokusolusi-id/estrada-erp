@@ -16,8 +16,8 @@ export default async function globalSetup() {
   await admin.unsafe("CREATE DATABASE estrada_e2e");
   await admin.end();
 
-  const env = { ...process.env, DATABASE_URL: E2E_DATABASE_URL };
-  for (const script of ["migrate", "seed"]) {
+  const env = { ...process.env, DATABASE_URL: E2E_DATABASE_URL, SEED_COA: "skeleton" };
+  for (const script of ["migrate", "seed", "seed:demo"]) {
     execFileSync("pnpm", ["--filter", "@estrada/db", script], { cwd: repo, env, stdio: "ignore" });
   }
 

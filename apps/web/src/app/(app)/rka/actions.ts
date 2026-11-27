@@ -30,6 +30,7 @@ const VALIDATION_MESSAGE: Record<string, string> = {
   negative_amount: "Nominal tidak boleh negatif",
   coa_unknown: "COA tidak ada di COA Master",
   coa_inactive: "COA tidak aktif",
+  coa_not_budgetable: "COA ini akun Neraca atau Pajak, tidak dianggarkan di RKA",
   entity_unknown: "Entitas tidak dikenal atau di luar akses Anda",
   basis_required: "Dasar perhitungan wajib diisi",
 };
