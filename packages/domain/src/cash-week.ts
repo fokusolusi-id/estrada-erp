@@ -17,11 +17,14 @@ export function isIndirectReceipt(customer: string, endCustomer: string | null):
   return /\btelkom/i.test(customer) && !!end && !customer.toLowerCase().includes(end);
 }
 
-/** What Cash Management types beside the automatic receipts and payments. */
-export const CASH_ENTRY_KINDS = ["loan_in", "other_in", "interest", "repayment", "cost", "other_out"] as const;
-export type CashEntryKind = (typeof CASH_ENTRY_KINDS)[number];
+/**
+ * What Cash Management types beside the automatic receipts and payments. Loans, interest and instalments come from the
+ * bank facilities (client decision); the three kinds stay for entries typed before that.
+ */
+export const CASH_ENTRY_KINDS = ["other_in", "cost", "other_out"] as const;
+export type CashEntryKind = (typeof CASH_ENTRY_KINDS)[number] | "loan_in" | "interest" | "repayment";
 export const CASH_ENTRY_LABEL: Record<CashEntryKind, string> = {
-  loan_in: "Pinjaman / injeksi kas",
+  loan_in: "Pinjaman bank",
   other_in: "Penerimaan lain",
   interest: "Bunga pinjaman",
   repayment: "Cicilan KMK / pinjaman",

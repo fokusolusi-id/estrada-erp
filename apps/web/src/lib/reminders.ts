@@ -1,8 +1,9 @@
 import "server-only";
 import { and, eq, lt, notInArray } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
-import { deadlineReminderDay, seatFor, type ApprovalState, type EmailTemplate, type Role } from "@estrada/domain";
+import { deadlineReminderDay, obligoReminders, seatFor, type ApprovalState, type EmailTemplate, type Role } from "@estrada/domain";
 import { enqueueEmail } from "./email/outbox";
+import { cashManagers, loadObligo } from "./obligo";
 import { env } from "./env";
 import { approvalConfig, loadOrg } from "./workflow";
 
@@ -100,6 +101,29 @@ export async function runReminders(now = new Date()) {
       }
     }
   }
-  return { deadline, pending };
+  return { deadline, pending, obligo: await obligoAlerts(today) };
 }
 
+
+/** Facility and guarantee expiry 30 days ahead, interest 7 days ahead, to Cash Management (BR-OBG-001, 005). */
+async function obligoAlerts(today: string) {
+  const { facilities, drawings } = await loadObligo(today);
+  const live = facilities.filter((f) => f.active);
+  const due = obligoReminders(
+    today,
+    live.map((f) => ({ id: f.id, expiresOn: f.expiresOn, interestDay: f.interestDay, owes: drawings.some((d) => d.facilityId === f.id && d.kind === "loan" && d.owed.gt(0)) })),
+    drawings.filter((d) => d.kind === "bg" && d.state === "issued"),
+  );
+  let sent = 0;
+  for (const r of due) {
+    const guarantee = r.kind === "bg_expiry" ? drawings.find((d) => d.id === r.id) : undefined;
+    const facility = facilities.find((f) => f.id === (guarantee?.facilityId ?? r.id))!;
+    for (const userId of await cashManagers(guarantee?.entityCode ?? facility.entityCode)) {
+      if (await claim(`obligo:${r.key}:${userId}`)) {
+        await send(`obligo_${r.kind}`, userId, "/obligo", { facility: `${facility.bankName} ${facility.name}`, date: r.date });
+        sent += 1;
+      }
+    }
+  }
+  return sent;
+}

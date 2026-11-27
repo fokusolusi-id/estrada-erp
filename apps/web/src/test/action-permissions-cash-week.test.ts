@@ -19,7 +19,7 @@ vi.mock("@/lib/workflow", async () => {
 });
 vi.mock("@/lib/period", () => ({ assertOpenPeriod: async () => null }));
 
-const input = { entityCode: "ESTRADA", onDate: "2020-02-01", kind: "interest" as const, amount: "1.000", coaCode: "", description: "Bunga KMK Mandiri" };
+const input = { entityCode: "ESTRADA", onDate: "2020-02-01", kind: "other_in" as const, amount: "1.000", coaCode: "", description: "Setoran pemilik" };
 const REFUSAL = "Transaksi kas dicatat oleh Cash Management.";
 
 beforeEach(() => {

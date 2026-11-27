@@ -2,7 +2,7 @@
  * Loads the default master data from the client's three workbooks, kept out of git (they name people and hold the client's ledger):
  *   pnpm db:master [--brd "fixtures/BRD_MasterData_rini v5.xlsx"] [--coa "fixtures/COA Structured RKA 2027.xlsx"]
  *                  [--karyawan "fixtures/Data Karyawan Estrada Group (1).xlsx"] [--replace] [--only-file] [--dry-run]
- * Sheets read: "Sheet2" of the COA, "Data Karyawan (Okt)" of Data Karyawan, and "M Perusahaan", "33_Master_CostCenter", "M Organisasi", "M Customer", "Master Mitra", "Master Produk Mitra" of the BRD.
+ * Sheets read: "Sheet2" of the COA, "Data Karyawan (Okt)" of Data Karyawan, and "M Perusahaan", "33_Master_CostCenter", "M Organisasi", "M Customer", "Master Mitra", "Master Produk Mitra" and "14_Obligo_Status_Apr2026" of the BRD.
  * A file that is missing is skipped, so `pnpm db:seed` still runs without them. Nothing is deleted without --only-file.
  * --only-file: COA codes the file lacks are removed when unused, else retired (inactive, provisional) for Finance to move on COA Master.
  * COA: adds new codes and sets every code's tree and ledger attributes; a provisional code the file lists is confirmed. Name, category, default owner and active
@@ -27,6 +27,7 @@ import { COST_CENTER_UNITS, companyIssues, customerIssues, functionCodeFor, orga
 import { codesOutsideFile, parseCoaStructured } from "./coa-structured";
 import { parseCompanies } from "./companies";
 import { parseCostCenters, parseOrganisationLevels } from "./cost-centers";
+import { OBLIGO_CUTOFF, parseObligo } from "./obligo";
 import { parseCustomers } from "./customers";
 import { parseEmployees } from "./employees";
 import { parsePartnerProducts, parsePartners } from "./partners";
@@ -301,6 +302,26 @@ async function loadPartnerProducts(rows: Cell[][]) {
   }
 }
 
+/** Adds facilities not yet in the register, with what was outstanding at the sheet's cut-off. Existing ones are left alone. */
+async function loadObligoSheet(rows: Cell[][]) {
+  const parsed = parseObligo(rows);
+  const existing = await db.select().from(schema.bankFacility);
+  const added = parsed.filter((p) => !existing.some((f) => f.bankName === p.bankName && f.name === p.name && f.entityCode === p.entityCode));
+  if (!values["dry-run"]) {
+    await db.transaction(async (tx) => {
+      for (const { drawings, ...f } of added) {
+        const [row] = await tx.insert(schema.bankFacility).values({ ...f, type: "kmk" }).returning({ id: schema.bankFacility.id });
+        await tx.insert(schema.auditLog).values({ action: "loan.facility", subjectType: "bank_facility", subjectId: row!.id, after: { ...f, drawings } });
+        if (!drawings.length) continue;
+        await tx.insert(schema.facilityDrawing).values(
+          drawings.map((d) => ({ ...d, facilityId: row!.id, entityCode: f.entityCode!, kind: "loan" as const, state: "issued" as const, issuedOn: OBLIGO_CUTOFF, opening: true })),
+        );
+      }
+    });
+  }
+  console.log(`Obligo: ${parsed.length} fasilitas di file, ${added.length} ${values["dry-run"] ? "akan ditambahkan" : "ditambahkan"}.`);
+}
+
 async function main() {
   const coa = await open(values.coa);
   if (coa) await loadCoa(sheetRows(coa, "Sheet2"));
@@ -314,6 +335,7 @@ async function main() {
     await loadCustomers(sheetRows(brd, "M Customer"));
     await loadPartners(sheetRows(brd, "Master Mitra"));
     await loadPartnerProducts(sheetRows(brd, "Master Produk Mitra"));
+    await loadObligoSheet(sheetRows(brd, "14_Obligo_Status_Apr2026"));
   }
   if (!values["dry-run"]) console.log(linkSummary(await linkDealCustomers(db)));
   process.exit(0);

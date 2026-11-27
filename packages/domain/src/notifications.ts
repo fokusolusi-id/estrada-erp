@@ -4,6 +4,13 @@ import type { ProjectTemplate } from "./project-notices";
 import type { Role } from "./roles";
 
 export type EmailTemplate =
+  | "obligo_requested"
+  | "obligo_issued"
+  | "obligo_rejected"
+  | "obligo_release_confirmed"
+  | "obligo_facility_expiry"
+  | "obligo_interest_due"
+  | "obligo_bg_expiry"
   | "cycle_opened"
   | "lines_submitted"
   | "division_ready"

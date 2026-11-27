@@ -222,6 +222,48 @@ export const COPY: Record<EmailTemplate, Copy> = {
     body: (p) => `Permintaan Pembayaran ${p.number ?? ""} dikembalikan untuk diperbaiki. Catatan: "${p.comment ?? ""}"`,
     cta: "Perbaiki permintaan",
   },
+  obligo_requested: {
+    subject: "Permintaan obligo menunggu persetujuan",
+    heading: "Permintaan obligo",
+    body: (p) => `Ada permintaan pada fasilitas ${p.facility ?? "bank"} (${p.entity ?? ""}). Periksa kelonggaran plafon dan underlying-nya.`,
+    cta: "Buka Obligo Bank",
+  },
+  obligo_issued: {
+    subject: "Permintaan obligo Anda diterbitkan",
+    heading: "Obligo diterbitkan",
+    body: (p) => `Permintaan Anda pada fasilitas ${p.facility ?? "bank"} (${p.entity ?? ""}) sudah diterbitkan.`,
+    cta: "Lihat rincian",
+  },
+  obligo_rejected: {
+    subject: "Permintaan obligo Anda ditolak",
+    heading: "Obligo ditolak",
+    body: (p) => `Permintaan obligo (${p.entity ?? ""}) ditolak. Catatan: "${p.comment ?? ""}"`,
+    cta: "Lihat rincian",
+  },
+  obligo_release_confirmed: {
+    subject: "Bank Garansi siap dilepas",
+    heading: "Konfirmasi PM diterima",
+    body: (p) => `PM mengonfirmasi kontrak selesai (${p.entity ?? ""}). Bank Garansi dapat dilepas.`,
+    cta: "Buka Obligo Bank",
+  },
+  obligo_facility_expiry: {
+    subject: "Fasilitas bank mendekati expired",
+    heading: "Fasilitas segera expired",
+    body: (p) => `Fasilitas ${p.facility ?? "bank"} expired pada ${p.date ?? ""}.`,
+    cta: "Buka Obligo Bank",
+  },
+  obligo_interest_due: {
+    subject: "Bunga bank segera jatuh tempo",
+    heading: "Bunga jatuh tempo",
+    body: (p) => `Bunga fasilitas ${p.facility ?? "bank"} jatuh tempo pada ${p.date ?? ""}.`,
+    cta: "Buka Obligo Bank",
+  },
+  obligo_bg_expiry: {
+    subject: "Bank Garansi mendekati expired",
+    heading: "Bank Garansi segera expired",
+    body: (p) => `Bank Garansi pada fasilitas ${p.facility ?? "bank"} berakhir pada ${p.date ?? ""}. Perpanjang atau lepaskan.`,
+    cta: "Buka Obligo Bank",
+  },
   deadline_near: {
     subject: "Batas waktu RKA mendekat",
     heading: "Batas waktu mendekat",

@@ -67,7 +67,7 @@ describe("weeklyCashflow (BR-CF-001..003)", () => {
 });
 
 describe("manual cash entries", () => {
-  const input = { amount: money("10"), date: "2027-02-01", today: "2027-02-01", description: "Bunga KMK Mandiri", kind: "interest" as const, coaCode: null };
+  const input = { amount: money("10"), date: "2027-02-01", today: "2027-02-01", description: "Setoran pemilik", kind: "other_in" as const, coaCode: null };
   it("needs a positive amount, a date up to today, a description, and an account for a cost", () => {
     expect(cashEntryProblem(input)).toBeNull();
     expect(cashEntryProblem({ ...input, amount: money("0") })).toBe("amount");

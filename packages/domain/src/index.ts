@@ -42,3 +42,4 @@ export * from "./variance";
 export * from "./invoice";
 export * from "./receivable";
 export * from "./cash-week";
+export * from "./obligo";

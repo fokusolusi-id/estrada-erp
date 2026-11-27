@@ -37,6 +37,8 @@ export const NAV: readonly NavItem[] = [
   { href: "/pipeline", icon: "pipeline", label: "Pipeline", roles: ["finance", "director", "auditor"], alsoIn: { unit: "BCD", roles: ["requestor", "default_owner", "division_owner"] }, group: "Laporan" },
   { href: "/cash", icon: "wallet", label: "Arus Kas", roles: ["finance", "director", "auditor"], group: "Laporan" },
   { href: "/cash/mingguan", icon: "wallet", label: "Kas Mingguan", roles: ["finance", "cash_manager", "director", "auditor"], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Laporan" },
+  { href: "/obligo", icon: "bank", label: "Obligo Bank", roles: ["finance", "cash_manager", "director", "auditor"], alsoIn: { unit: "PMO", roles: ["requestor", "default_owner", "division_owner"] }, group: "Laporan" },
+  { href: "/obligo", icon: "bank", label: "Obligo Bank", roles: [], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Laporan" },
   { href: "/master", icon: "database", label: "Master Data", roles: "all", group: "Data" },
   { href: "/master/persetujuan", icon: "check", label: "Persetujuan Master", roles: ["finance", "director", "auditor", "admin"], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Data" },
   { href: "/rka/actual", icon: "actual", label: "Realisasi", roles: ["finance"], group: "Data" },
