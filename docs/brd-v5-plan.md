@@ -49,7 +49,7 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | B2 Cash receipts and AR aging (`cash_receipt`, migration `0034`, receipts on the invoice, `/piutang` with weekly review, aging and 12-month cash-in) | Built and checked on the local DB. One receipt pays one invoice: no unapplied credit or daily snapshots (`P1-M2`) |
 | B3 AP bills (vendor invoice, bill date, project and PPh type on `payment_request`, migration `0035`; `/hutang` aging) | Built and checked on the local DB. Not built from `P1-M3`: bill lines, approval by amount (A10), payment batches, e-Bupot |
 | B4 Weekly cashflow (`cash_entry`, migration `0036`; `/cash/mingguan`: invoice receipts, paid requests at nett, Cash Management's typed entries; per PT and consolidated; cash out per COA) | Built and checked on the local DB. Not built from `P1-M4`: bank statement import, daily projection, petty-cash accounts per bank |
-| Group E (E1–E9) | Not started; E1–E4 and E6–E8 need no new module |
+| E9 Project profitability (`/portofolio/profitabilitas`; no migration) | Built and checked on the local DB |
 
 Overall order: **Phase A → E4, E7 → D0 → E1, E2, E3 → Phase B → E5, E6, E8 → Phase C → D1–D6 → E9**. The quick E items and D0 come early because they use data the app already has and give BOD and Finance something visible while Phase B is built. Ask the user before changing the order.
 
@@ -156,6 +156,7 @@ Answered by the user on 2026-11-27:
 57. **Reports (D4):** full FC09 flow (preparer, second Finance reviewer, Head of FRM approves, distribute), all eight types. Financial reports need closed months; consolidated Neraca is a sum without elimination.
 58. **Early warning (D5):** acknowledge within 1/2/3/7 days by severity, then Head of FRM, then Direktur. Money rules judged on the group, spending rules per division and unit. DSO = open receivables ÷ last 90 days billing × 90; EW-03 compares the quarter's P&L revenue with the phased target.
 59. **Risk (D6):** severity bands of `P3_Module_Spec` (Critical ≥20, High 15–19, Medium 8–14). Auto-risk from a Critical warning starts at 4×5, owned by its first assignee, due in 30 days. Review every month.
+60. **Profitability (E9):** OPEX per project = the company's yearly RKA OPEX (after shared-cost allocation) split over running projects by contract value. COGS = paid bills to date; rating on EBITDA % (20 / 12 / 5) as the sheet's formula.
 
 ## 3. What the app already has
 

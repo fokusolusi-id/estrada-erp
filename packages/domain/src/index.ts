@@ -60,3 +60,4 @@ export * from "./portfolio";
 export * from "./report";
 export * from "./early-warning";
 export * from "./risk";
+export * from "./profitability";
