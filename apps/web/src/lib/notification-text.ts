@@ -41,6 +41,8 @@ export const NOTIFICATION_TEXT: Record<EmailTemplate, string> = {
   po_returned: "PO dikembalikan",
   telkom_escalation: "Penagihan Telkom melewati SLA",
   invoice_termin_ready: "Termin proyek siap ditagih",
+  kpi_submitted: "Target KPI menunggu persetujuan BOD",
+  kpi_decided: "Target KPI diputuskan BOD",
   payment_submitted: "Permintaan Pembayaran menunggu persetujuan Anda",
   payment_review: "Permintaan Pembayaran perlu diperiksa",
   payment_approval: "Permintaan Pembayaran menunggu persetujuan",

@@ -33,7 +33,8 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | C3 Purchase request → PO → receipt (`purchase_request`, `purchase_order`, `goods_receipt`, `payment_request.purchase_order_id`, migration `0046`; `/pengadaan`; three-way match at BFP check; open POs as commitment) | Built and checked on the local DB. Not built from `FC05`: attachments on PO and BAST, sending the PO to the Mitra, NPWP override approval, spend report by Mitra category |
 | C4 Telkom billing tracker (`billing_track`, `billing_stage`, `billing_escalation`, `billing_obstacle`, `billing_assurance`, migration `0047`; `/tracker-telkom`; daily escalation) | Built and checked on the local DB. Not built: yearly billing achievement (BR-PNG-005), named Telkom and Estrada PICs per tier, auto-fill from the project's BAUT/BARD/BAST fields |
 | C5 Billing trigger (a Recurring project issues no invoice before RFS; approved RFS or BAST emails Accounting the next termin) | Built and checked on the local DB. No migration |
-| Phase D (D0–D6) | Not started; D0 can start after Phase A |
+| D1 KPI targets (`kpi_target`, migration `0048`; `/kpi`: versioned targets per PT, submit and BOD approval with the board decision, actuals and consolidation) | Built and checked on the local DB. Pipeline coverage still uses the segment targets |
+| Phase D (D2–D6) | Not started |
 | E4 Won deals without a project (control list on `/implementasi`, count on `/pipeline`; a project may open from Won Bidding or Closed Won) | Built and checked on the local DB |
 | E7 Audit event catalogue (`audit-catalogue.ts`; logout and failed sign-ins recorded; RKA steps now written to `audit_log`; `/audit` viewer with CSV export) | Built and checked on the local DB. Not done: `SEC.FAILEDACCESS`, role on each row, purging past retention |
 | D0 Beranda widgets that need no new module (`home.ts` in domain, `lib/home.ts`, cards on `/`) | Built and checked on the local DB. Obligo concentration is per facility until banks exist (B5); risk register is D6 |
@@ -145,6 +146,7 @@ Answered by the user on 2026-11-27:
 51. **Procurement (C3):** Head of SCM approves a PO, plus the FRM head and Direktur above the requesting unit's limit; approved POs are commitment only, Realisasi books when paid; a bill linked to a PO passes BFP only up to the received value, bills without a PO stay allowed.
 52. **Telkom tracker (C4):** one escalation tier per SLA period up to 5; tiers 1–3 email the stage's unit, 4 its head, 5 the Direktur; only Close WFM PSB, Close WFM Existing and BA Kesepakatan may be not applicable, with a reason.
 53. **Billing trigger (C5):** service projects are deals with business model Recurring; nothing, DP included, is issued before their RFS is approved.
+54. **KPI targets (D1):** a Direktur seat limited to a PT submits, a Direktur seat covering all PTs (BOD) approves; targets are phased by the monthly shares of `22_Assumptions`.
 
 ## 3. What the app already has
 

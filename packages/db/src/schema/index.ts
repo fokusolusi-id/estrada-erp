@@ -12,3 +12,4 @@ export * from "./tax";
 export * from "./closing";
 export * from "./compliance";
 export * from "./telkom";
+export * from "./kpi";
