@@ -5,7 +5,7 @@ import { AUDIT_EVENTS, AUDIT_MODULES, auditEvent, auditMatcher, auditResult } fr
 const APP_ACTIONS = [
   "auth.login", "auth.login_failed", "auth.logout", "admin.act_as", "position.switch", "user.invite", "user.update",
   "position.create", "position.update", "position.assign_acting", "position.clear_acting",
-  "line.create", "line.update", "line.delete", "line.comment", "line.shared", "line.actual", "variance.note", "actual.adjust",
+  "line.create", "line.update", "line.delete", "line.comment", "line.shared", "line.actual", "variance.note", "actual.adjust", "invoice.create", "invoice.update", "invoice.return", "invoice.cancel", "invoice.validate", "invoice.approve", "invoice.issue", "receipt.record", "receipt.reverse",
   "line.submit", "line.consolidate", "line.approve", "line.finalize", "line.lock", "line.return", "line.send_back", "line.clarify",
   "cycle.deadline", "cycle.open", "cycle.revise", "version.headcount",
   "pipeline.create", "pipeline.update", "pipeline.delete", "pipeline.recovery_plan",

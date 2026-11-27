@@ -22,6 +22,30 @@ export const COPY: Record<EmailTemplate, Copy> = {
     body: () => "Kami menerima permintaan atur ulang kata sandi. Abaikan email ini jika Anda tidak memintanya.",
     cta: "Atur ulang kata sandi",
   },
+  invoice_created: {
+    subject: "Invoice menunggu validasi pajak",
+    heading: "Invoice baru",
+    body: (p) => `Draft invoice ${p.entity ?? ""} untuk ${p.customer ?? ""} (${p.project ?? ""}) menunggu validasi pajak.`,
+    cta: "Buka invoice",
+  },
+  invoice_validated: {
+    subject: "Invoice menunggu persetujuan",
+    heading: "Invoice siap disetujui",
+    body: (p) => `Pajak invoice ${p.entity ?? ""} untuk ${p.customer ?? ""} (${p.project ?? ""}) sudah divalidasi.`,
+    cta: "Buka invoice",
+  },
+  invoice_issued: {
+    subject: "Invoice terbit",
+    heading: "Invoice terbit",
+    body: (p) => `Invoice ${p.number ?? ""} untuk ${p.customer ?? ""} sudah diterbitkan.`,
+    cta: "Buka invoice",
+  },
+  invoice_returned: {
+    subject: "Invoice dikembalikan",
+    heading: "Invoice dikembalikan",
+    body: (p) => `Invoice untuk ${p.customer ?? ""} (${p.project ?? ""}) dikembalikan ke draft. Catatan: "${p.comment ?? ""}"`,
+    cta: "Perbaiki invoice",
+  },
   master_change_submitted: {
     subject: "Perubahan master menunggu persetujuan",
     heading: "Permintaan perubahan master",

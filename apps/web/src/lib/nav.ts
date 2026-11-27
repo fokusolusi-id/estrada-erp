@@ -6,7 +6,7 @@ export interface NavItem {
   roles: readonly Role[] | "all";
   icon: string;
   /** Menu section; items without one sit at the top. */
-  group?: "Anggaran" | "Pembayaran" | "Proyek" | "Laporan" | "Data" | "Admin" | "Bantuan";
+  group?: "Anggaran" | "Pembayaran" | "Penagihan" | "Proyek" | "Laporan" | "Data" | "Admin" | "Bantuan";
   /** Also shown to these roles when the user's unit sits within `unit`, or any of them (BCD's people for Pipeline). */
   alsoIn?: { unit: string | readonly string[]; roles: readonly Role[] };
   phase?: number;
@@ -27,6 +27,10 @@ export const NAV: readonly NavItem[] = [
   { href: "/pembayaran", icon: "pay", label: "Permintaan Pembayaran", roles: ["requestor", "default_owner", "division_owner", "finance", "bfp", "cash_manager", "director", "auditor"], group: "Pembayaran" },
   { href: "/pembayaran/rekap", icon: "recap", label: "Rekap Pembayaran", roles: ["finance", "bfp", "cash_manager", "director", "auditor"], group: "Pembayaran" },
   { href: "/pembayaran/rekening", icon: "bank", label: "Rekening Bank", roles: ["cash_manager", "admin"], group: "Pembayaran" },
+  { href: "/invoice", icon: "invoice", label: "Invoice", roles: ["finance", "bfp", "cash_manager", "director", "auditor"], alsoIn: { unit: "FRM-FIN-ATM", roles: ["requestor", "default_owner", "division_owner"] }, group: "Penagihan" },
+  { href: "/invoice", icon: "invoice", label: "Invoice", roles: [], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Penagihan" },
+  { href: "/piutang", icon: "wallet", label: "Piutang", roles: ["finance", "bfp", "cash_manager", "director", "auditor"], alsoIn: { unit: "FRM-FIN-ATM", roles: ["requestor", "default_owner", "division_owner"] }, group: "Penagihan" },
+  { href: "/piutang", icon: "wallet", label: "Piutang", roles: [], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Penagihan" },
   { href: "/implementasi", icon: "project", label: "Implementasi", roles: ["finance", "director", "auditor"], alsoIn: { unit: ["BCD", "PDMS"], roles: ["requestor", "default_owner", "division_owner"] }, group: "Proyek" },
   { href: "/summary", icon: "chart", label: "Management Summary", roles: ["division_owner", "finance", "director", "auditor"], group: "Laporan" },
   { href: "/pipeline", icon: "pipeline", label: "Pipeline", roles: ["finance", "director", "auditor"], alsoIn: { unit: "BCD", roles: ["requestor", "default_owner", "division_owner"] }, group: "Laporan" },

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq, ne } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@estrada/db";
-import { DEAL_STATUSES, DEAL_TYPES, SEGMENTS, canPipeline, canRecoveryPlan, dealProblems, duplicateProject, isWon, needsRecovery, pipelineBySegment, type TerminInput } from "@estrada/domain";
+import { DEAL_STATUSES, DEAL_TYPES, SEGMENTS, canPipeline, canRecoveryPlan, dealProblems, duplicateProject, isWon, money, needsRecovery, pipelineBySegment, terminChangeProblem, type TerminInput } from "@estrada/domain";
 import { loadPipeline, pipelineYear } from "@/lib/pipeline";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
@@ -86,6 +86,14 @@ export async function saveDeal(input: Omit<z.input<typeof Deal>, "termins"> & { 
   if (!picked.active && before?.customerId !== picked.id) return { ok: false, message: "Customer sudah nonaktif di Master Customer." };
   // A deal with a project is a won one in delivery: it does not fall back below Won Bidding.
   if (id && !isWon(deal.status) && (await hasProject(id))) return { ok: false, message: "Deal ini sudah memiliki proyek di Implementasi; statusnya tetap Won Bidding atau Closed Won." };
+  if (id) {
+    const invoiced = await db.select({ no: schema.invoice.terminNo, billed: schema.invoice.billed }).from(schema.invoice).where(and(eq(schema.invoice.dealId, id), ne(schema.invoice.state, "cancelled")));
+    const touched = terminChangeProblem(
+      termins.map((t) => ({ no: t.no, amount: money(t.amount) })),
+      invoiced.map((i) => ({ no: i.no, amount: money(i.billed) })),
+    );
+    if (touched !== null) return { ok: false, message: `Termin ${touched} sudah ditagih: nilai dan urutannya tidak dapat diubah.` };
+  }
   await db.transaction(async (tx) => {
     let dealId = id;
     if (id) {
