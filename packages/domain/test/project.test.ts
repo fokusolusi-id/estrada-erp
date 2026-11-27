@@ -130,10 +130,9 @@ describe("siteProblems: Kamus Field B", () => {
   });
 });
 
-describe("canOpenProject: proyek dibuka setelah kontrak terbit (Tahap 1)", () => {
-  it("opens a project only from a Closed Won deal", () => {
-    expect(canOpenProject({ status: "CW" })).toBe(true);
-    expect(canOpenProject({ status: "WB" })).toBe(false);
+describe("canOpenProject (sheet 41_Pipeline_Projek_Sync: Won Bidding and signed deals have a project)", () => {
+  it("opens a project from a Won Bidding or Closed Won deal only", () => {
+    expect(["PP", "PT", "QO", "WB", "CW"].filter((status) => canOpenProject({ status: status as "PP" }))).toEqual(["WB", "CW"]);
   });
 });
 

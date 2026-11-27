@@ -32,7 +32,7 @@ export default async function ImplementasiPage() {
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <PageHeader
         title="Implementasi"
-        description="Proyek dibuka dari deal Closed Won dan dicatat per lokasi. Progres = lokasi selesai ÷ jumlah lokasi kontrak."
+        description="Proyek dibuka dari deal Won Bidding atau Closed Won dan dicatat per lokasi. Progres = lokasi selesai ÷ jumlah lokasi kontrak."
         note={<ViewNote ignores={["division"]} />}
       />
 
@@ -86,16 +86,18 @@ export default async function ImplementasiPage() {
               </TableBody>
             </Table>
           ) : (
-            <p className="text-muted-foreground text-sm">Belum ada proyek. Proyek dibuka oleh BCD dari deal berstatus Closed Won.</p>
+            <p className="text-muted-foreground text-sm">Belum ada proyek. Proyek dibuka oleh BCD dari deal Won Bidding atau Closed Won.</p>
           )}
         </CardContent>
       </Card>
 
       {deals.length ? (
-        <Card>
+        <Card id="tanpa-proyek">
           <CardHeader>
-            <CardTitle>Closed Won menunggu proyek</CardTitle>
-            <CardDescription>Kontrak sudah terbit tetapi proyeknya belum dibuka. BCD mengisi jumlah lokasi menurut kontrak; angka itu menjadi pembagi progres.</CardDescription>
+            <CardTitle>Deal menang tanpa proyek</CardTitle>
+            <CardDescription>
+              {deals.length} deal Won Bidding atau Closed Won belum punya proyek. BCD mengisi jumlah lokasi menurut kontrak lalu membukanya; angka itu menjadi pembagi progres.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ProjectOpen deals={deals} onOpen={openProject} />

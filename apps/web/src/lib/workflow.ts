@@ -72,6 +72,17 @@ export async function applyTransition(actor: Actor, lineIds: string[], action: A
     const t = transition(from, { action, role: actor.role, ...(comment ? { comment } : {}) }, cfg);
 
     await tx.update(schema.budgetLine).set({ state: t.to, updatedAt: new Date() }).where(inArray(schema.budgetLine.id, lineIds));
+    // RKA.SUBMIT and RKA.APPROVE in the audit log, beside the line's own history.
+    await tx.insert(schema.auditLog).values(
+      lines.map((l) => ({
+        actorUserId: actor.userId,
+        action: `line.${action}`,
+        subjectType: "budget_line",
+        subjectId: l.id,
+        before: { state: t.from },
+        after: { state: t.to, ...(comment ? { comment } : {}) },
+      })),
+    );
     await tx.insert(schema.approvalEvent).values(
       lines.map((l) => ({
         lineId: l.id,

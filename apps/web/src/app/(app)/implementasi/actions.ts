@@ -39,7 +39,7 @@ const done = (id?: string) => {
   if (id) revalidatePath(`/implementasi/${id}`);
 };
 
-/** Opens a project from a Closed Won deal. BCD's people, within their entities (Kewenangan A row 1). */
+/** Opens a project from a won deal (Won Bidding or Closed Won). BCD's people, within their entities (Kewenangan A row 1). */
 export async function openProject(dealId: string, contractSites: number): Promise<Result> {
   const user = await requireUser();
   const parsed = z.object({ dealId: z.string().uuid(), contractSites: z.number().int().min(1).max(100000) }).safeParse({ dealId, contractSites });
@@ -47,7 +47,7 @@ export async function openProject(dealId: string, contractSites: number): Promis
   const org = await loadOrg();
   const [deal] = await db.select().from(schema.pipelineDeal).where(eq(schema.pipelineDeal.id, dealId));
   if (!deal || !canProject(user.actor, "open", { entity: deal.entityCode, team: null }, org)) return { ok: false, message: "Proyek dibuka oleh BCD untuk entitasnya." };
-  if (!canOpenProject(deal)) return { ok: false, message: "Proyek hanya dibuka dari deal berstatus Closed Won." };
+  if (!canOpenProject(deal)) return { ok: false, message: "Proyek hanya dibuka dari deal Won Bidding atau Closed Won." };
   const [existing] = await db.select({ id: schema.project.id }).from(schema.project).where(eq(schema.project.dealId, dealId));
   if (existing) return { ok: false, message: "Deal ini sudah memiliki proyek." };
 

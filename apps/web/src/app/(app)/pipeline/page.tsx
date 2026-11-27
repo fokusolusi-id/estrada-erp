@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { and, asc, eq } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
-import { DEAL_STATUS_LABEL, billingPlan, canPipeline, canRecoveryPlan, duplicateProjects, isWon, needsRecovery, pipelineByCoa, pipelineBySegment, pipelineTotals, sum, unitLabel, ZERO } from "@estrada/domain";
+import { DEAL_STATUS_LABEL, billingPlan, canPipeline, canProject, canRecoveryPlan, duplicateProjects, isWon, needsRecovery, pipelineByCoa, pipelineBySegment, pipelineTotals, sum, unitLabel, ZERO } from "@estrada/domain";
 import { displayUnit } from "@/lib/display-unit";
+import { dealsAwaitingProject } from "@/lib/implementasi";
 import { loadPipeline, pipelineYear } from "@/lib/pipeline";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
@@ -68,6 +70,10 @@ export default async function PipelinePage() {
   const carried = sum(billing.rows.map((r) => r.carried));
   const noCoa = deals.filter((d) => !d.coaCode).length;
   const duplicates = duplicateProjects(deals);
+  // Control (sheet 41_Pipeline_Projek_Sync): every won deal has a project.
+  const listed = new Set(deals.map((d) => d.id));
+  // Counted as Implementasi lists them: within the entities the seat may see there.
+  const withoutProject = (await dealsAwaitingProject()).filter((d) => listed.has(d.id) && canProject(user.actor, "view", { entity: d.entity, team: null }, org)).length;
   const unlinked = deals.filter((d) => !d.customerId).sort((a, b) => a.customer.localeCompare(b.customer, "id"));
   const canPlan = canRecoveryPlan(user.actor, org);
 
@@ -93,6 +99,17 @@ export default async function PipelinePage() {
             {noCoa ? ` ${noCoa} deal belum memiliki COA pendapatan.` : ""}
             {duplicates.length ? ` ${sum(duplicates.map((g) => ZERO.plus(g.length))).toFixed(0)} deal memakai nama project yang sama dalam satu entitas (${duplicates.length} nama); nama project harus unik karena menjadi Kode Proyek.` : ""}
             {" "}Deal tersebut tidak dapat disimpan ulang sebelum diperbaiki.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {withoutProject ? (
+        <Alert data-testid="pipeline-without-project">
+          <AlertDescription>
+            {withoutProject} deal Won Bidding atau Closed Won belum punya proyek.{" "}
+            <Link href="/implementasi#tanpa-proyek" className="font-medium underline underline-offset-4">
+              Lihat di Implementasi
+            </Link>
           </AlertDescription>
         </Alert>
       ) : null}

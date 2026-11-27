@@ -23,6 +23,9 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | Phase B (B1–B8) | Not started |
 | Phase C (C1–C5) | Not started |
 | Phase D (D0–D6) | Not started; D0 can start after Phase A |
+| E4 Won deals without a project (control list on `/implementasi`, count on `/pipeline`; a project may open from Won Bidding or Closed Won) | Built and checked on the local DB |
+| E7 Audit event catalogue (`audit-catalogue.ts`; logout and failed sign-ins recorded; RKA steps now written to `audit_log`; `/audit` viewer with CSV export) | Built and checked on the local DB. Not done: `SEC.FAILEDACCESS`, role on each row, purging past retention |
+| D0 Beranda widgets that need no new module (`home.ts` in domain, `lib/home.ts`, cards on `/`) | Built and checked on the local DB. Obligo concentration is per facility until banks exist (B5); risk register is D6 |
 | Group E (E1–E9) | Not started; E1–E4 and E6–E8 need no new module |
 
 Overall order: **Phase A → E4, E7 → D0 → E1, E2, E3 → Phase B → E5, E6, E8 → Phase C → D1–D6 → E9**. The quick E items and D0 come early because they use data the app already has and give BOD and Finance something visible while Phase B is built. Ask the user before changing the order.
@@ -103,6 +106,7 @@ Answered by the user on 2026-11-27:
 30. **Closed month** blocks posting dates only (payment schedule and paid dates now; invoices, receipts and bills in Phase B). Plans stay editable.
 31. **Closing** warns and still accepts postings; Finance Reviewer or FRM Division Owner moves a month on. Admin or FRM Division Owner reopens, with a reason (`MOD-F1` names Admin only).
 32. **SoD seats:** director = BOD / Direktur PT; finance and bfp = Finance-Pricing; cash_manager = Finance-CashMgmt; BCD head = Head BusDev, other BCD = Sales; PMO = PM; SCM = SCM; MSO and ISO = OPS; FRM-FIN-ATM = AR/Tax and Accounting. The check runs in the two transition paths rather than inside `can()`.
+33. **E4:** a project may be opened from a Won Bidding or Closed Won deal (`41_Pipeline_Projek_Sync`); a deal with a project cannot fall below Won Bidding or be deleted.
 
 ## 3. What the app already has
 
