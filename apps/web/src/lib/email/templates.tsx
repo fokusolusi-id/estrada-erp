@@ -366,6 +366,18 @@ export const COPY: Record<EmailTemplate, Copy> = {
     body: (p) => `Laporan ${p.report ?? ""} sudah disetujui dan dapat dibaca.`,
     cta: "Buka laporan",
   },
+  ew_alert: {
+    subject: "Peringatan dini baru",
+    heading: "Peringatan Dini",
+    body: (p) => `${p.count ?? "Beberapa"} peringatan baru ditugaskan kepada Anda. Terima dan tindak lanjuti di aplikasi.`,
+    cta: "Buka peringatan",
+  },
+  ew_escalated: {
+    subject: "Peringatan dini dieskalasi",
+    heading: "Eskalasi",
+    body: (p) => `${p.count ?? "Beberapa"} peringatan belum diterima dalam batas waktu dan dieskalasi kepada Anda.`,
+    cta: "Buka peringatan",
+  },
   deadline_near: {
     subject: "Batas waktu RKA mendekat",
     heading: "Batas waktu mendekat",

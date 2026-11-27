@@ -37,7 +37,8 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | D2 KPI health (`/kpi/kesehatan`: 10 KPIs of `08_KPI_Thresholds` with bands, three stress tests; no migration) | Built and checked on the local DB. Beranda cards do not use the bands yet |
 | D3 BOD dashboard and portfolio (`/dashboard`, `/portofolio`; monthly highlights, view log; migration 0049) | Built and checked on the local DB. Export is browser print; no PPT; the health check is a table, not a radar |
 | D4 Periodic reports (`/laporan`: eight types, month to year, review and approval, frozen once approved, Excel and print; migration 0050) | Built and checked on the local DB. No digital signature (decision); no automatic generation at cutoff (a person generates the draft) |
-| Phase D (D5–D6) | Not started |
+| D5 Early warning (`/peringatan`: 15 rules from `P3_Module_Spec`, daily job, acknowledge, resolve, escalation; migration 0051) | Built and checked on the local DB. EW-07 and EW-10 have no data source; no WhatsApp, snooze, rule editor or auto-risk |
+| Phase D (D6) | Not started |
 | E4 Won deals without a project (control list on `/implementasi`, count on `/pipeline`; a project may open from Won Bidding or Closed Won) | Built and checked on the local DB |
 | E7 Audit event catalogue (`audit-catalogue.ts`; logout and failed sign-ins recorded; RKA steps now written to `audit_log`; `/audit` viewer with CSV export) | Built and checked on the local DB. Not done: `SEC.FAILEDACCESS`, role on each row, purging past retention |
 | D0 Beranda widgets that need no new module (`home.ts` in domain, `lib/home.ts`, cards on `/`) | Built and checked on the local DB. Obligo concentration is per facility until banks exist (B5); risk register is D6 |
@@ -153,6 +154,7 @@ Answered by the user on 2026-11-27:
 55. **KPI health (D2):** cash plan = Arus Kas forecast; flow KPIs are year to date; positive EBITDA under 1% of revenue is WASPADA; capital efficiency uses annualised EBIT.
 56. **Portfolio (D3):** revenue = issued invoice DPP; COGS = paid payment requests on COGS accounts; At-risk = a blocked site or an unmet RFS target within 14 days. Dashboard: Direktur, Auditor, Head of FRM; portfolio also Finance.
 57. **Reports (D4):** full FC09 flow (preparer, second Finance reviewer, Head of FRM approves, distribute), all eight types. Financial reports need closed months; consolidated Neraca is a sum without elimination.
+58. **Early warning (D5):** acknowledge within 1/2/3/7 days by severity, then Head of FRM, then Direktur. Money rules judged on the group, spending rules per division and unit. DSO = open receivables ÷ last 90 days billing × 90; EW-03 compares the quarter's P&L revenue with the phased target.
 
 ## 3. What the app already has
 
