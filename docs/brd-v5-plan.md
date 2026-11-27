@@ -20,6 +20,7 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | A9 Period master (`fiscal_period`, migration `0029`, `/master/periode`; `assertOpenPeriod` guards payment schedule and paid dates) | Built and checked on the local DB. Phase B postings must call `assertOpenPeriod` |
 | A11 SoD check (`sod.ts` encodes the 13 X pairs of `05_SoD_Matrix`; enforced in `applyTransition` and `applyPaymentTransition`; `actor_unit` on both event tables, migration `0030`) | Built; tests for every X pair |
 | A10 Approval above the cost center limit (payment states `frm_approval`, `director_approval`, migration `0037`; limit = nearest unit with `approval_limit`, compared with DPP) and the self-payment warning | Built and checked on the local DB. Payment requests only; no `approval_threshold` table (limits live on `org_unit`) |
+| B5 Bank facilities, drawings and guarantees (`bank_facility`, `facility_drawing`, `facility_payment`, migration `0038`; `/obligo`; reminders; concentration alert; `pnpm db:master` loads `14_Obligo_Status_Apr2026`; loans, principal and interest feed `/cash/mingguan`) | Built and checked on the local DB. Not built from `P1-M5`: covenants, daily interest accrual, 80% utilisation warning, bank master table, W1–W4 cash-in estimate (BR-OBG-008). `loan_facility` stays the yearly forecast |
 | Phase B (B1–B8) | Not started |
 | Phase C (C1–C5) | Not started |
 | Phase D (D0–D6) | Not started; D0 can start after Phase A |
@@ -122,6 +123,7 @@ Answered by the user on 2026-11-27:
 39. **Placeholder NPWP and NIB** values are acceptable for now.
 40. **Kepala Finance & Risk Management Div.** is held by Kamal Abdillah (Head of FRM in `Data Karyawan`).
 41. **Self-payment:** paying a request you raised yourself only warns, it is not blocked.
+42. **Obligo (B5):** PMO or Finance request, Cash Management issues (`FC08_Obligo_Bank`); drawdowns, principal and interest enter the weekly cashflow automatically and are no longer typed there; the project's PM (PMO head if none) confirms a guarantee's release; opening data from `14_Obligo_Status_Apr2026`.
 
 ## 3. What the app already has
 

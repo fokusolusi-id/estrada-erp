@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CASH_ENTRY_KINDS, CASH_ENTRY_LABEL, type CashEntryKind } from "@estrada/domain";
+import { CASH_ENTRY_KINDS, CASH_ENTRY_LABEL } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,7 +11,7 @@ type Result = { ok: boolean; message: string };
 export interface CashEntryFields {
   entityCode: string;
   onDate: string;
-  kind: CashEntryKind;
+  kind: (typeof CASH_ENTRY_KINDS)[number];
   amount: string;
   coaCode: string;
   description: string;
@@ -149,7 +149,7 @@ export function CashEntries({
           {field("Tanggal", <Input aria-label="Tanggal" type="date" max={form.today} value={v.onDate} onChange={(e) => setV({ ...v, onDate: e.target.value })} />)}
           {field(
             "Jenis",
-            <select aria-label="Jenis" className={SELECT} value={v.kind} onChange={(e) => setV({ ...v, kind: e.target.value as CashEntryKind })}>
+            <select aria-label="Jenis" className={SELECT} value={v.kind} onChange={(e) => setV({ ...v, kind: e.target.value as CashEntryFields["kind"] })}>
               {CASH_ENTRY_KINDS.map((k) => (
                 <option key={k} value={k}>
                   {CASH_ENTRY_LABEL[k]}

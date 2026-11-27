@@ -36,14 +36,14 @@ Setiap pengguna memegang posisi: peran, unit organisasi, dan entitas yang boleh 
 | Requestor | Beranda, RKA Saya, Permintaan Pembayaran, Master Data, Panduan | Baris unitnya selama Draft | Kirim ke Default Owner |
 | Default Owner | Beranda, RKA Saya, Antrean Konsolidasi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Master Data, Panduan | Baris dalam cakupannya selama Konsolidasi | Kirim ke Division Owner, Kembalikan (catatan wajib) |
 | Division Owner | Beranda, RKA Divisi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Management Summary, Master Data, Panduan | Tidak | Setujui & kirim ke Finance, Kembalikan ke Default Owner (catatan wajib) |
-| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Implementasi, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Master Data, Persetujuan Master, Realisasi, Biaya Bersama, COA Master, Panduan | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
+| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Implementasi, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Realisasi, Biaya Bersama, COA Master, Panduan | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
 | Business Finance (BFP) | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Master Data, Panduan | Tidak | Memeriksa Permintaan Pembayaran (lihat bagian Permintaan Pembayaran) |
-| Cash Management | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Rekening Bank, Invoice, Piutang, Kas Mingguan, Master Data, Panduan | Tidak | Menjadwalkan dan membayar Permintaan Pembayaran |
-| Direktur | Beranda, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Implementasi, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Master Data, Persetujuan Master, Audit Log, Panduan | Tidak | Tidak ada, hanya membaca |
-| Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Implementasi, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Master Data, Persetujuan Master, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
+| Cash Management | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Rekening Bank, Invoice, Piutang, Kas Mingguan, Obligo Bank, Master Data, Panduan | Tidak | Menjadwalkan dan membayar Permintaan Pembayaran |
+| Direktur | Beranda, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Implementasi, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Audit Log, Panduan | Tidak | Tidak ada, hanya membaca |
+| Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Implementasi, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
 | Admin | Beranda, Rekening Bank, Master Data, Persetujuan Master, Audit Log, Pengguna, Unit & Entitas, Struktur Organisasi, Panduan | Tidak | Tidak ada; tidak melihat angka anggaran |
 
-Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner) juga melihat Pipeline; orang BCD dan PDMS (PMO, SCM, ISO, MSO) dengan peran yang sama juga melihat Implementasi. Unit Accounting & Tax Management (FRM-FIN-ATM) dengan peran yang sama melihat Invoice dan Piutang, dan Requestor-nya juga Monitor Anggaran. Division Owner FRM juga melihat Invoice, Piutang, Kas Mingguan dan Persetujuan Master. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
+Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner) juga melihat Pipeline; orang BCD dan PDMS (PMO, SCM, ISO, MSO) dengan peran yang sama juga melihat Implementasi. Unit Accounting & Tax Management (FRM-FIN-ATM) dengan peran yang sama melihat Invoice dan Piutang, dan Requestor-nya juga Monitor Anggaran. Orang PMO dengan peran Requestor, Default Owner atau Division Owner juga melihat Obligo Bank. Division Owner FRM juga melihat Invoice, Piutang, Kas Mingguan, Obligo Bank dan Persetujuan Master. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
 
 ## Memulai
 
@@ -362,8 +362,22 @@ Menu **Laporan → Kas Mingguan** menampilkan realisasi kas per minggu: **W1** t
 - **Saldo kas awal** berasal dari saldo 1 Januari di **Arus Kas → Asumsi** ditambah semua mutasi sebelumnya. PT yang saldonya belum diisi dihitung nol dan diberi peringatan.
 - **Cash In** otomatis dari penerimaan invoice. *Indirect* bila pelanggannya perusahaan Telkom dan pelanggan akhir pada deal berbeda; selain itu *Direct*.
 - **Kas keluar** otomatis dari Permintaan Pembayaran yang sudah **dibayar**, sebesar nilai nett, pada tanggal bayar. Akunnya mengikuti baris anggaran: **Direct Cost** (COA 5100–5900), **OPEX** (COA 6100–6420), selain itu **Pengeluaran lain**.
-- **Cash Management** mencatat sisanya di **Transaksi kas lain**: pinjaman atau injeksi kas, penerimaan lain, bunga, cicilan KMK, biaya di luar Permintaan Pembayaran (wajib memilih akun COA) dan pengeluaran lain. Jangan catat ulang penerimaan invoice atau pembayaran yang sudah ada di aplikasi.
+- **Pinjaman, bunga dan cicilan** otomatis dari **Obligo Bank**: penarikan kredit pada tanggal terbitnya, pokok dan bunga pada tanggal bayarnya.
+- **Cash Management** mencatat sisanya di **Transaksi kas lain**: penerimaan lain, biaya di luar Permintaan Pembayaran (wajib memilih akun COA) dan pengeluaran lain. Jangan catat ulang yang sudah ada di aplikasi.
 - Tanggal transaksi harus pada periode yang belum ditutup dan tidak setelah hari ini. Transaksi yang salah **dibatalkan** dengan alasan, tidak dihapus.
+
+## Obligo Bank
+
+Menu **Laporan → Obligo Bank** memuat fasilitas bank yang dipakai: plafon, outstanding dan kelonggaran. Dibaca Cash Management, Finance, Division Owner FRM, Direktur, Auditor dan orang PMO. Peringatan muncul bila satu bank memegang lebih dari 50% seluruh plafon.
+
+- **Fasilitas** dikelola Cash Management (*Kelola fasilitas*): bank, nama, jenis (Bank Garansi, KMK, Kredit Investasi, Trade Line), perusahaan, plafon, expired, tanggal bunga dan rekening escrow. Plafon tidak boleh di bawah outstanding.
+- **Permintaan** penarikan kredit atau Bank Garansi diajukan orang PMO atau Finance: pilih fasilitas, nilai, underlying (kontrak atau KL) dan lampirkan dokumennya. Bank Garansi wajib terkait proyek dan memilih tipe (Penawaran, Pelaksanaan, Pemeliharaan, Uang Muka). Melebihi kelonggaran, atau fasilitas expired, ditolak.
+- **Cash Management** memeriksa lalu *Terbitkan* (nomor BG atau akad, tanggal terbit, jatuh tempo) atau *Tolak* dengan alasan. Pengaju tidak bisa menerbitkan permintaannya sendiri.
+- **Release BG:** PM proyek (Head PMO bila proyek belum punya PM) menekan *Konfirmasi kontrak selesai*, lalu Cash Management *Lepas BG*. BG yang lewat jatuh tempo berstatus Expired dan tetap memakai plafon sampai dilepas.
+- **Pokok dan bunga** dicatat Cash Management; pokok mengurangi outstanding penarikannya. Yang salah dibatalkan dengan alasan.
+- **Pengingat email** ke Cash Management: 30 hari sebelum plafon atau BG expired, dan 7 hari sebelum tanggal bunga.
+- Data awal berasal dari sheet 14_Obligo_Status_Apr2026 (per 14 April 2026, ditandai *Saldo awal*, tidak masuk Kas Mingguan). Tanggal expired plafon diisi Cash Management.
+- Pinjaman di **Arus Kas** adalah rencana tahunan dan terpisah dari daftar ini.
 
 ## Master Data
 

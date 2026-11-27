@@ -83,7 +83,7 @@ export default async function WeeklyCashPage({ searchParams }: { searchParams: P
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <PageHeader
         title={`Kas Mingguan ${title}`}
-        description={`Realisasi kas: penerimaan invoice, Permintaan Pembayaran yang dibayar (nett) dan transaksi yang dicatat Cash Management. ${
+        description={`Realisasi kas: penerimaan invoice, Permintaan Pembayaran yang dibayar (nett), fasilitas bank dan transaksi yang dicatat Cash Management. ${
           entities.length === 1 ? `Entitas ${entities[0]}.` : `Konsolidasi ${entities.length} entitas aktif.`
         } Angka dalam ${unitLabel(unit)}.`}
         note={<ViewNote ignores={["division"]} />}
@@ -200,7 +200,7 @@ export default async function WeeklyCashPage({ searchParams }: { searchParams: P
       <Card>
         <CardHeader>
           <CardTitle>Transaksi kas lain</CardTitle>
-          <CardDescription>Pinjaman, bunga, cicilan, kas kecil dan transaksi lain di luar invoice dan Permintaan Pembayaran. Nilai penuh dalam rupiah.</CardDescription>
+          <CardDescription>Kas kecil dan transaksi lain di luar invoice, Permintaan Pembayaran dan fasilitas bank (Obligo Bank). Nilai penuh dalam rupiah.</CardDescription>
         </CardHeader>
         <CardContent>
           <CashEntries

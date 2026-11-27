@@ -13,3 +13,4 @@ export * from "./customers";
 export * from "./partners";
 export * from "./companies";
 export * from "./cost-centers";
+export * from "./obligo";
