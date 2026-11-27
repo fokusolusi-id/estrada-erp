@@ -15,6 +15,7 @@ import {
   pipelineTotals,
   statusBand,
   terminTotal,
+  defaultTermins,
   weighted,
   type DealInput,
 } from "@estrada/domain";
@@ -268,6 +269,7 @@ function DealForm({
     termins: (initial.termins ?? []).map((t) => ({ amount: shown(t.amount), plannedDate: t.plannedDate, description: t.description ?? "" })),
   });
   const [pending, startTransition] = useTransition();
+  const [sppbj, setSppbj] = useState("");
   const set = (patch: Partial<typeof d>) => setD((cur) => ({ ...cur, ...patch }));
   const { leadTime, ...rest } = d;
   const normal: DealSave = {
@@ -413,11 +415,23 @@ function DealForm({
               {contract.gt(0) ? ` (${planned.div(contract).times(100).toFixed(1).replace(".", ",")}%)` : ""}
             </span>
           </legend>
-          <Button type="button" variant="outline" size="sm" onClick={() => set({ termins: [...d.termins, { amount: "", plannedDate: "", description: "" }] })}>
-            <Plus aria-hidden /> Tambah termin
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Input type="date" aria-label="Tanggal SPPBJ" title="Tanggal SPPBJ" className="h-8 w-40" value={sppbj} onChange={(e) => setSppbj(e.target.value)} />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!sppbj || !contract.gt(0)}
+              onClick={() => set({ termins: defaultTermins(contract, sppbj).map((t) => ({ ...t, amount: shown(t.amount.replace(/\.00$/, "")) })) })}
+            >
+              Isi jadwal default
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => set({ termins: [...d.termins, { amount: "", plannedDate: "", description: "" }] })}>
+              <Plus aria-hidden /> Tambah termin
+            </Button>
+          </div>
         </div>
-        <p className="text-muted-foreground text-xs">Rencana invoice hanya berasal dari termin ini. Deal Closed Won wajib memiliki termin senilai 100% nilai kontrak.</p>
+        <p className="text-muted-foreground text-xs">Rencana invoice hanya berasal dari termin ini. Deal Closed Won wajib memiliki termin senilai 100% nilai kontrak. <em>Isi jadwal default</em> mengganti daftar dengan DP 15% (SPPBJ + 30 hari), progress 80% (+ 3 bulan) dan retensi 5% (6 bulan sesudah progress); semuanya boleh diubah.</p>
         {d.termins.map((t, i) => (
           <div key={i} className="grid gap-2 sm:grid-cols-[1fr_1fr_2fr_auto]" data-testid={`termin-${i + 1}`}>
             <MoneyInput aria-label={`Nilai termin ${i + 1}`} placeholder="Nilai (exclude PPN)" value={t.amount} onChange={(e) => setTermin(i, { amount: e.target.value })} />

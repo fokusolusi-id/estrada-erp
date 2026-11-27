@@ -295,6 +295,13 @@
       "when": 1795778541625,
       "tag": "0041_broken_songbird",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1795779778332,
+      "tag": "0042_faithful_wildside",
+      "breakpoints": true
     }
   ]
 }

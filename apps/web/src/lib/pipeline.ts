@@ -1,7 +1,7 @@
 import "server-only";
 import { asc, eq, inArray } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
-import { money, type DealInput, type Money } from "@estrada/domain";
+import { money, terminSchedule, type DealInput, type Money } from "@estrada/domain";
 import { reportVersions } from "./rka";
 
 /** The Pipeline register follows the RKA being reported: the open version's year, else the latest locked one's. */
@@ -59,4 +59,22 @@ export async function loadPipeline(
     targets: new Map(targets.map((t) => [t.segment, money(t.target)])),
     recovery: new Map(plans.map((p) => [p.segment, { plan: p.plan, updatedBy: p.updatedBy, updatedAt: p.updatedAt }])),
   };
+}
+
+/** The listed deals' termin against the invoices raised for them (plan E5). */
+export async function loadTerminSchedule(dealIds: string[], year: number, today: string) {
+  if (!dealIds.length) return terminSchedule([], [], year, today);
+  const [termins, invoices] = await Promise.all([
+    db.select().from(schema.billingTermin).where(inArray(schema.billingTermin.dealId, dealIds)),
+    db
+      .select({ dealId: schema.invoice.dealId, no: schema.invoice.terminNo, state: schema.invoice.state, dpp: schema.invoice.dpp, invoicedOn: schema.invoice.invoicedOn })
+      .from(schema.invoice)
+      .where(inArray(schema.invoice.dealId, dealIds)),
+  ]);
+  return terminSchedule(
+    termins.map((t) => ({ dealId: t.dealId, no: t.no, plannedOn: t.plannedOn, amount: money(t.amount), description: t.description })),
+    invoices.map((i) => ({ ...i, dpp: money(i.dpp) })),
+    year,
+    today,
+  );
 }

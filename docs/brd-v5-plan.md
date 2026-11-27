@@ -24,6 +24,8 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | B6 Tax (`tax_document`, `tax_pph21`, migration `0039`; `/pajak`: faktur out and in, bukti potong, monthly summary, 7-day alert, Excel export) | Built and checked on the local DB. Not built from `P1-M11`: Coretax/e-Bupot upload files (waiting for the official template), SPT filing; payroll PPh 21 is typed |
 | B7 Monthly closing (`balance_sheet`, immutable `pnl_snapshot`, migration `0040`; `/closing`; closing a period requires balanced totals and takes the snapshot) | Built and checked on the local DB. Not built from `FC07`/`FC09`: cashflow snapshot, report review and approval steps, PDF with watermark, distribution |
 | B8 P&L (`/pnl`: Revenue to Net Profit per PT and consolidated with intercompany elimination, against the RKA, Excel; `invoice.revenue_coa`, `group_entity_code` on customer and partner, migration `0041`) | Built and checked on the local DB. Not built from `P1-M6`/`P1-M9`: configurable line layout, drill-down to transactions, MoM/YoY view, intercompany review and settlement |
+| E5 Termin schedule defaults (*Isi jadwal default* from the SPPBJ date; planned vs billed per month and overdue list on `/pipeline`) | Built and checked on the local DB. Percentages and offsets are constants, not settings |
+| E6 Scenarios (`scenario_setting`, migration `0042`; `/cash/skenario`: three scenarios, monthly P&L and cash, burn and runway, sensitivity grid) | Built and checked on the local DB. Not built: AR/AP forecast of `28_AR_AP_Forecast`, budget-vs-actual of `27` (covered by `/rka/monitor` and `/pnl`) |
 | Phase B (B1–B8) | Not started |
 | Phase C (C1–C5) | Not started |
 | Phase D (D0–D6) | Not started; D0 can start after Phase A |
@@ -130,6 +132,8 @@ Answered by the user on 2026-11-27:
 43. **Tax (B6):** export is a plain Excel workbook until Finance sends the Coretax template; PPh 21 is typed per PT per month; missing faktur or bukti potong numbers only alert, nothing is blocked.
 44. **Closing (B7):** a cost counts in the month it is paid (as Realisasi), plus accruals; a month closes only with typed, balanced balance sheet totals; each closing adds an immutable snapshot version.
 45. **P&L (B8):** group companies are marked in Master Customer and Mitra; invoices must carry a revenue account; closed months read their snapshot.
+46. **Termin defaults (E5):** DP 15% at SPPBJ + 30 days, progress 80% at + 3 months, retention 5% six months after progress; all editable.
+47. **Scenarios (E6):** Finance types the drivers per RKA year, starting from `22_Assumptions`; the cashflow uses the Arus Kas rules with DSO and DPO as month lags, not sheet 26's collection percentage.
 
 ## 3. What the app already has
 

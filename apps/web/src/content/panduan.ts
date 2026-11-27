@@ -36,11 +36,11 @@ Setiap pengguna memegang posisi: peran, unit organisasi, dan entitas yang boleh 
 | Requestor | Beranda, RKA Saya, Permintaan Pembayaran, Master Data, Panduan | Baris unitnya selama Draft | Kirim ke Default Owner |
 | Default Owner | Beranda, RKA Saya, Antrean Konsolidasi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Master Data, Panduan | Baris dalam cakupannya selama Konsolidasi | Kirim ke Division Owner, Kembalikan (catatan wajib) |
 | Division Owner | Beranda, RKA Divisi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Management Summary, Master Data, Panduan | Tidak | Setujui & kirim ke Finance, Kembalikan ke Default Owner (catatan wajib) |
-| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Laba Rugi, Tutup Buku, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Realisasi, Biaya Bersama, COA Master, Panduan | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
+| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Laba Rugi, Tutup Buku, Management Summary, Pipeline, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Realisasi, Biaya Bersama, COA Master, Panduan | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
 | Business Finance (BFP) | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Master Data, Panduan | Tidak | Memeriksa Permintaan Pembayaran (lihat bagian Permintaan Pembayaran) |
 | Cash Management | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Rekening Bank, Invoice, Piutang, Kas Mingguan, Obligo Bank, Master Data, Panduan | Tidak | Menjadwalkan dan membayar Permintaan Pembayaran |
-| Direktur | Beranda, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Laba Rugi, Tutup Buku, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Audit Log, Panduan | Tidak | Tidak ada, hanya membaca |
-| Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Laba Rugi, Tutup Buku, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
+| Direktur | Beranda, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Laba Rugi, Tutup Buku, Management Summary, Pipeline, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Audit Log, Panduan | Tidak | Tidak ada, hanya membaca |
+| Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Laba Rugi, Tutup Buku, Management Summary, Pipeline, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
 | Admin | Beranda, Rekening Bank, Master Data, Persetujuan Master, Audit Log, Pengguna, Unit & Entitas, Struktur Organisasi, Panduan | Tidak | Tidak ada; tidak melihat angka anggaran |
 
 Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner) juga melihat Pipeline; orang BCD dan PDMS (PMO, SCM, ISO, MSO) dengan peran yang sama juga melihat Implementasi. Unit Accounting & Tax Management (FRM-FIN-ATM) dengan peran yang sama melihat Invoice, Piutang, Pajak, Laba Rugi dan Tutup Buku, dan Requestor-nya juga Monitor Anggaran. Orang PMO dengan peran Requestor, Default Owner atau Division Owner juga melihat Obligo Bank. Division Owner FRM juga melihat Invoice, Piutang, Pajak, Laba Rugi, Tutup Buku, Kas Mingguan, Obligo Bank dan Persetujuan Master. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
@@ -356,6 +356,15 @@ Permintaan jenis *Pembayaran* yang memilih **Mitra** adalah tagihan vendor: isi 
 - **PPh** dihitung dari *Jenis PPh* dan *Tarif* atas Nominal (DPP): PPh 23 otomatis 2%, PPh 4(2) dan 22 diisi tarifnya. Permintaan lama yang nominal PPh-nya diketik tetap memakai angka itu.
 - Menu **Hutang** (Finance Reviewer, BFP, Cash Management, Direktur, Auditor) menampilkan tagihan mitra dari *Submitted* sampai *Scheduled*: yang jatuh tempo minggu ini dan umur hutang per mitra, nilai nett.
 
+## Skenario
+
+Menu **Laporan → Skenario** memproyeksikan tahun berjalan dalam tiga skenario: **Conservative**, **Normal** dan **Aggressive**. Finance Reviewer mengisi; Direktur dan Auditor membaca.
+
+- Asumsi per skenario: target pendapatan, COGS % dan OpEx % dari pendapatan, tarif pajak, DSO, DPO dan CapEx; satu **persentase pendapatan per bulan** (jumlah 100). Nilai awal dari sheet 22_Assumptions sampai disimpan. *Isi Normal dari RKA* mengambil total dan rasio RKA, bila RKA punya pendapatan.
+- Proyeksi kas memakai aturan **Arus Kas**: DSO dan DPO dibulatkan ke bulan sebagai jeda penagihan dan pembayaran; saldo awal, pinjaman dan saldo minimum dari Arus Kas; penyusutan CapEx/12 mengurangi laba, bukan kas.
+- **Burn rate** = rata-rata kas keluar 3 bulan; **runway** = saldo akhir dibagi burn rate.
+- **Sensitivitas** menunjukkan laba bersih untuk kombinasi COGS % dan OpEx % di sekitar skenario terpilih (tanpa penyusutan dan bunga).
+
 ## Kas Mingguan
 
 Menu **Laporan → Kas Mingguan** menampilkan realisasi kas per minggu: **W1** tanggal 1–7, **W2** 8–14, **W3** 15–21, **W4** 22 sampai akhir bulan. Dibaca oleh Cash Management, Finance, Division Owner FRM, Direktur dan Auditor.
@@ -468,6 +477,11 @@ Billing Termin adalah satu-satunya sumber rencana invoice dari Pipeline, sehingg
 | CW | Closed Won | 100% |
 
 Probabilitas di luar rentang statusnya memunculkan peringatan, tetapi tetap bisa disimpan.
+
+### Jadwal termin
+
+- Pada form deal, isi **Tanggal SPPBJ** lalu *Isi jadwal default*: DP 15% (SPPBJ + 30 hari), termin progress 80% (SPPBJ + 3 bulan) dan retensi 5% (6 bulan sesudah progress). Daftar termin diganti; nilai dan tanggal boleh diubah. Termin yang sudah ditagih tidak bisa diubah atau dihapus.
+- Kartu **Termin: rencana dan tagihan** membandingkan rencana per bulan dengan invoice yang sudah terbit, dan mendaftar termin yang **Terlambat** (lewat tanggal rencana, invoice belum terbit) atau invoicenya masih disiapkan.
 
 ## Implementasi
 

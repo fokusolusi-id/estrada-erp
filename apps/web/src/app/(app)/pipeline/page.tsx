@@ -3,10 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { and, asc, eq } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
-import { DEAL_STATUS_LABEL, billingPlan, canPipeline, canProject, canRecoveryPlan, duplicateProjects, isWon, needsRecovery, pipelineByCoa, pipelineBySegment, pipelineTotals, sum, unitLabel, ZERO } from "@estrada/domain";
+import { DEAL_STATUS_LABEL, TERMIN_STATUS_LABEL, billingPlan, canPipeline, canProject, canRecoveryPlan, duplicateProjects, isWon, needsRecovery, pipelineByCoa, pipelineBySegment, pipelineTotals, sum, unitLabel, ZERO } from "@estrada/domain";
 import { displayUnit } from "@/lib/display-unit";
 import { dealsAwaitingProject } from "@/lib/implementasi";
-import { loadPipeline, pipelineYear } from "@/lib/pipeline";
+import { loadPipeline, loadTerminSchedule, pipelineYear } from "@/lib/pipeline";
+import { formatDate, todayJakarta } from "@/lib/payment";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
 import { KpiCard, KpiStrip } from "@/components/erp/kpi-card";
@@ -67,6 +68,9 @@ export default async function PipelinePage() {
   const byCoa = pipelineByCoa(deals);
   const coaName = new Map(coa.map((c) => [c.code, c.name]));
   const billing = billingPlan(deals, year);
+  const schedule = await loadTerminSchedule(deals.map((d) => d.id), year, todayJakarta());
+  const dealById = new Map(deals.map((d) => [d.id, d]));
+  const followUp = schedule.rows.filter((r) => r.status === "overdue" || r.status === "drafted");
   const carried = sum(billing.rows.map((r) => r.carried));
   const noCoa = deals.filter((d) => !d.coaCode).length;
   const duplicates = duplicateProjects(deals);
@@ -365,6 +369,80 @@ export default async function PipelinePage() {
           ) : (
             <p className="text-muted-foreground text-sm">Belum ada deal Closed Won atau termin. Isi Billing Termin pada deal; status Closed Won mewajibkan termin senilai 100% kontrak.</p>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Termin: rencana dan tagihan</CardTitle>
+          <CardDescription>
+            Rencana menurut bulan rencana termin; ditagih menurut tanggal invoice yang sudah terbit (DPP). {schedule.overdue ? `${schedule.overdue} termin terlambat ditagih.` : "Tidak ada termin yang terlambat."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-[minmax(0,1fr)] gap-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{year}</TableHead>
+                {MONTHS.map((m) => (
+                  <TableHead key={m} className="text-right">
+                    {m}
+                  </TableHead>
+                ))}
+                <TableHead className="text-right">Total</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(
+                [
+                  ["Rencana", schedule.planned],
+                  ["Ditagih", schedule.billed],
+                ] as const
+              ).map(([label, months]) => (
+                <TableRow key={label} data-testid={`termin-${label}`}>
+                  <TableCell className="font-medium">{label}</TableCell>
+                  {months.map((m, i) => (
+                    <TableCell key={i} className="text-right">
+                      <FigureCell value={m} unit={unit} />
+                    </TableCell>
+                  ))}
+                  <TableCell className="text-right">
+                    <FigureCell value={sum(months)} unit={unit} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          {followUp.length ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Proyek · termin</TableHead>
+                  <TableHead>Rencana invoice</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Nilai (DPP)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {followUp.map((r) => (
+                  <TableRow key={`${r.dealId}-${r.no}`}>
+                    <TableCell className="min-w-56 whitespace-normal">
+                      <span className="font-medium">{dealById.get(r.dealId)?.project}</span>
+                      <span className="text-muted-foreground block text-xs">
+                        {dealById.get(r.dealId)?.entity} · termin {r.no}
+                        {r.description ? ` · ${r.description}` : ""}
+                      </span>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">{formatDate(r.plannedOn)}</TableCell>
+                    <TableCell className={r.status === "overdue" ? "text-destructive font-medium" : ""}>{TERMIN_STATUS_LABEL[r.status]}</TableCell>
+                    <TableCell className="text-right">
+                      <FigureCell value={r.amount} unit={unit} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : null}
         </CardContent>
       </Card>
 
