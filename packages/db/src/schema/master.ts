@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, date, integer, numeric, pgEnum, pgTable, primaryKey, text, timestamp, unique, uniqueIndex, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { boolean, date, index, integer, jsonb, numeric, pgEnum, pgTable, primaryKey, text, timestamp, unique, uniqueIndex, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
 /** RKA budgets the first five; TAX and BALANCE_SHEET complete the ledger from COA Structured RKA 2027. */
@@ -27,7 +27,20 @@ export const companyEntity = pgTable("company_entity", {
   name: text("name").notNull(),
   costType: costTypeEnum("cost_type").notNull(),
   active: boolean("active").notNull().default(true),
+  /** From sheet M Perusahaan (BR-MD-001); changes go through approval. */
+  npwp: text("npwp"),
+  nib: text("nib"),
+  address: text("address"),
+  /** Kedudukan */
+  domicile: text("domicile"),
+  phone: text("phone"),
+  email: text("email"),
+  director: text("director"),
+  commissioner: text("commissioner"),
+  authorisedCapital: numeric("authorised_capital", { precision: 20, scale: 2 }),
 });
+
+export const functionGroupEnum = pgEnum("function_group", ["Revenue", "Delivery", "Support", "Governance"]);
 
 /** FRM, HCM, PDMS, PMO, SCM, ISO, MSO, BCD, PST (Mapping Entitas A + org chart). */
 export const orgUnit = pgTable("org_unit", {
@@ -39,6 +52,9 @@ export const orgUnit = pgTable("org_unit", {
   aliases: text("aliases").array().notNull().default([]),
   validFrom: date("valid_from").notNull().defaultNow(),
   validTo: date("valid_to"),
+  /** The unit is the cost center: what it may approve, and its group (33_Master_CostCenter). */
+  approvalLimit: numeric("approval_limit", { precision: 20, scale: 2 }),
+  functionGroup: functionGroupEnum("function_group"),
 });
 
 export const position = pgTable("position", {
@@ -54,6 +70,10 @@ export const position = pgTable("position", {
   actingUserId: text("acting_user_id").references(() => user.id),
   /** The person the org chart document names for this seat, until they have an account. */
   holderName: text("holder_name"),
+  /** Org level 1–4 (BR-MD-002, M Organisasi). */
+  level: integer("level"),
+  /** F0–F6 (BR-MD-007, 07_Org_Chart). */
+  functionCodes: text("function_codes").array().notNull().default([]),
 });
 
 /** Entities a position may see; '*' for all. */
@@ -222,4 +242,54 @@ export const partnerProduct = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique("partner_product_unique").on(t.partnerId, t.category, t.type, t.brand)],
+);
+
+export const changeStatusEnum = pgEnum("master_change_status", ["pending", "approved", "applied", "rejected", "cancelled", "failed"]);
+
+/** A change to a sensitive master (COA, Perusahaan) waiting for the Finance Controller (FC12_Master_Data). */
+export const masterChangeRequest = pgTable(
+  "master_change_request",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** "coa" or "entity" */
+    master: text("master").notNull(),
+    subjectId: text("subject_id").notNull(),
+    /** create, update, confirm or remap */
+    action: text("action").notNull(),
+    /** What to write; the record as it was when asked. */
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
+    before: jsonb("before").$type<Record<string, unknown> | null>(),
+    reason: text("reason").notNull(),
+    effectiveOn: date("effective_on").notNull(),
+    status: changeStatusEnum("status").notNull().default("pending"),
+    requesterId: text("requester_id")
+      .notNull()
+      .references(() => user.id),
+    requestedAt: timestamp("requested_at", { withTimezone: true }).notNull().defaultNow(),
+    decidedBy: text("decided_by").references(() => user.id),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    /** The rejection note, or why applying failed. */
+    note: text("note"),
+    appliedAt: timestamp("applied_at", { withTimezone: true }),
+  },
+  (t) => [index("master_change_request_status_idx").on(t.status), index("master_change_request_subject_idx").on(t.master, t.subjectId)],
+);
+
+export const periodStatusEnum = pgEnum("period_status", ["open", "closing", "closed"]);
+
+/** One month of one PT (plan A9). A month with no row is open. */
+export const fiscalPeriod = pgTable(
+  "fiscal_period",
+  {
+    entityCode: text("entity_code")
+      .notNull()
+      .references(() => companyEntity.code),
+    year: integer("year").notNull(),
+    month: integer("month").notNull(),
+    status: periodStatusEnum("status").notNull().default("open"),
+    closedBy: text("closed_by").references(() => user.id),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.entityCode, t.year, t.month] })],
 );

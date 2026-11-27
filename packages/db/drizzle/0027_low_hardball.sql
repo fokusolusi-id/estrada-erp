@@ -1,0 +1,9 @@
+ALTER TABLE "company_entity" ADD COLUMN "npwp" text;--> statement-breakpoint
+ALTER TABLE "company_entity" ADD COLUMN "nib" text;--> statement-breakpoint
+ALTER TABLE "company_entity" ADD COLUMN "address" text;--> statement-breakpoint
+ALTER TABLE "company_entity" ADD COLUMN "domicile" text;--> statement-breakpoint
+ALTER TABLE "company_entity" ADD COLUMN "phone" text;--> statement-breakpoint
+ALTER TABLE "company_entity" ADD COLUMN "email" text;--> statement-breakpoint
+ALTER TABLE "company_entity" ADD COLUMN "director" text;--> statement-breakpoint
+ALTER TABLE "company_entity" ADD COLUMN "commissioner" text;--> statement-breakpoint
+ALTER TABLE "company_entity" ADD COLUMN "authorised_capital" numeric(20, 2);

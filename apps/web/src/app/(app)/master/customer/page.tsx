@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Master Customer" };
 const SEGMENTS = ["Telco", "APH", "K/L", "Pemda"];
 
 export default async function CustomerMasterPage() {
-  const { may, employees } = await masterAccess();
+  const { may, employees, requests, costCenters, periods } = await masterAccess();
   const customers = await db.select().from(schema.customer).orderBy(asc(schema.customer.id));
   const issues = Map.groupBy(customerIssues(customers), (i) => i.id);
   const fields: MasterField[] = [
@@ -35,7 +35,7 @@ export default async function CustomerMasterPage() {
   const names = fields.map((f) => f.name);
 
   return (
-    <MasterWorkspace active="/master/customer" employees={employees} steward="Master Customer dikelola Sales (BCD). Peran lain hanya membaca.">
+    <MasterWorkspace active="/master/customer" periods={periods} costCenters={costCenters} employees={employees} requests={requests} steward="Master Customer dikelola Sales (BCD). Peran lain hanya membaca.">
       <MasterTable
         noun="customer"
         fields={fields}

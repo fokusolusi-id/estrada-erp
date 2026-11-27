@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@estrada/db";
-import { PARTNER_CATEGORIES, can, cleanNpwp, customerIssues, nextMasterId, nextProductId, partnerIssues, splitDuplicateNpwp, type Permission } from "@estrada/domain";
+import { FUNCTION_GROUPS, PARTNER_CATEGORIES, can, parseIdr, cleanNpwp, customerIssues, nextMasterId, nextProductId, partnerIssues, splitDuplicateNpwp, type Permission } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
 
@@ -188,4 +188,35 @@ export async function saveEmployee(nip: string | null, input: Input): Promise<Re
   });
   revalidatePath("/master/karyawan");
   return { ok: true, message: `Karyawan ${record.nip} disimpan.` };
+}
+
+const CostCenter = z.object({
+  functionGroup: z.enum(["", ...FUNCTION_GROUPS]).transform((g) => g || null),
+  approvalLimit: z.string().max(40),
+});
+
+/** An org unit's approval limit and function group; the unit itself is managed on Unit & Entitas. */
+export async function saveCostCenter(code: string | null, input: Input): Promise<Result> {
+  const s = await steward("costcenter.manage", "Limit cost center diubah oleh Finance.", CostCenter, input);
+  if ("refused" in s) return s.refused!;
+  let approvalLimit: string | null = null;
+  if (s.data.approvalLimit.trim()) {
+    try {
+      const v = parseIdr(s.data.approvalLimit);
+      if (v.isNegative()) throw new Error();
+      approvalLimit = v.toFixed(2);
+    } catch {
+      return { ok: false, message: "Limit persetujuan tidak terbaca." };
+    }
+  }
+  const [before] = await db.select().from(schema.orgUnit).where(eq(schema.orgUnit.code, code ?? ""));
+  if (!before) return NOT_FOUND;
+  const after = { functionGroup: s.data.functionGroup, approvalLimit };
+
+  await db.transaction(async (tx) => {
+    await tx.update(schema.orgUnit).set(after).where(eq(schema.orgUnit.code, before.code));
+    await tx.insert(schema.auditLog).values({ actorUserId: s.userId, action: "master.costcenter.update", subjectType: "org_unit", subjectId: before.code, before: { functionGroup: before.functionGroup, approvalLimit: before.approvalLimit }, after });
+  });
+  revalidatePath("/master/cost-center");
+  return { ok: true, message: `Cost center ${before.code} disimpan.` };
 }

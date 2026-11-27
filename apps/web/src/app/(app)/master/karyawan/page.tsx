@@ -10,7 +10,7 @@ import { saveEmployee } from "../actions";
 export const metadata: Metadata = { title: "Master Karyawan" };
 
 export default async function EmployeeMasterPage() {
-  const { may, employees } = await masterAccess();
+  const { may, employees, requests, costCenters, periods } = await masterAccess();
   if (!employees) redirect("/master/customer");
   const [people, entities, units] = await Promise.all([
     db.select().from(schema.employee).orderBy(asc(schema.employee.name)),
@@ -36,7 +36,7 @@ export default async function EmployeeMasterPage() {
   const names = fields.map((f) => f.name);
 
   return (
-    <MasterWorkspace active="/master/karyawan" employees steward="Master Karyawan dikelola HCM. Akun masuk aplikasi diundang di menu Pengguna dan terhubung lewat email yang sama.">
+    <MasterWorkspace active="/master/karyawan" periods={periods} costCenters={costCenters} employees requests={requests} steward="Master Karyawan dikelola HCM. Akun masuk aplikasi diundang di menu Pengguna dan terhubung lewat email yang sama.">
       <MasterTable
         noun="karyawan"
         fields={fields}

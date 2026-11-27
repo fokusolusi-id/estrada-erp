@@ -26,6 +26,8 @@ import {
 import { env } from "./env";
 import { enqueueEmail } from "./email/outbox";
 import { putFile } from "./storage";
+import { assertOpenPeriod } from "./period";
+import { SENDS_BACK, assertSeparated } from "./sod";
 import { loadOrg, WorkflowError } from "./workflow";
 
 export const paymentLink = (id: string) => `/pembayaran/${id}`;
@@ -129,6 +131,15 @@ export async function applyPaymentTransition(actor: Actor, requestId: string, ac
       throw new WorkflowError((e as Error).message);
     }
 
+    // The dates a request is posted on must fall in an open month of its PT.
+    const postingDate = action === "schedule" ? extra.scheduledOn : action === "pay" ? extra.paidOn : undefined;
+    const warning = postingDate ? await assertOpenPeriod(tx, r.entityCode, postingDate) : null;
+
+    if (!SENDS_BACK.includes(action)) {
+      const events = await tx.select().from(schema.paymentEvent).where(eq(schema.paymentEvent.requestId, r.id));
+      assertSeparated(actor, [{ actorUserId: r.requesterId, actorRole: r.requesterRole, actorUnit: r.requesterUnit, action: "submit" }, ...events]);
+    }
+
     const now = new Date();
     const patch: Partial<typeof schema.paymentRequest.$inferInsert> = { state: t.to, updatedAt: now };
     if (action === "submit") {
@@ -149,6 +160,7 @@ export async function applyPaymentTransition(actor: Actor, requestId: string, ac
       action,
       actorUserId: actor.userId,
       actorRole: actor.role,
+      actorUnit: actor.orgUnit,
       comment: extra.comment?.trim() || null,
     });
     await tx.insert(schema.auditLog).values({
@@ -159,11 +171,11 @@ export async function applyPaymentTransition(actor: Actor, requestId: string, ac
       before: { state: t.from },
       after: { state: t.to, ...(patch.number ? { number: patch.number } : {}), ...(extra.scheduledOn ? { scheduledOn: extra.scheduledOn, bankAccountId: extra.bankAccountId } : {}), ...(extra.paidOn ? { paidOn: extra.paidOn } : {}) },
     });
-    return { t, request: { ...r, ...patch } as RequestRow };
+    return { t, warning, request: { ...r, ...patch } as RequestRow };
   });
 
   await notifyPayment(result.request, result.t, org);
-  return result.t;
+  return { ...result.t, warning: result.warning };
 }
 
 async function notifyPayment(r: RequestRow, t: ReturnType<typeof paymentTransition>, org: Awaited<ReturnType<typeof loadOrg>>) {

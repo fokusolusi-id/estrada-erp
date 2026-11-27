@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { everyRole, outcome, queued, rows, signInAs } from "./action-harness";
-import { saveCustomer, saveEmployee, savePartner, saveProduct } from "@/app/(app)/master/actions";
+import { saveCostCenter, saveCustomer, saveEmployee, savePartner, saveProduct } from "@/app/(app)/master/actions";
 
 // Plan A5 exit: each steward can edit only their master. Called as every role against a database that refuses writes.
 
@@ -84,5 +84,22 @@ describe("master rules before any write", () => {
   it("refuses editing a record that does not exist", async () => {
     signInAs("requestor", { orgUnit: "SCM" });
     expect(await outcome(() => savePartner("Mitra-999", partner))).toEqual({ message: "Data tidak ditemukan." });
+  });
+});
+
+describe("saveCostCenter: Finance and Admin set approval limits", () => {
+  const input = { functionGroup: "Delivery", approvalLimit: "2.000.000.000" };
+
+  it.each(everyRole.map((r) => [r]))("as %s", async (role) => {
+    signInAs(role);
+    rows.current = [{ code: "SCM" }];
+    const out = await outcome(() => saveCostCenter("SCM", input));
+    if (role === "finance" || role === "admin") expect(out).toHaveProperty("pastGate");
+    else expect(out).toEqual({ message: "Limit cost center diubah oleh Finance." });
+  });
+
+  it("refuses a limit it cannot read", async () => {
+    signInAs("finance");
+    expect(await outcome(() => saveCostCenter("SCM", { ...input, approvalLimit: "dua miliar" }))).toEqual({ message: "Limit persetujuan tidak terbaca." });
   });
 });

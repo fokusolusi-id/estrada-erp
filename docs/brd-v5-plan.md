@@ -8,12 +8,18 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | Item | State |
 |---|---|
 | COA Structured RKA 2027 + Data Karyawan seed (`pnpm db:master`, migration `0020`, `employee` and `coa_segment` tables, TAX / BALANCE_SHEET categories) | Done (merged in PR #34) |
-| A1 Customer master (`customer` table, migration `0021`, loaded by `pnpm db:master` from sheet `M Customer`) | Built and checked on the local DB. Cust-002 (XL) is rejected: it shares Telkom's NPWP in `M Customer`; client to correct |
+| A1–A5 and the decisions of section 2 | Done, merged in PR #36 on 2026-11-27 |
+| A1 Customer master (`customer` table, migration `0021`, loaded by `pnpm db:master` from sheet `M Customer`) | Done, merged in PR #36. XL carries a dummy NPWP (section 6) |
 | A2 Pipeline uses the customer (`pipeline_deal.customer_id`, migration `0022`; linked by `pnpm db:master` and `db:import`; "Perlu dirapikan: customer" list on `/pipeline`) | Built and checked on the local DB. Text column kept until every deal is matched |
 | A3 Mitra and Produk Mitra (`partner`, `partner_product`, migration `0023`, loaded by `pnpm db:master` from sheets `Master Mitra`, `Master Produk Mitra`) | Built and checked on the local DB. Product IDs are app-numbered `Produk-001…`; the empty-NPWP warning on save arrives with the A5 screens (`partnerIssues`) |
 | A4 Payments use the partner (`payment_request.partner_id`, migration `0024`; picker on the payment form) | Built and checked on the local DB. The sheet has no bank accounts, so bank and account stay typed; a partner without NPWP is warned, not blocked |
 | A5 Master screens (`/master/customer`, `mitra`, `produk`, `karyawan`; `customer.manage`, `partner.manage`, `employee.view` in `policy.ts`) | Built and checked on the local DB. Direct save with audit; approval workflow comes in A6. COA stays on `/coa` |
-| Phase A (A6–A11) | Not started |
+| A6 Master change workflow (`master_change_request`, migration `0026`, `/master/persetujuan`; domain `master-change.ts`; cron applies future-dated changes) | Built and checked on the local DB. COA and Perusahaan only. `e2e/rka-approval.spec.ts` still expects direct COA saves (journeys are disabled in CI) |
+| A7 Company master fields (`company_entity` columns, migration `0027`, `pnpm db:master` loads `M Perusahaan`; shown and edited under Unit & Entitas through the A6 approval) | Built and checked on the local DB. The sheet's NPWP is all zeros and both companies share one NIB; reported for review |
+| A8 Org unit as cost center (`approval_limit`, `function_group`; `position.level`, `function_codes`; migration `0028`; `/master/cost-center`; loads `33_Master_CostCenter`, `M Organisasi`) | Built and checked on the local DB. CC-008 has no unit. Data Karyawan codes run F0–F12, not the F0–F6 of `07_Org_Chart` |
+| A9 Period master (`fiscal_period`, migration `0029`, `/master/periode`; `assertOpenPeriod` guards payment schedule and paid dates) | Built and checked on the local DB. Phase B postings must call `assertOpenPeriod` |
+| A11 SoD check (`sod.ts` encodes the 13 X pairs of `05_SoD_Matrix`; enforced in `applyTransition` and `applyPaymentTransition`; `actor_unit` on both event tables, migration `0030`) | Built; tests for every X pair |
+| Phase A (A10) | Not started; waits for the approval amounts |
 | Phase B (B1–B8) | Not started |
 | Phase C (C1–C5) | Not started |
 | Phase D (D0–D6) | Not started; D0 can start after Phase A |
@@ -27,7 +33,7 @@ The client gives three workbooks. **They are the only references**; use no other
 
 | Workbook (in `/Volumes/EXTREMESSD/FokuSolusi/[NEW] BRD-ERP/`) | Sheets `pnpm db:master` loads | Notes |
 |---|---|---|
-| `BRD_MasterData_rini v5.xlsx` | `M Customer`, `Master Mitra`, `Master Produk Mitra` | The BRD, 100+ sheets |
+| `BRD_MasterData_rini v5.xlsx` | `M Perusahaan`, `33_Master_CostCenter`, `M Organisasi`, `M Customer`, `Master Mitra`, `Master Produk Mitra` | The BRD, 100+ sheets |
 | `COA Structured RKA 2027.xlsx` | `Sheet2` | The chart of accounts (`Sheet1` lacks the units) |
 | `Data Karyawan Estrada Group (1).xlsx` | `Data Karyawan (Okt)` | Employees |
 
@@ -88,6 +94,15 @@ Answered by the user on 2026-11-27:
 21. **Old RKA lines** on parent codes and on codes outside the structured COA were removed from the local open version on 2026-11-27 (82 lines, all revenue and all CAPEX included; the six outside codes deleted). Backup: `fixtures/removed-rka-lines-2026-11-27.json` (git-ignored). Re-importing the workbook brings them back; no deployment was changed.
 22. **Ministries** are segment K/L. Dummy NPWPs may stay for now.
 23. A deployment's master data may be overwritten from the patched workbook copies (`pnpm db:master --coa none --replace`).
+24. **A6 scope:** only COA and Perusahaan wait for approval; the other masters stay direct edits by their steward, audited.
+25. **A6 approver:** the FRM Division Owner approves both, although `FC12_Master_Data` rule 2 (BR-MD-001) names the Direktur for Perusahaan. The requester never decides their own request.
+26. **A6 effective date:** an approved change applies on its effective date (the daily cron), or at approval when the date has come.
+27. The steward review of `FC12_Master_Data` step 2 is the submission itself: only the steward (Finance for COA, Admin for Perusahaan) can raise a request.
+28. **Cost center mapping:** CC-001 BCD, 002 PST, 003 PMO, 004 SCM, 005 ISO, 006 FRM, 007 HCM, 009 FRM-LCM, 010 BCD-MKT, 011 FRM-RCI, 012 DIR; CC-008 unmapped.
+29. **Levels and function codes** are edited by Admin; the load fills only clear matches.
+30. **Closed month** blocks posting dates only (payment schedule and paid dates now; invoices, receipts and bills in Phase B). Plans stay editable.
+31. **Closing** warns and still accepts postings; Finance Reviewer or FRM Division Owner moves a month on. Admin or FRM Division Owner reopens, with a reason (`MOD-F1` names Admin only).
+32. **SoD seats:** director = BOD / Direktur PT; finance and bfp = Finance-Pricing; cash_manager = Finance-CashMgmt; BCD head = Head BusDev, other BCD = Sales; PMO = PM; SCM = SCM; MSO and ISO = OPS; FRM-FIN-ATM = AR/Tax and Accounting. The check runs in the two transition paths rather than inside `can()`.
 
 ## 3. What the app already has
 

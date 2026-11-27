@@ -29,10 +29,12 @@ describe("ProvisionalCoa", () => {
     const onConfirm = ok();
     const onRemap = ok();
     render(<ProvisionalCoa accounts={accounts} onConfirm={onConfirm} onRemap={onRemap} />);
+    fireEvent.change(screen.getByLabelText("Alasan perubahan"), { target: { value: "Kode dipakai" } });
+    fireEvent.change(screen.getByLabelText("Tanggal berlaku"), { target: { value: "2027-01-01" } });
     fireEvent.click(within(screen.getByTestId("provisional-5100-1")).getByRole("button", { name: "Konfirmasi" }));
-    await waitFor(() => expect(onConfirm).toHaveBeenCalledWith("5100-1"));
+    await waitFor(() => expect(onConfirm).toHaveBeenCalledWith("5100-1", "Kode dipakai", "2027-01-01"));
     fireEvent.change(screen.getByLabelText("Pindahkan 4300 ke"), { target: { value: "4200" } });
     fireEvent.click(within(screen.getByTestId("provisional-4300")).getByRole("button", { name: "Pindahkan" }));
-    await waitFor(() => expect(onRemap).toHaveBeenCalledWith("4300", "4200"));
+    await waitFor(() => expect(onRemap).toHaveBeenCalledWith("4300", "4200", "Kode dipakai", "2027-01-01"));
   });
 });

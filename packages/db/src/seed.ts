@@ -15,7 +15,8 @@ async function main() {
   await db
     .insert(orgUnit)
     .values(ORG_UNITS.map((u) => ({ ...u, aliases: [...u.aliases] })))
-    .onConflictDoUpdate({ target: orgUnit.code, set: { aliases: sql`excluded.aliases` } });
+    // Aliases are added to, so the cost center codes the master load puts there stay.
+    .onConflictDoUpdate({ target: orgUnit.code, set: { aliases: sql`array(select distinct unnest(${orgUnit.aliases} || excluded.aliases))` } });
 
   // SEED_COA=skeleton keeps the starter COA (e2e), so tests never depend on a file outside git.
   const structuredCoa = process.env.SEED_COA !== "skeleton" && existsSync(resolve(import.meta.dirname, "../../../fixtures/COA Structured RKA 2027.xlsx"));

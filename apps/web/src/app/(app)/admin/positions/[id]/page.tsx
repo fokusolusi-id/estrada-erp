@@ -49,6 +49,8 @@ export default async function EditPositionPage({ params }: { params: Promise<{ i
               entities: scope.map((s) => s.e),
               holderUserId: pos.holderUserId,
               holderName: pos.holderName,
+              level: pos.level,
+              functionCodes: pos.functionCodes,
             }}
             units={units.map((u) => ({ value: u.code, label: `${u.code} · ${u.name}` }))}
             roles={ROLES.map((r) => ({ value: r, label: ROLE_LABEL[r] }))}

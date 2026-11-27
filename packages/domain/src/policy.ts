@@ -36,7 +36,14 @@ export type Permission =
   | "customer.manage"
   | "partner.manage"
   | "employee.view"
-  | "employee.manage";
+  | "employee.manage"
+  | "master.approve"
+  | "master.requests"
+  | "costcenter.manage"
+  | "costcenter.view"
+  | "period.view"
+  | "period.close"
+  | "period.reopen";
 
 /** A unit's own people, as opposed to the company-wide seats. */
 const UNIT_STAFF: readonly Role[] = ["requestor", "default_owner", "division_owner"];
@@ -69,6 +76,23 @@ export function can(actor: Actor, permission: Permission, resource: LineResource
     case "employee.view":
       // Employee data is HR data (20_Navigation_IA, SCR-MD-02): its keepers, the Direktur and the Auditor.
       return actor.role === "director" || actor.role === "auditor" || can(actor, "employee.manage", null, org);
+    case "master.approve":
+      // The Finance Controller who approves COA and Perusahaan changes is the FRM Division Owner (client decision).
+      return actor.role === "division_owner" && org.isWithin(actor.orgUnit, "FRM");
+    case "master.requests":
+      return ["finance", "director", "auditor", "admin"].includes(actor.role) || can(actor, "master.approve", null, org);
+    case "costcenter.manage":
+      // Approval limits are Finance's to keep (plan A8); Admin may edit masters too.
+      return actor.role === "finance" || actor.role === "admin";
+    case "costcenter.view":
+      return ["finance", "director", "auditor", "admin"].includes(actor.role);
+    case "period.close":
+      return actor.role === "finance" || can(actor, "master.approve", null, org);
+    case "period.reopen":
+      // Admin (MOD-F1) or the FRM Division Owner (client decision), always with a reason.
+      return actor.role === "admin" || can(actor, "master.approve", null, org);
+    case "period.view":
+      return ["finance", "director", "auditor", "admin"].includes(actor.role) || can(actor, "master.approve", null, org);
     case "org.manage":
     case "user.manage":
       return actor.role === "admin";

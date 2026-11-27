@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { asc } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
-import { ROLES, ROLE_LABEL, can } from "@estrada/domain";
+import { ROLES, ROLE_LABEL, can, formatIdr, money } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
 import { Badge } from "@/components/ui/badge";
@@ -56,7 +56,11 @@ export default async function MasterPage() {
           <ColumnHead cols={ENTITY_GRID} labels={["Kode", "Nama", "Jenis biaya", "Status", ""]} />
           <div className="divide-border -mt-3 divide-y border-b *:py-3">
             {entities.map((e) => (
-              <EntityForm key={e.code} entity={{ code: e.code, name: e.name, costType: e.costType, active: e.active }} />
+              <EntityForm
+                key={e.code}
+                // The capital is typed as rupiah, so it is shown the same way.
+                entity={{ ...e, authorisedCapital: e.authorisedCapital ? formatIdr(money(e.authorisedCapital)).replace("Rp ", "") : null }}
+              />
             ))}
           </div>
           <div className="bg-muted/40 -mx-2 mt-1 rounded-lg border border-dashed p-3"><p className="text-muted-foreground mb-2 text-xs font-medium uppercase tracking-wide">Tambah baru</p>

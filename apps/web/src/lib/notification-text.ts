@@ -15,6 +15,8 @@ export const NOTIFICATION_TEXT: Record<EmailTemplate, string> = {
   seat_vacant: "Posisi kosong: RKA menunggu pjs",
   line_comment: "Komentar baru di diskusi baris RKA",
   invitation: "Undangan akun",
+  master_change_submitted: "Perubahan master menunggu persetujuan Anda",
+  master_change_decided: "Permintaan perubahan master Anda diputuskan",
   password_reset: "Atur ulang kata sandi",
   payment_submitted: "Permintaan Pembayaran menunggu persetujuan Anda",
   payment_review: "Permintaan Pembayaran perlu diperiksa",

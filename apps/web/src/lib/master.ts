@@ -8,7 +8,7 @@ export async function masterAccess() {
   const user = await requireUser();
   const org = await loadOrg();
   const may = (permission: Permission) => can(user.actor, permission, null, org);
-  return { may, employees: may("employee.view") };
+  return { may, employees: may("employee.view"), requests: may("master.requests"), costCenters: may("costcenter.view"), periods: may("period.view") };
 }
 
 /** The form's view of a database row: blanks for nulls, text for numbers. */

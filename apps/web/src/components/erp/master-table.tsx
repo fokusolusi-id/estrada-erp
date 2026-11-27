@@ -48,7 +48,10 @@ export function MasterTable({
   fields,
   rows,
   onSave,
+  fixed = false,
 }: {
+  /** The records come from elsewhere: they are edited, never added or retired here. */
+  fixed?: boolean;
   noun: string;
   fields: readonly MasterField[];
   rows: readonly MasterRow[];
@@ -84,7 +87,7 @@ export function MasterTable({
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {message ? <p className={message.ok ? "text-success text-sm" : "text-destructive text-sm"}>{message.message}</p> : null}
-          {onSave ? (
+          {onSave && !fixed ? (
             <Button
               type="button"
               onClick={() => {
@@ -103,6 +106,7 @@ export function MasterTable({
           key={editing.id ?? "new"}
           title={editing.id ?? `Tambah ${noun}`}
           fields={fields}
+          fixed={fixed}
           initial={editing.values}
           creating={editing.id === null}
           onCancel={() => setEditing(null)}
@@ -121,7 +125,7 @@ export function MasterTable({
             {columns.map((c) => (
               <TableHead key={c.name}>{c.label}</TableHead>
             ))}
-            <TableHead>Status</TableHead>
+            {fixed ? null : <TableHead>Status</TableHead>}
             {onSave ? <TableHead /> : null}
           </TableRow>
         </TableHeader>
@@ -141,7 +145,7 @@ export function MasterTable({
                   ) : null}
                 </TableCell>
               ))}
-              <TableCell>{r.values.active ? <Badge variant="secondary">Aktif</Badge> : <Badge variant="outline">Nonaktif</Badge>}</TableCell>
+              {fixed ? null : <TableCell>{r.values.active ? <Badge variant="secondary">Aktif</Badge> : <Badge variant="outline">Nonaktif</Badge>}</TableCell>}
               {onSave ? (
                 <TableCell>
                   <Button
@@ -174,9 +178,11 @@ function MasterForm({
   fields,
   initial,
   creating,
+  fixed,
   onSave,
   onCancel,
 }: {
+  fixed: boolean;
   creating: boolean;
   title: string;
   fields: readonly MasterField[];
@@ -233,7 +239,7 @@ function MasterForm({
           </label>
         );
       })}
-      {check("active", "Aktif")}
+      {fixed ? null : check("active", "Aktif")}
       <div className="flex flex-wrap justify-end gap-2 sm:col-span-2 lg:col-span-4">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Batal

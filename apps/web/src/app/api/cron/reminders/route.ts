@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { env } from "@/lib/env";
+import { applyDueChanges } from "@/lib/master-change";
 import { runReminders } from "@/lib/reminders";
 
 /** Called once a day by a scheduler with "Authorization: Bearer <CRON_SECRET>". */
@@ -8,5 +9,6 @@ export async function GET(request: Request) {
   const given = Buffer.from(request.headers.get("authorization") ?? "");
   const expected = Buffer.from(`Bearer ${env.CRON_SECRET}`);
   if (given.length !== expected.length || !timingSafeEqual(given, expected)) return Response.json({ error: "Unauthorized" }, { status: 401 });
-  return Response.json(await runReminders());
+  const masterChanges = await applyDueChanges();
+  return Response.json({ ...(await runReminders()), masterChanges });
 }

@@ -18,6 +18,8 @@ export type EmailTemplate =
   | "line_comment"
   | "invitation"
   | "password_reset"
+  | "master_change_submitted"
+  | "master_change_decided"
   | PaymentTemplate
   | ProjectTemplate;
 

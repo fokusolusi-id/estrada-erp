@@ -9,7 +9,7 @@ import { saveProduct } from "../actions";
 export const metadata: Metadata = { title: "Master Produk Mitra" };
 
 export default async function ProductMasterPage() {
-  const { may, employees } = await masterAccess();
+  const { may, employees, requests, costCenters, periods } = await masterAccess();
   const [products, partners] = await Promise.all([
     db.select().from(schema.partnerProduct).orderBy(asc(schema.partnerProduct.id)),
     db.select({ id: schema.partner.id, name: schema.partner.name }).from(schema.partner).orderBy(asc(schema.partner.name)),
@@ -23,7 +23,7 @@ export default async function ProductMasterPage() {
   const names = fields.map((f) => f.name);
 
   return (
-    <MasterWorkspace active="/master/produk" employees={employees} steward="Master Produk Mitra dikelola SCM. Peran lain hanya membaca.">
+    <MasterWorkspace active="/master/produk" periods={periods} costCenters={costCenters} employees={employees} requests={requests} steward="Master Produk Mitra dikelola SCM. Peran lain hanya membaca.">
       <MasterTable
         noun="produk"
         fields={fields}

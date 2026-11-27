@@ -24,13 +24,13 @@ const FIELDS: MasterField[] = [
 ];
 
 export default async function PartnerMasterPage() {
-  const { may, employees } = await masterAccess();
+  const { may, employees, requests, costCenters, periods } = await masterAccess();
   const partners = await db.select().from(schema.partner).orderBy(asc(schema.partner.id));
   const issues = Map.groupBy(partnerIssues(partners), (i) => i.id);
   const names = FIELDS.map((f) => f.name);
 
   return (
-    <MasterWorkspace active="/master/mitra" employees={employees} steward="Master Mitra dikelola SCM. Peran lain hanya membaca.">
+    <MasterWorkspace active="/master/mitra" periods={periods} costCenters={costCenters} employees={employees} requests={requests} steward="Master Mitra dikelola SCM. Peran lain hanya membaca.">
       <MasterTable
         noun="mitra"
         fields={FIELDS}

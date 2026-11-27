@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@estrada/db";
-import { can } from "@estrada/domain";
+import { can, parseIdr } from "@estrada/domain";
+import { requestChange } from "@/lib/master-change";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
 
@@ -57,38 +58,53 @@ export async function saveUnit(_prev: MasterState, form: FormData): Promise<Mast
   return { ok: true, message: existing ? "Unit disimpan." : "Unit ditambahkan." };
 }
 
+/** A company field that may be left empty, stored as null. */
+const blank = z
+  .string()
+  .trim()
+  .max(500)
+  .default("")
+  .transform((s) => s || null);
+
+/** "2.000.000.000" → "2000000000.00"; empty is null, anything else unreadable is undefined. */
+function capital(raw: string): string | null | undefined {
+  if (!raw.trim()) return null;
+  try {
+    const v = parseIdr(raw);
+    return v.isNegative() ? undefined : v.toFixed(2);
+  } catch {
+    return undefined;
+  }
+}
+
 const EntitySchema = z.object({
   code: CODE,
   name: z.string().trim().min(2, "Nama wajib diisi"),
   costType: z.enum(["direct", "indirect"]),
   active: z.string().optional(),
+  npwp: blank,
+  nib: blank,
+  address: blank,
+  domicile: blank,
+  phone: blank,
+  email: blank,
+  director: blank,
+  commissioner: blank,
+  authorisedCapital: z.string().max(40).default(""),
   isNew: z.string().optional(),
+  reason: z.string().max(1000).default(""),
+  effectiveOn: z.string().default(""),
 });
 
+/** A change to Perusahaan is a request the Finance Controller approves (FC12_Master_Data). */
 export async function saveEntity(_prev: MasterState, form: FormData): Promise<MasterState> {
   const admin = await requireOrgAdmin();
   if (!admin) return { ok: false, message: "Hanya Admin yang dapat mengelola master." };
   const parsed = EntitySchema.safeParse(Object.fromEntries(form));
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Periksa isian." };
-  const { code, name, costType, isNew } = parsed.data;
-  const active = parsed.data.active === "on" || !!isNew;
-
-  const [existing] = await db.select().from(schema.companyEntity).where(eq(schema.companyEntity.code, code));
-  if (isNew && existing) return { ok: false, message: "Kode entitas sudah ada." };
-  if (!isNew && !existing) return { ok: false, message: "Entitas tidak ditemukan." };
-
-  await db.transaction(async (tx) => {
-    if (existing) await tx.update(schema.companyEntity).set({ name, costType, active }).where(eq(schema.companyEntity.code, code));
-    else await tx.insert(schema.companyEntity).values({ code, name, costType, active });
-    await tx.insert(schema.auditLog).values({
-      actorUserId: admin.id,
-      action: existing ? "entity.update" : "entity.create",
-      subjectType: "company_entity",
-      subjectId: code,
-      ...(existing ? { before: { name: existing.name, costType: existing.costType, active: existing.active } } : {}),
-      after: { name, costType, active },
-    });
-  });
-  revalidatePath("/admin", "layout");
-  return { ok: true, message: existing ? "Entitas disimpan." : "Entitas ditambahkan." };
+  const { code, name, costType, isNew, reason, effectiveOn, active: ticked, authorisedCapital: raw, ...company } = parsed.data;
+  const authorisedCapital = capital(raw);
+  if (authorisedCapital === undefined) return { ok: false, message: "Modal dasar tidak terbaca." };
+  const active = ticked === "on" || !!isNew;
+  return requestChange(admin, { master: "entity", action: isNew ? "create" : "update", subjectId: code, payload: { name, costType, active, ...company, authorisedCapital } }, reason, effectiveOn);
 }

@@ -55,3 +55,16 @@ describe("MasterTable", () => {
     expect((form.getByLabelText("Kategori") as HTMLSelectElement).value).toBe("Distributor");
   });
 });
+
+describe("MasterTable for records that exist already (org units)", () => {
+  afterEach(cleanup);
+
+  it("edits them without adding or retiring any", async () => {
+    const onSave = vi.fn(async () => ({ ok: true, message: "Disimpan." }));
+    render(<MasterTable noun="cost center" fields={fields} rows={rows} onSave={onSave} fixed />);
+    expect(screen.queryByRole("button", { name: /^Tambah/ })).toBeNull();
+    expect(screen.queryByText("Status")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Ubah Mitra-001" }));
+    expect(screen.queryByLabelText("Aktif")).toBeNull();
+  });
+});
