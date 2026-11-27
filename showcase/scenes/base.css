@@ -1,0 +1,4 @@
+@font-face{font-family:"InterV";src:url("file:///Volumes/EXTREMESSD/WWW/_github/fokusolusi/estrada-erp/apps/web/node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2") format("woff2");font-weight:100 900}
+*{box-sizing:border-box;margin:0}
+html,body{width:1920px;height:1080px;overflow:hidden;font-family:"InterV",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.word{font-weight:650;letter-spacing:-.025em}
