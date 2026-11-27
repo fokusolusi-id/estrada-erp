@@ -41,12 +41,6 @@ export const auth = betterAuth({
     additionalFields: { activePositionId: { type: "string", required: false, input: false } },
   },
   user: { additionalFields: { active: { type: "boolean", required: false, input: false } } },
-  rateLimit: {
-    enabled: true,
-    window: 60,
-    max: 100,
-    customRules: { "/sign-in/email": { window: 300, max: 5 } },
-  },
   databaseHooks: {
     session: {
       create: {
