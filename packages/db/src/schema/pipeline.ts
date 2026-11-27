@@ -1,8 +1,11 @@
 import { date, index, integer, numeric, pgEnum, pgTable, primaryKey, smallint, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
-import { coaAccount, companyEntity, customer } from "./master";
+import { coaAccount, companyEntity, customer, employee, roleEnum } from "./master";
 
-export const dealStatusEnum = pgEnum("deal_status", ["PP", "PT", "QO", "WB", "CW"]);
+export const dealStatusEnum = pgEnum("deal_status", ["PP", "PT", "PC", "QO", "NG", "AK", "WB", "CW", "DR", "CX"]);
+export const legalDocStatusEnum = pgEnum("legal_doc_status", ["draft", "circulating", "done"]);
+export const businessModelEnum = pgEnum("business_model", ["project", "recurring", "trading"]);
+export const sphStateEnum = pgEnum("sph_state", ["pricing", "approval", "approved", "returned"]);
 export const dealTypeEnum = pgEnum("deal_type", ["new", "renewal"]);
 
 /**
@@ -36,6 +39,18 @@ export const pipelineDeal = pgTable(
     /** Months from the deal's start to PDMS's spend for it. */
     leadTimeMonths: smallint("lead_time_months"),
     notes: text("notes"),
+    /** BR-SP-002 fields; PIC are Karyawan. */
+    subSegment: text("sub_segment"),
+    businessModel: businessModelEnum("business_model"),
+    productCategory: text("product_category"),
+    picSalesNip: text("pic_sales_nip").references(() => employee.nip),
+    picPresalesNip: text("pic_presales_nip").references(() => employee.nip),
+    /** P6/BAKN, P8/SPPBJ and contract, in sequence (BR-SP-007). */
+    p6Status: legalDocStatusEnum("p6_status"),
+    p8Status: legalDocStatusEnum("p8_status"),
+    contractStatus: legalDocStatusEnum("contract_status"),
+    /** The company holding the contract when it is not ours (BR-SP-006). */
+    contractOwner: text("contract_owner"),
     /** Where an imported deal came from, e.g. "Pipeline #12". */
     sourceRef: text("source_ref"),
     createdBy: text("created_by").references(() => user.id),
@@ -84,4 +99,38 @@ export const pipelineRecoveryPlan = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.fiscalYear, t.segment] })],
+);
+
+/** Surat Penawaran Harga for a deal (plan C1; BR-SP-003). */
+export const sph = pgTable(
+  "sph",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** SPH/{entity}/{yy}/{seq}, per company and year. */
+    number: text("number").notNull().unique(),
+    dealId: uuid("deal_id")
+      .notNull()
+      .references(() => pipelineDeal.id),
+    entityCode: text("entity_code")
+      .notNull()
+      .references(() => companyEntity.code),
+    issuedOn: date("issued_on").notNull(),
+    /** Offered price and its cost, both excluding PPN. */
+    price: numeric("price", { precision: 20, scale: 2 }).notNull(),
+    cogs: numeric("cogs", { precision: 20, scale: 2 }).notNull(),
+    description: text("description").notNull(),
+    state: sphStateEnum("state").notNull().default("pricing"),
+    /** The last return note. */
+    note: text("note"),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => user.id),
+    createdRole: roleEnum("created_role").notNull(),
+    createdUnit: text("created_unit").notNull(),
+    reviewedBy: text("reviewed_by").references(() => user.id),
+    approvedBy: text("approved_by").references(() => user.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("sph_deal_idx").on(t.dealId)],
 );

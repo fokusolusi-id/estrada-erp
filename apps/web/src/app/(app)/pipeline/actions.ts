@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq, ne } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@estrada/db";
-import { DEAL_STATUSES, DEAL_TYPES, SEGMENTS, canPipeline, canRecoveryPlan, dealProblems, duplicateProject, isWon, money, needsRecovery, pipelineBySegment, terminChangeProblem, type TerminInput } from "@estrada/domain";
+import { BUSINESS_MODELS, DEAL_STATUSES, DEAL_TYPES, LEGAL_DOC_STATUSES, SEGMENTS, STATUS_STEP_MESSAGE, statusStepProblem, canPipeline, canRecoveryPlan, dealProblems, duplicateProject, isWon, money, needsRecovery, pipelineBySegment, terminChangeProblem, type TerminInput } from "@estrada/domain";
 import { loadPipeline, pipelineYear } from "@/lib/pipeline";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
@@ -30,6 +30,15 @@ const Deal = z.object({
   endMonth: z.number().int(),
   notes: z.string().max(1000).nullable().optional(),
   leadTimeMonths: z.number().nullable().optional(),
+  subSegment: z.string().max(100).nullable().optional(),
+  businessModel: z.enum(BUSINESS_MODELS).nullable().optional(),
+  productCategory: z.string().max(100).nullable().optional(),
+  picSalesNip: z.string().max(40).nullable().optional(),
+  picPresalesNip: z.string().max(40).nullable().optional(),
+  p6Status: z.enum(LEGAL_DOC_STATUSES).nullable().optional(),
+  p8Status: z.enum(LEGAL_DOC_STATUSES).nullable().optional(),
+  contractStatus: z.enum(LEGAL_DOC_STATUSES).nullable().optional(),
+  contractOwner: z.string().max(100).nullable().optional(),
   termins: z
     .array(z.object({ amount: z.string().regex(/^\d+(\.\d{1,2})?$/), plannedDate: z.string().max(10), description: z.string().max(200).nullable().optional() }))
     .max(60)
@@ -79,11 +88,24 @@ export async function saveDeal(input: Omit<z.input<typeof Deal>, "termins"> & { 
     endMonth: deal.endMonth,
     notes: deal.notes?.trim() || null,
     leadTimeMonths: deal.leadTimeMonths ?? null,
+    subSegment: deal.subSegment?.trim() || null,
+    businessModel: deal.businessModel ?? null,
+    productCategory: deal.productCategory?.trim() || null,
+    picSalesNip: deal.picSalesNip || null,
+    picPresalesNip: deal.picPresalesNip || null,
+    p6Status: deal.p6Status ?? null,
+    p8Status: deal.p8Status ?? null,
+    contractStatus: deal.contractStatus ?? null,
+    contractOwner: deal.contractOwner?.trim() || null,
   };
   const termins = (deal.termins ?? []).map((t, i) => ({ no: i + 1, description: t.description?.trim() || null, amount: t.amount, plannedOn: t.plannedDate }));
   const [before] = id ? await db.select().from(schema.pipelineDeal).where(eq(schema.pipelineDeal.id, id)) : [];
   if (id && (!before || !canPipeline(user.actor, "edit", before.entityCode, org))) return { ok: false, message: "Anda tidak berwenang mengubah deal ini." };
   if (!picked.active && before?.customerId !== picked.id) return { ok: false, message: "Customer sudah nonaktif di Master Customer." };
+  // Statuses move in sequence, and pass SPH only with an approved one (BR-SP-001, BR-SP-003).
+  const approved = id ? (await db.select({ id: schema.sph.id }).from(schema.sph).where(and(eq(schema.sph.dealId, id), eq(schema.sph.state, "approved")))).length > 0 : false;
+  const step = statusStepProblem(before?.status ?? null, deal.status, approved);
+  if (step) return { ok: false, message: STATUS_STEP_MESSAGE[step] };
   // A deal with a project is a won one in delivery: it does not fall back below Won Bidding.
   if (id && !isWon(deal.status) && (await hasProject(id))) return { ok: false, message: "Deal ini sudah memiliki proyek di Implementasi; statusnya tetap Won Bidding atau Closed Won." };
   if (id) {
@@ -121,6 +143,7 @@ export async function deleteDeal(id: string): Promise<Result> {
   const [before] = await db.select().from(schema.pipelineDeal).where(eq(schema.pipelineDeal.id, id));
   if (!before || !canPipeline(user.actor, "edit", before.entityCode, org)) return { ok: false, message: "Anda tidak berwenang menghapus deal ini." };
   if (await hasProject(id)) return { ok: false, message: "Deal ini sudah memiliki proyek di Implementasi dan tidak dapat dihapus." };
+  if ((await db.select({ id: schema.sph.id }).from(schema.sph).where(eq(schema.sph.dealId, id))).length) return { ok: false, message: "Deal ini sudah memiliki SPH. Ubah statusnya menjadi Drop atau Cancel." };
   await db.transaction(async (tx) => {
     await tx.delete(schema.pipelineDeal).where(eq(schema.pipelineDeal.id, id));
     await tx.insert(schema.auditLog).values({ actorUserId: user.id, action: "pipeline.delete", subjectType: "pipeline_deal", subjectId: id, before });

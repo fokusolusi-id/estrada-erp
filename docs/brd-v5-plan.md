@@ -28,7 +28,8 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | E6 Scenarios (`scenario_setting`, migration `0042`; `/cash/skenario`: three scenarios, monthly P&L and cash, burn and runway, sensitivity grid) | Built and checked on the local DB. Not built: AR/AP forecast of `28_AR_AP_Forecast`, budget-vs-actual of `27` (covered by `/rka/monitor` and `/pnl`) |
 | E8 Compliance tracker (`compliance_record`, migration `0043`; `/kepatuhan`: the 17 rows of `06_Compliance` with status, evidence link and note) | Built and checked on the local DB. Evidence is a link, not an upload |
 | Phase B (B1–B8) | Not started |
-| Phase C (C1–C5) | Not started |
+| C1 Pipeline statuses and SPH (statuses of `FC03`, sequence and SPH gate; `sph` with Pricing review and approval on `/pipeline/sph`; deal fields and legal document statuses; migration `0044`) | Built and checked on the local DB. Not built from `FC03`: minimum margin rule, SPH print form, PT/year-unique pipeline name beyond the existing project rule |
+| Phase C (C2–C5) | Not started |
 | Phase D (D0–D6) | Not started; D0 can start after Phase A |
 | E4 Won deals without a project (control list on `/implementasi`, count on `/pipeline`; a project may open from Won Bidding or Closed Won) | Built and checked on the local DB |
 | E7 Audit event catalogue (`audit-catalogue.ts`; logout and failed sign-ins recorded; RKA steps now written to `audit_log`; `/audit` viewer with CSV export) | Built and checked on the local DB. Not done: `SEC.FAILEDACCESS`, role on each row, purging past retention |
@@ -136,6 +137,7 @@ Answered by the user on 2026-11-27:
 46. **Termin defaults (E5):** DP 15% at SPPBJ + 30 days, progress 80% at + 3 months, retention 5% six months after progress; all editable.
 47. **Scenarios (E6):** Finance types the drivers per RKA year, starting from `22_Assumptions`; the cashflow uses the Arus Kas rules with DSO and DPO as month lags, not sheet 26's collection percentage.
 48. **Compliance tracker (E8):** the Head of FRM and the Auditor update it; Finance, Direktur and Admin read.
+49. **Pipeline (C1):** codes PP, PT (Qualified), QO (SPH), WB stay, POC, Negotiation, Admin Kontrak, Drop and Cancel added, Closed Won kept; new bands POC 30–60, Negotiation 60–70, Admin Kontrak 70–80, Drop/Cancel 0; BFP reviews pricing, Head BusDev approves (Direktur if the Head wrote it); passing beyond SPH needs an approved SPH.
 
 ## 3. What the app already has
 
