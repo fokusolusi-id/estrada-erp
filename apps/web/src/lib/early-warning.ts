@@ -6,6 +6,7 @@ import { loadEwFigures } from "./early-warning-figures";
 import { env } from "./env";
 import { enqueueEmail } from "./email/outbox";
 import { loadSeats, todayJakarta } from "./payment";
+import { openRiskFromWarning } from "./risk";
 import { loadOrg } from "./workflow";
 
 export const EW_LINK = "/peringatan";
@@ -53,6 +54,7 @@ export async function runEarlyWarning(today = todayJakarta()) {
     const assignees = ruleRecipients(result.code, result.subject, seats, org);
     const added = await db.insert(schema.earlyWarning).values({ rule: result.code, subject: result.subject, firedOn: today, detail: result.detail, assignees }).onConflictDoNothing().returning({ id: schema.earlyWarning.id });
     if (!added.length) continue;
+    await openRiskFromWarning(result.code, result.subject, assignees, today);
     count(fresh, assignees);
     if (rule.email) assignees.forEach((id) => mailed.add(id));
     done.opened++;

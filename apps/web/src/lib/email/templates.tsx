@@ -378,6 +378,12 @@ export const COPY: Record<EmailTemplate, Copy> = {
     body: (p) => `${p.count ?? "Beberapa"} peringatan belum diterima dalam batas waktu dan dieskalasi kepada Anda.`,
     cta: "Buka peringatan",
   },
+  risk_review: {
+    subject: "Risiko perlu direview",
+    heading: "Review risiko",
+    body: (p) => `${p.count ?? "Beberapa"} risiko milik Anda sudah waktunya direview.`,
+    cta: "Buka register risiko",
+  },
   deadline_near: {
     subject: "Batas waktu RKA mendekat",
     heading: "Batas waktu mendekat",
