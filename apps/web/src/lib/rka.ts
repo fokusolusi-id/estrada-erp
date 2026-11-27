@@ -2,6 +2,7 @@ import "server-only";
 import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import {
+  BUDGET_CATEGORIES,
   ROLE_LABEL,
   actionsFor,
   can,
@@ -165,10 +166,10 @@ export async function loadScopedLines(
   });
 }
 
-/** Master data for the line editor: active COA, active entities within the user's scope, org units. */
+/** Master data for the line editor: active COA RKA budgets (no Neraca or Pajak), active entities within the user's scope, org units. */
 export async function editorMasters(user: CurrentUser) {
   const [coa, entities, units] = await Promise.all([
-    db.select().from(schema.coaAccount).where(eq(schema.coaAccount.active, true)).orderBy(asc(schema.coaAccount.code)),
+    db.select().from(schema.coaAccount).where(and(eq(schema.coaAccount.active, true), inArray(schema.coaAccount.category, [...BUDGET_CATEGORIES]))).orderBy(asc(schema.coaAccount.code)),
     db.select().from(schema.companyEntity).where(eq(schema.companyEntity.active, true)).orderBy(asc(schema.companyEntity.code)),
     db.select().from(schema.orgUnit).orderBy(asc(schema.orgUnit.code)),
   ]);

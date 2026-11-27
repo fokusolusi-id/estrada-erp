@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { CATEGORIES, CATEGORY_LABEL } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,9 +61,9 @@ export function CoaForm({ accounts, units }: { accounts: CoaRecord[]; units: { c
       <div className="grid gap-2">
         <Label htmlFor="coa-category">Kategori</Label>
         <select id="coa-category" name="category" className={SELECT} defaultValue={r.category}>
-          {["Revenue", "COGS", "OPEX", "OTHERS", "CAPEX"].map((c) => (
+          {CATEGORIES.map((c) => (
             <option key={c} value={c}>
-              {c}
+              {CATEGORY_LABEL[c]}
             </option>
           ))}
         </select>

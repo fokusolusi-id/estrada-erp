@@ -79,6 +79,9 @@ export function inferCoaParent(code: string, accounts: readonly Pick<CoaNode, "c
   return null;
 }
 
+/** Fixed assets are CAPEX for RKA but sit in the balance-sheet tree: 1500 under 1000, 1590 Akumulasi under 1500. */
+const balanceSheetPair = (a: Category, b: Category) => (a === "BALANCE_SHEET" && b === "CAPEX") || (a === "CAPEX" && b === "BALANCE_SHEET");
+
 export type CoaParentProblem = "self" | "missing" | "category_mismatch" | "cycle";
 
 export function coaParentProblem(code: string, parentCode: string | null, accounts: readonly CoaNode[], category: Category): CoaParentProblem | null {
@@ -86,7 +89,7 @@ export function coaParentProblem(code: string, parentCode: string | null, accoun
   if (parentCode === code) return "self";
   const parent = accounts.find((a) => a.code === parentCode);
   if (!parent) return "missing";
-  if (parent.category !== category) return "category_mismatch";
+  if (parent.category !== category && !balanceSheetPair(parent.category, category)) return "category_mismatch";
   if (coaSubtree(code, accounts).has(parentCode)) return "cycle";
   return null;
 }

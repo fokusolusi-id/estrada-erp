@@ -1,6 +1,16 @@
 import { sum, ZERO, type Money } from "./money";
 
-export type Category = "Revenue" | "COGS" | "OPEX" | "OTHERS" | "CAPEX";
+/**
+ * RKA's five groups, plus TAX and BALANCE_SHEET from COA Structured RKA 2027: the full ledger is in the COA tree,
+ * but RKA only ever budgets the first five.
+ */
+export type Category = "Revenue" | "COGS" | "OPEX" | "OTHERS" | "CAPEX" | "TAX" | "BALANCE_SHEET";
+export const BUDGET_CATEGORIES = ["Revenue", "COGS", "OPEX", "OTHERS", "CAPEX"] as const satisfies readonly Category[];
+export type BudgetCategory = (typeof BUDGET_CATEGORIES)[number];
+/** Every group in COA order, P&L first; the UI shows TAX and BALANCE_SHEET by their Indonesian names. */
+export const CATEGORIES = [...BUDGET_CATEGORIES, "TAX", "BALANCE_SHEET"] as const satisfies readonly Category[];
+export const CATEGORY_LABEL: Record<Category, string> = { Revenue: "Revenue", COGS: "COGS", OPEX: "OPEX", OTHERS: "OTHERS", CAPEX: "CAPEX", TAX: "Pajak", BALANCE_SHEET: "Neraca" };
+export const isBudgetCategory = (c: Category): c is BudgetCategory => (BUDGET_CATEGORIES as readonly Category[]).includes(c);
 
 export interface CoaAccount {
   code: string;
@@ -28,6 +38,7 @@ export interface ValidationError {
     | "negative_amount"
     | "coa_unknown"
     | "coa_inactive"
+    | "coa_not_budgetable"
     | "entity_unknown"
     | "basis_required";
 }
@@ -51,6 +62,7 @@ export function validateLine(line: BudgetLine, ctx: ValidationContext): Validati
   const account = ctx.coa.get(line.coaCode);
   if (!account) errors.push({ field: "coaCode", code: "coa_unknown" });
   else if (account.status !== "active") errors.push({ field: "coaCode", code: "coa_inactive" });
+  else if (!isBudgetCategory(account.category)) errors.push({ field: "coaCode", code: "coa_not_budgetable" });
 
   if (!ctx.entities.has(line.entity)) errors.push({ field: "entity", code: "entity_unknown" });
 

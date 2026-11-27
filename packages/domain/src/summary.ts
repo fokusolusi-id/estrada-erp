@@ -37,7 +37,8 @@ const minus = (a: Money[], b: readonly Money[]) => a.map((m, i) => m.minus(b[i] 
  * COGS + OPEX + OTHERS + CAPEX, so every report reconciles to the same figure.
  */
 export function pnl(lines: readonly SummaryLine[]): PnlRow[] {
-  const by: Record<Category, Money[]> = { Revenue: zeros(), COGS: zeros(), OPEX: zeros(), OTHERS: zeros(), CAPEX: zeros() };
+  // TAX and BALANCE_SHEET never carry RKA lines (validateLine refuses them), so they have no row here.
+  const by: Record<Category, Money[]> = { Revenue: zeros(), COGS: zeros(), OPEX: zeros(), OTHERS: zeros(), CAPEX: zeros(), TAX: zeros(), BALANCE_SHEET: zeros() };
   for (const l of lines) by[l.category] = add(by[l.category], l.months);
 
   const gross = minus(by.Revenue, by.COGS);

@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@estrada/db";
 import { ROLES } from "@estrada/domain";
@@ -40,6 +40,8 @@ export async function inviteUser(_prev: InviteState, form: FormData): Promise<In
       .insert(schema.position)
       .values({ orgUnitCode: input.orgUnit, title: input.title, role: input.role, holderUserId: userId })
       .returning({ id: schema.position.id });
+    // Master Karyawan row with the same email: the account belongs to that employee.
+    await tx.update(schema.employee).set({ userId }).where(and(eq(schema.employee.email, input.email), isNull(schema.employee.userId)));
     if (pos && entities.length) {
       await tx.insert(schema.positionEntityScope).values(entities.map((entityCode) => ({ positionId: pos.id, entityCode })));
     }

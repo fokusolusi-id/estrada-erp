@@ -35,7 +35,7 @@ export interface ExportInput {
   entityAllocation?: readonly EntityAllocationRow[];
 }
 
-const CATEGORY_CELL: Record<Category, string> = { Revenue: "REVENUE", COGS: "COGS", OPEX: "OPEX", OTHERS: "OTHERS", CAPEX: "CAPEX" };
+const CATEGORY_CELL: Record<Category, string> = { Revenue: "REVENUE", COGS: "COGS", OPEX: "OPEX", OTHERS: "OTHERS", CAPEX: "CAPEX", TAX: "TAX", BALANCE_SHEET: "BALANCE SHEET" };
 const IDR = "#,##0.00;[Red]-#,##0.00";
 
 /**
