@@ -9,13 +9,16 @@ export interface ExportSheet {
 }
 
 /** Plain lists, one sheet each: the tax lists (DJP's upload format is not in the sheets) and the profit and loss. */
-export async function writeSheets(title: string, sheets: readonly ExportSheet[]): Promise<ExcelJS.Buffer> {
+export async function writeSheets(title: string, sheets: readonly ExportSheet[], extra?: { header: readonly string[]; watermark: string }): Promise<ExcelJS.Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = "ERP Estrada";
   for (const s of sheets) {
     const ws = wb.addWorksheet(s.name);
     ws.addRow([title]).font = { bold: true, size: 13 };
     ws.addRow([`Rupiah penuh · diekspor dari ERP Estrada ${new Date().toISOString().slice(0, 10)}`]).font = { italic: true, color: { argb: "FF666666" } };
+    for (const line of extra?.header ?? []) ws.addRow([line]).font = { color: { argb: "FF666666" } };
+    // Printed on every page: Excel has no background watermark.
+    if (extra) ws.headerFooter.oddHeader = `&C&24&KC0C0C0${extra.watermark.replace(/&/g, "&&")}`;
     ws.addRow([]);
     const head = ws.addRow(s.columns);
     head.font = { bold: true };

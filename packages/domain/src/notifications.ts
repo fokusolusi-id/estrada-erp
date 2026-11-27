@@ -6,6 +6,9 @@ import type { Role } from "./roles";
 export type EmailTemplate =
   | "kpi_submitted"
   | "kpi_decided"
+  | "report_step"
+  | "report_returned"
+  | "report_distributed"
   | "invoice_termin_ready"
   | "telkom_escalation"
   | "pr_review"

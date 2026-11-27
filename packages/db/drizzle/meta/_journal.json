@@ -351,6 +351,13 @@
       "when": 1795791608932,
       "tag": "0049_strong_colonel_america",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1795792068175,
+      "tag": "0050_nosy_nick_fury",
+      "breakpoints": true
     }
   ]
 }

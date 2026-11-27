@@ -348,6 +348,24 @@ export const COPY: Record<EmailTemplate, Copy> = {
     body: (p) => `Target KPI ${p.year ?? ""} ${p.entity ?? ""} ${p.result ?? "diputuskan"}.${p.comment ? ` Catatan: "${p.comment}"` : ""}`,
     cta: "Lihat Target KPI",
   },
+  report_step: {
+    subject: "Laporan menunggu tindakan Anda",
+    heading: "Laporan berkala",
+    body: (p) => `Laporan ${p.report ?? ""} ${p.action ?? "menunggu tindakan Anda"}.`,
+    cta: "Buka laporan",
+  },
+  report_returned: {
+    subject: "Laporan dikembalikan",
+    heading: "Laporan dikembalikan",
+    body: (p) => `Laporan ${p.report ?? ""} dikembalikan.${p.comment ? ` Catatan: "${p.comment}"` : ""}`,
+    cta: "Perbaiki laporan",
+  },
+  report_distributed: {
+    subject: "Laporan didistribusikan",
+    heading: "Laporan tersedia",
+    body: (p) => `Laporan ${p.report ?? ""} sudah disetujui dan dapat dibaca.`,
+    cta: "Buka laporan",
+  },
   deadline_near: {
     subject: "Batas waktu RKA mendekat",
     heading: "Batas waktu mendekat",
