@@ -22,7 +22,7 @@ export function ContributionTable({ rows, unit = "juta", label }: { rows: Contri
             Total Biaya <span className="text-muted-foreground font-normal">({unitLabel(unit)})</span>
           </TableHead>
           <TableHead className="text-right">Porsi biaya</TableHead>
-          <TableHead className="text-right">Selisih</TableHead>
+          <TableHead className="text-right">Pendapatan − Total Biaya</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

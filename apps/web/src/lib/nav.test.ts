@@ -6,6 +6,11 @@ describe("navFor", () => {
     expect(navFor("requestor").map((n) => n.href)).toEqual(["/", "/rka", "/pembayaran", "/panduan"]);
   });
 
+  it("gives Finance a way into the line list, under its own name", () => {
+    expect(navFor("finance").find((n) => n.href === "/rka")?.label).toBe("Daftar Baris RKA");
+    expect(navFor("requestor").find((n) => n.href === "/rka")?.label).toBe("RKA Saya");
+  });
+
   it("keeps budget screens away from Admin", () => {
     const hrefs = navFor("admin").map((n) => n.href);
     expect(hrefs).toEqual(expect.arrayContaining(["/admin/users", "/admin/master", "/admin/positions"]));

@@ -2,8 +2,8 @@
 export default function Loading() {
   const bar = "bg-muted animate-pulse rounded-md motion-reduce:animate-none";
   return (
-    <div role="status" aria-busy="true" aria-label="Memuat halaman" className="grid gap-6">
-      <div className="grid gap-2">
+    <div role="status" aria-busy="true" aria-label="Memuat halaman" className="grid grid-cols-[minmax(0,1fr)] gap-6">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-2">
         <div className={`${bar} h-7 w-56`} />
         <div className={`${bar} h-4 w-96 max-w-full`} />
       </div>

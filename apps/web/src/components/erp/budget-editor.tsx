@@ -409,7 +409,7 @@ export function BudgetEditor({
                         aria-expanded={notesOpen.has(r.key)}
                         className={cn(
                           "inline-flex items-center gap-1 rounded px-1 text-xs font-medium hover:underline",
-                          r.flags?.length ? "text-state-finance" : "text-muted-foreground",
+                          r.flags?.length ? "text-state-finance-text" : "text-muted-foreground",
                         )}
                         onClick={() =>
                           setNotesOpen((s) => {

@@ -82,3 +82,29 @@ export function contribution<L extends SummaryLine>(lines: readonly L[], keyOf: 
   }
   return [...out.values()];
 }
+
+export type TotalKind = "Revenue" | "Cost" | "CAPEX";
+export const TOTAL_KIND_LABEL: Record<TotalKind, string> = { Revenue: "Pendapatan", Cost: "Biaya", CAPEX: "CAPEX" };
+
+export interface KindTotal {
+  kind: TotalKind;
+  months: Money[];
+  total: Money;
+}
+
+/** Totals of a mixed list of RKA lines. Revenue is never added to spending: COGS, OPEX and OTHERS make up Biaya. */
+export function totalsByKind(lines: readonly { category: Category; months: Money[] }[]): KindTotal[] {
+  const kindOf = (c: Category): TotalKind => (c === "Revenue" || c === "CAPEX" ? c : "Cost");
+  return (Object.keys(TOTAL_KIND_LABEL) as TotalKind[]).flatMap((kind) => {
+    const own = lines.filter((l) => kindOf(l.category) === kind);
+    if (!own.length) return [];
+    const months = own.reduce((acc, l) => add(acc, l.months), zeros());
+    return [{ kind, months, total: sum(months) }];
+  });
+}
+
+/** The line list's search box: COA code, COA name or what the line is for. */
+export function searchLines<L extends { coaCode: string; coaName: string; item?: string | null }>(lines: readonly L[], query: string | undefined): L[] {
+  const q = query?.trim().toLowerCase() ?? "";
+  return q ? lines.filter((l) => [l.coaCode, l.coaName, l.item ?? ""].some((v) => v.toLowerCase().includes(q))) : [...lines];
+}

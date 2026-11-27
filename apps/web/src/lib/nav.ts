@@ -19,6 +19,7 @@ export const NAV: readonly NavItem[] = [
   { href: "/rka/queue", icon: "inbox", label: "Antrean Konsolidasi", roles: ["default_owner"], group: "Anggaran" },
   { href: "/rka/division", icon: "layers", label: "RKA Divisi", roles: ["division_owner"], group: "Anggaran" },
   { href: "/rka/review", icon: "kanban", label: "Status Board Finance", roles: ["finance"], group: "Anggaran" },
+  { href: "/rka", icon: "file", label: "Daftar Baris RKA", roles: ["finance"], group: "Anggaran" },
   { href: "/rka/lock", icon: "lock", label: "Kunci RKA", roles: ["finance", "director"], group: "Anggaran" },
   { href: "/rka/cycle", icon: "cycle", label: "Siklus RKA", roles: ["finance", "director"], group: "Anggaran" },
   { href: "/pembayaran", icon: "pay", label: "Permintaan Pembayaran", roles: ["requestor", "default_owner", "division_owner", "finance", "bfp", "cash_manager", "director", "auditor"], group: "Pembayaran" },

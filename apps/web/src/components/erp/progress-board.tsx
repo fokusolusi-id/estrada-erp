@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { APPROVAL_STATES, type ApprovalState, type DivisionProgress } from "@estrada/domain";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -20,16 +21,30 @@ const TINT: Record<ApprovalState, string> = {
   locked: "bg-state-locked/12",
 };
 
-function Count({ state, n }: { state: ApprovalState; n: number }) {
-  return (
+function Count({ state, n, href, label }: { state: ApprovalState; n: number; href?: string | undefined; label?: string }) {
+  const badge = (
     <span data-testid={`state-${state}`} className={cn("tabular inline-flex min-w-8 justify-center rounded-md px-1.5 py-0.5 font-medium", n ? TINT[state] : "text-muted-foreground")}>
       {n || "–"}
     </span>
   );
+  return n && href ? (
+    <Link href={href} aria-label={label} className="rounded-md underline-offset-2 hover:underline">
+      {badge}
+    </Link>
+  ) : (
+    badge
+  );
 }
 
 /** Where every division's lines stand in the cycle: a count per state and the share already final. */
-export function ProgressBoard({ rows }: { rows: DivisionProgress[] }) {
+export function ProgressBoard({
+  rows,
+  hrefFor,
+}: {
+  rows: DivisionProgress[];
+  /** Where a count leads: the lines of that division in that state. */
+  hrefFor?: (division: string, state: ApprovalState) => string;
+}) {
   if (!rows.length) return <p className="text-muted-foreground py-6 text-center text-sm">Belum ada baris RKA di siklus ini.</p>;
   const sum = (state: ApprovalState) => rows.reduce((n, r) => n + r.counts[state], 0);
   const all = rows.reduce((n, r) => n + r.total, 0);
@@ -65,7 +80,7 @@ export function ProgressBoard({ rows }: { rows: DivisionProgress[] }) {
             <TableCell className="font-medium">{r.division}</TableCell>
             {APPROVAL_STATES.map((s) => (
               <TableCell key={s} className="text-center">
-                <Count state={s} n={r.counts[s]} />
+                <Count state={s} n={r.counts[s]} href={hrefFor?.(r.division, s)} label={`${r.counts[s]} baris ${r.division} ${STATE_LABEL[s]}`} />
               </TableCell>
             ))}
             <TableCell className="tabular text-right">{r.total}</TableCell>
