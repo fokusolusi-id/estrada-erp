@@ -29,6 +29,7 @@ export const AUDIT_EVENTS: readonly AuditEventType[] = [
   app("RKA.EDIT", "RKA", "Isi, ubah, kembalikan atau hapus baris", "Medium", ["line.create", "line.update", "line.delete", "line.comment", "line.shared", "variance.note", "line.return", "line.send_back", "line.clarify", "version.headcount"]),
   app("RKA.CYCLE", "RKA", "Siklus dan versi RKA", "High", ["cycle.*"]),
   sheet("SP.STATUSCHANGE", "Sales Pipeline", "Tambah, ubah atau hapus deal", "Medium", 10, ["pipeline.create", "pipeline.update", "pipeline.delete"]),
+  app("SCM.PROCUREMENT", "Pengadaan", "PR, PO dan penerimaan", "High", ["procurement.*"]),
   app("SP.SPH", "Sales Pipeline", "SPH", "High", ["sph.*"]),
   app("SP.RECOVERY", "Sales Pipeline", "Rencana pemulihan", "Medium", ["pipeline.recovery_plan"]),
   sheet("PRJ.CREATE", "Projek", "Buka proyek", "Medium", 10, ["project.open"]),

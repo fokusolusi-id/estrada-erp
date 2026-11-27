@@ -4,6 +4,7 @@ export * from "./budget";
 export * from "./pipeline";
 export * from "./cash";
 export * from "./payment";
+export * from "./procurement";
 export * from "./project";
 export * from "./invoice";
 export * from "./obligo";

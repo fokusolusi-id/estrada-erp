@@ -323,6 +323,13 @@
       "when": 1795783463219,
       "tag": "0045_rich_talisman",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1795784626538,
+      "tag": "0046_watery_hex",
+      "breakpoints": true
     }
   ]
 }

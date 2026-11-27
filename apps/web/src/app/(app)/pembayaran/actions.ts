@@ -23,6 +23,7 @@ const FormSchema = z.object({
   vendorInvoiceNo: z.string().trim().max(100),
   billDate: z.string().refine((s) => s === "" || DATE.test(s), "Tanggal invoice vendor tidak valid"),
   projectId: z.union([z.literal(""), z.string().uuid()]),
+  purchaseOrderId: z.union([z.literal(""), z.string().uuid()]).default(""),
   pphType: z.union([z.literal(""), z.enum(PPH_TYPES)]),
   pphRate: z.string().max(10),
   description: z.string().trim().max(1000),
@@ -88,6 +89,15 @@ export async function savePayment(id: string | null, values: PaymentFormValues):
         .where(eq(schema.project.id, v.projectId));
       if (!project || project.entity !== v.entity) return { ok: false, message: "Proyek tidak ada pada entitas ini." };
     }
+    if (bill && v.purchaseOrderId) {
+      const [order] = await db
+        .select({ entity: schema.purchaseOrder.entityCode, partnerId: schema.purchaseOrder.partnerId, state: schema.purchaseOrder.state, budgetLineId: schema.purchaseRequest.budgetLineId })
+        .from(schema.purchaseOrder)
+        .innerJoin(schema.purchaseRequest, eq(schema.purchaseRequest.id, schema.purchaseOrder.requestId))
+        .where(eq(schema.purchaseOrder.id, v.purchaseOrderId));
+      if (!order || order.state !== "approved" || order.entity !== v.entity || order.partnerId !== partner!.id) return { ok: false, message: "Pilih PO disetujui milik mitra dan entitas ini." };
+      if (order.budgetLineId !== v.budgetLineId) return { ok: false, message: "Baris RKA harus sama dengan baris pada permintaan pengadaan PO ini." };
+    }
     if (bill && v.vendorInvoiceNo) {
       const [twin] = await db
         .select({ id: schema.paymentRequest.id, number: schema.paymentRequest.number })
@@ -113,6 +123,7 @@ export async function savePayment(id: string | null, values: PaymentFormValues):
       vendorInvoiceNo: bill ? v.vendorInvoiceNo || null : null,
       billDate: bill ? v.billDate || null : null,
       projectId: bill ? v.projectId || null : null,
+      purchaseOrderId: bill ? v.purchaseOrderId || null : null,
       pphType: v.pphType || null,
       pphRate,
       payeeName: partner?.name ?? (v.payeeName || null),

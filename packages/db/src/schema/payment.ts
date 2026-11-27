@@ -59,6 +59,8 @@ export const paymentRequest = pgTable(
     vendorInvoiceNo: text("vendor_invoice_no"),
     billDate: date("bill_date"),
     projectId: uuid("project_id").references(() => project.id),
+    /** The purchase order a vendor bill is matched against (plan C3); no FK here, the procurement tables point back. */
+    purchaseOrderId: uuid("purchase_order_id"),
     /** Null on requests saved before PPh types: their amount was typed. */
     pphType: pphTypeEnum("pph_type"),
     /** Percent. */

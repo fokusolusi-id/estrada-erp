@@ -16,7 +16,7 @@ import { approvalSteps,
 } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { activeYear } from "@/lib/fiscal-year";
-import { asLike, billProjects, formatDate, isOverLimit, lineHeadroom, lineOptions, partnerOptions, todayJakarta } from "@/lib/payment";
+import { asLike, billProjects, orderOptions, formatDate, isOverLimit, lineHeadroom, lineOptions, partnerOptions, todayJakarta } from "@/lib/payment";
 import { loadOrg } from "@/lib/workflow";
 import { PaymentStatusBadge, PaymentStepper } from "@/components/erp/payment-status";
 import { PaymentForm } from "@/components/erp/payment-form";
@@ -165,7 +165,8 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
         <CardContent>
           {editable && options ? (
             <PaymentForm
-              initial={{
+              orders={await orderOptions()}
+            initial={{
                 kind: r.kind,
                 entity: r.entityCode,
                 project: r.project ?? "",
@@ -175,6 +176,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
                 vendorInvoiceNo: r.vendorInvoiceNo ?? "",
                 billDate: r.billDate ?? "",
                 projectId: r.projectId ?? "",
+                purchaseOrderId: r.purchaseOrderId ?? "",
                 // A request with a typed PPh and no type keeps it; one without PPh starts at "Tanpa PPh".
                 pphType: r.pphType ?? (money(r.pph).isZero() ? "none" : ""),
                 pphRate: r.pphRate ? money(r.pphRate).toString().replace(".", ",") : "0",

@@ -31,7 +31,7 @@ describe("navFor", () => {
   });
 
   it("shows Implementasi to PDMS and BCD and to Finance, Direktur and Auditor, not to other divisions", () => {
-    expect(navFor("requestor", (unit) => unit === "PDMS").map((n) => n.href)).toEqual(["/", "/rka", "/pembayaran", "/implementasi", "/master", "/panduan"]);
+    expect(navFor("requestor", (unit) => unit === "PDMS").map((n) => n.href)).toEqual(["/", "/rka", "/pembayaran", "/implementasi", "/pengadaan", "/master", "/panduan"]);
     expect(navFor("default_owner", () => false).map((n) => n.href)).not.toContain("/implementasi");
     for (const role of ["finance", "director", "auditor"] as const) expect(navFor(role).map((n) => n.href)).toContain("/implementasi");
   });
