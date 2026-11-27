@@ -26,7 +26,7 @@ vi.mock("@/lib/invoice", () => ({
   },
 }));
 
-const form = { dealId: "11111111-1111-4111-8111-111111111111", terminNo: 1, description: "Termin 1", penalty: "", fine: "", pphType: "pph23" as const, pphRate: "2", invoicedOn: "2020-01-10", bankAccountId: "" };
+const form = { dealId: "11111111-1111-4111-8111-111111111111", terminNo: 1, description: "Termin 1", revenueCoa: "4100", penalty: "", fine: "", pphType: "pph23" as const, pphRate: "2", invoicedOn: "2020-01-10", bankAccountId: "" };
 
 beforeEach(() => {
   rows.current = [];

@@ -1,4 +1,5 @@
 import "server-only";
+import { db, schema } from "@estrada/db";
 import { can, type Permission } from "@estrada/domain";
 import { requireUser } from "./session";
 import { loadOrg } from "./workflow";
@@ -19,3 +20,9 @@ export const formValues = (row: object, names: readonly string[]): Record<string
       return [n, typeof value === "boolean" ? value : value == null ? "" : String(value)];
     }),
   );
+
+/** The "Perusahaan grup" choice on Customer and Mitra: blank first, so a new record is an outside party. */
+export async function groupCompanyField() {
+  const rows = await db.select({ code: schema.companyEntity.code, name: schema.companyEntity.name }).from(schema.companyEntity).orderBy(schema.companyEntity.code);
+  return { name: "groupEntityCode", label: "Perusahaan grup", type: "select" as const, options: [{ value: "", label: "Bukan perusahaan grup" }, ...rows.map((r) => ({ value: r.code, label: `${r.code} · ${r.name}` }))] };
+}

@@ -41,7 +41,7 @@ export const pnlSnapshot = pgTable(
     month: smallint("month").notNull(),
     version: smallint("version").notNull(),
     /** Amounts are strings, never JSON numbers. */
-    data: jsonb("data").$type<{ lines: { coaCode: string; name: string; category: string; amount: string }[]; balance: Record<string, string> }>().notNull(),
+    data: jsonb("data").$type<{ lines: { coaCode: string; name: string; category: string; amount: string }[]; balance: Record<string, string>; intercompany?: { coaCode: string; name: string; category: string; counterparty: string; amount: string }[] }>().notNull(),
     takenBy: text("taken_by")
       .notNull()
       .references(() => user.id),

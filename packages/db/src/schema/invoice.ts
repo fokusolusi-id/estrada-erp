@@ -35,6 +35,8 @@ export const invoice = pgTable(
       .references(() => pipelineDeal.id),
     terminNo: smallint("termin_no").notNull(),
     description: text("description").notNull(),
+    /** The revenue account (4xxx); null only on invoices raised before it was asked (plan B8). */
+    revenueCoa: text("revenue_coa"),
     /** Jumlah tagihan termin, before penalty and fine. */
     billed: rupiah("billed"),
     penalty: rupiah("penalty"),

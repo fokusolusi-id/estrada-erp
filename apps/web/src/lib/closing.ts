@@ -11,12 +11,14 @@ export async function loadMonthPnl(from: Reader, entity: string, year: number, m
   const [first, last] = [`${prefix}-01`, new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10)];
   const [invoices, paid, adjustments, interest, entries, accounts] = await Promise.all([
     from
-      .select({ dpp: schema.invoice.dpp })
+      .select({ dpp: schema.invoice.dpp, coaCode: schema.invoice.revenueCoa, counterparty: schema.customer.groupEntityCode })
       .from(schema.invoice)
+      .innerJoin(schema.customer, eq(schema.customer.id, schema.invoice.customerId))
       .where(and(eq(schema.invoice.entityCode, entity), eq(schema.invoice.state, "issued"), between(schema.invoice.invoicedOn, first, last))),
     from
-      .select({ amount: schema.paymentRequest.gross, coaCode: schema.budgetLine.coaCode })
+      .select({ amount: schema.paymentRequest.gross, coaCode: schema.budgetLine.coaCode, counterparty: schema.partner.groupEntityCode })
       .from(schema.paymentRequest)
+      .leftJoin(schema.partner, eq(schema.partner.id, schema.paymentRequest.partnerId))
       .leftJoin(schema.budgetLine, eq(schema.budgetLine.id, schema.paymentRequest.budgetLineId))
       .where(and(eq(schema.paymentRequest.entityCode, entity), eq(schema.paymentRequest.state, "paid"), between(schema.paymentRequest.paidOn, first, last))),
     from
@@ -34,8 +36,12 @@ export async function loadMonthPnl(from: Reader, entity: string, year: number, m
     from.select({ code: schema.coaAccount.code, name: schema.coaAccount.name, category: schema.coaAccount.category }).from(schema.coaAccount),
   ]);
   return monthPnl({
-    revenue: invoices.map((i) => money(i.dpp)),
-    costs: [...paid, ...adjustments, ...entries.filter((e) => e.kind === "cost")].map((c) => ({ coaCode: c.coaCode, amount: money(c.amount) })),
+    revenue: invoices.map((i) => ({ coaCode: i.coaCode, amount: money(i.dpp), counterparty: i.counterparty })),
+    costs: [...paid, ...adjustments.map((a) => ({ ...a, counterparty: null })), ...entries.filter((e) => e.kind === "cost").map((e) => ({ ...e, counterparty: null }))].map((c) => ({
+      coaCode: c.coaCode,
+      amount: money(c.amount),
+      counterparty: c.counterparty,
+    })),
     interest: [...interest, ...entries.filter((e) => e.kind === "interest")].map((i) => money(i.amount)).filter((i) => i.gt(0)),
     accounts: new Map(accounts.map((a) => [a.code, a])),
   });

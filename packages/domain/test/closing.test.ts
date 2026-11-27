@@ -34,14 +34,14 @@ describe("monthPnl", () => {
     ["1521", { name: "Peralatan", category: "CAPEX" as const }],
   ]);
   const cost = (coaCode: string | null, amount: string) => ({ coaCode, amount: money(amount) });
-  const p = monthPnl({ revenue: [money("1000"), money("500")], costs: [cost("6241", "50"), cost("5110", "300"), cost("5110", "-20"), cost("1521", "900"), cost(null, "10")], interest: [money("5"), money("2")], accounts });
+  const p = monthPnl({ revenue: [{ coaCode: null, amount: money("1000") }, { coaCode: null, amount: money("500") }], costs: [cost("6241", "50"), cost("5110", "300"), cost("5110", "-20"), cost("1521", "900"), cost(null, "10")], interest: [money("5"), money("2")], accounts });
   it("lists revenue from invoices, then costs per account, then loan interest", () => {
     expect(p.lines.map((l) => [l.coaCode, l.category, l.amount.toString()])).toEqual([
       ["", "Revenue", "1500"],
       ["5110", "COGS", "280"],
       ["6241", "OPEX", "50"],
       ["", "OTHERS", "10"],
-      ["", "OTHERS", "7"],
+      ["7220", "OTHERS", "7"],
     ]);
     expect(p.lines.at(-1)!.name).toBe("Bunga pinjaman");
   });

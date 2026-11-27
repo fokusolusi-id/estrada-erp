@@ -1,5 +1,5 @@
 import { PPH_LABEL, TAX_KIND_LABEL, TAX_STATUS_LABEL, can, taxPeriodOf, type TaxKind } from "@estrada/domain";
-import { writeTaxWorkbook } from "@estrada/importers";
+import { writeSheets } from "@estrada/importers";
 import { MONTH_NAMES } from "@/lib/period";
 import { todayJakarta } from "@/lib/payment";
 import { requireUser } from "@/lib/session";
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   const period = /^\d{4}-(0[1-9]|1[0-2])$/.test(asked) ? asked : todayJakarta().slice(0, 7);
   const { items, entities } = await loadTaxMonth(user.actor, period, (await activeView()).entity);
   const month = `${MONTH_NAMES[Number(period.slice(5, 7)) - 1]} ${period.slice(0, 4)}`;
-  const body = await writeTaxWorkbook(
+  const body = await writeSheets(
     `Pajak ${month} · ${entities.join(", ")}`,
     SHEETS.map(([kind, name]) => ({
       name,

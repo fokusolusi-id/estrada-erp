@@ -45,3 +45,4 @@ export * from "./cash-week";
 export * from "./obligo";
 export * from "./tax";
 export * from "./closing";
+export * from "./pnl-report";

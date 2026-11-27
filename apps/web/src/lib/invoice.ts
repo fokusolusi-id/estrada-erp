@@ -131,3 +131,9 @@ export async function applyInvoiceStep(user: CurrentUser, id: string, action: In
   if (template) await tellInvoice(result.invoice, template, user.id);
   return { state: INVOICE_STATE_LABEL[result.invoice.state], number: result.invoice.number, warning: result.warning };
 }
+
+/** Revenue accounts an invoice may be booked to. */
+export async function revenueAccounts() {
+  const rows = await db.select().from(schema.coaAccount).orderBy(schema.coaAccount.code);
+  return rows.filter((a) => a.category === "Revenue" && a.postable && a.active).map((a) => ({ code: a.code, label: `${a.code} · ${a.name}` }));
+}
