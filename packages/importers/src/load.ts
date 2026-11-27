@@ -10,6 +10,7 @@ import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import { ORG_UNITS } from "@estrada/db/seed-data";
 import { APPROVAL_STATES, formatIdr, headcountBasis, inferCoaParent, pipelineTotals, pnl, type ApprovalState } from "@estrada/domain";
+import { linkDealCustomers, linkSummary } from "./link-customers";
 import { readRkaWorkbook, type RkaWorkbook } from "./workbook";
 
 const { values, positionals } = parseArgs({
@@ -209,6 +210,7 @@ async function loadPipeline(tx: Tx, pipeline: NonNullable<RkaWorkbook["pipeline"
   await tx.delete(schema.pipelineTarget).where(eq(schema.pipelineTarget.fiscalYear, fiscalYear));
   if (pipeline.deals.length) {
     await tx.insert(schema.pipelineDeal).values(pipeline.deals.map(({ ref, entity, ...d }) => ({ ...d, fiscalYear, entityCode: entity, sourceRef: `Pipeline #${ref.no}` })));
+    console.log(linkSummary(await linkDealCustomers(tx)));
   }
   if (pipeline.targets.length) {
     await tx.insert(schema.pipelineTarget).values(pipeline.targets.map((t) => ({ fiscalYear, segment: t.segment, target: t.target.toFixed(2) })));

@@ -12,7 +12,7 @@ brew install postgresql@16 && brew services start postgresql@16   # Postgres 16 
 createuser -s estrada && psql -d postgres -c "ALTER ROLE estrada PASSWORD 'estrada'" && createdb -O estrada estrada   # first time only
 pnpm install
 pnpm db:migrate
-pnpm db:seed                     # entities, org units, COA + Karyawan from fixtures/*.csv (else a starter COA), demo RKA version
+pnpm db:seed                     # entities, org units, masters from the client workbooks in fixtures/ (else a starter COA), demo RKA version
 pnpm --filter web create-admin -- admin@estrada.co.id "Admin" 'password-min-10'
 pnpm db:import -- "fixtures/RKA_2027_Upd_Fin v2.xlsx"   # optional: load the real RKA 2027 lines (see below)
 pnpm --filter web create-demo-users   # optional: one user per role, passwords in .dev-users.txt

@@ -105,6 +105,7 @@ const REMAP_MESSAGE: Record<RemapProblem, string> = {
   same_code: "Kode tujuan sama dengan kode asal.",
   target_inactive: "Kode tujuan tidak aktif.",
   target_provisional: "Kode tujuan juga masih sementara.",
+  target_not_postable: "Kode tujuan adalah akun induk; pilih akun turunannya.",
   category_mismatch: "Kategori kode tujuan berbeda; total kategori akan berubah.",
   locked_lines: "Ada baris di versi yang sudah dikunci; versi terkunci tidak diubah.",
 };

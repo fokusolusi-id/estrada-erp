@@ -175,7 +175,7 @@ export async function editorMasters(user: CurrentUser) {
   ]);
   const scoped = user.actor.entities.includes("*") ? entities : entities.filter((e) => user.actor.entities.includes(e.code));
   return {
-    coa: coa.map((c) => ({ code: c.code, name: c.name, category: c.category, defaultOwnerUnit: c.defaultOwnerUnit })),
+    coa: coa.map((c) => ({ code: c.code, name: c.name, category: c.category, defaultOwnerUnit: c.defaultOwnerUnit, postable: c.postable })),
     entities: scoped.map((e) => e.code),
     units: units.filter((u) => u.type !== "company").map((u) => ({ code: u.code, name: u.name })),
   };

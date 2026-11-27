@@ -19,6 +19,7 @@ const FormSchema = z.object({
   entity: z.string().min(1, "Pilih entitas"),
   project: z.string().trim().max(200),
   budgetLineId: z.string(),
+  partnerId: z.string().max(50),
   description: z.string().trim().max(1000),
   payeeName: z.string().trim().max(200),
   payeeBank: z.string().trim().max(60),
@@ -56,13 +57,21 @@ export async function savePayment(id: string | null, values: PaymentFormValues):
       const { lines } = await lineOptions(user.actor, await activeYear());
       if (!lines.some((l) => l.id === v.budgetLineId && l.entity === v.entity)) return { ok: false, message: "Baris RKA tidak tersedia untuk Anda." };
     }
+    // A picked partner must be in the master, and gives the payee its name.
+    const [partner] = v.partnerId ? await db.select().from(schema.partner).where(eq(schema.partner.id, v.partnerId)) : [];
+    if (v.partnerId && !partner) return { ok: false, message: "Mitra tidak ada di Master Mitra." };
+    if (partner && !partner.active) {
+      const [held] = id ? await db.select().from(schema.paymentRequest).where(eq(schema.paymentRequest.id, id)) : [];
+      if (held?.partnerId !== partner.id) return { ok: false, message: "Mitra sudah nonaktif di Master Mitra." };
+    }
     const values = {
       kind: v.kind,
       entityCode: v.entity,
       project: v.project || null,
       budgetLineId: v.budgetLineId || null,
       description: v.description,
-      payeeName: v.payeeName || null,
+      partnerId: partner?.id ?? null,
+      payeeName: partner?.name ?? (v.payeeName || null),
       payeeBank: v.payeeBank || null,
       payeeAccount: v.payeeAccount || null,
       dueOn: v.dueOn || null,
@@ -99,7 +108,7 @@ export async function savePayment(id: string | null, values: PaymentFormValues):
       action: "payment.update",
       subjectType: "payment_request",
       subjectId: id,
-      before: { gross: r.gross, ppn: r.ppn, pph: r.pph, budgetLineId: r.budgetLineId, description: r.description },
+      before: { gross: r.gross, ppn: r.ppn, pph: r.pph, budgetLineId: r.budgetLineId, partnerId: r.partnerId, description: r.description },
       after: values,
     });
     revalidatePath(`/pembayaran/${id}`);

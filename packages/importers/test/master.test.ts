@@ -1,15 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCoaStructured, parseCsv, parseEmployees } from "../src/index";
-
-describe("parseCsv", () => {
-  it("reads quoted fields with commas, doubled quotes and line breaks, and drops a BOM", () => {
-    const text = '﻿a,"b, c","say ""hi"""\r\n1,"two\nlines",\n';
-    expect(parseCsv(text)).toEqual([
-      ["a", "b, c", 'say "hi"'],
-      ["1", "two\nlines", ""],
-    ]);
-  });
-});
+import { codesOutsideFile, parseCoaStructured, parseEmployees } from "../src/index";
 
 const UNITS = [
   { code: "FRM", aliases: [] },
@@ -19,7 +9,7 @@ const UNITS = [
   { code: "BCD", aliases: ["CBD", "SPA", "Sales"] },
 ];
 
-// "COA Structured RKA 2027 - Sheet2" as exported: two title rows, header on row 3, the segment legend to the right.
+// "COA Structured RKA 2027", sheet "Sheet2": two title rows, header on row 3, the segment legend to the right.
 const COA_HEADER = ["account_code", "account_name", "level", "parent_code", "account_type", "normal_balance", "statement", "is_postable", "is_segmented", "path", "note", "requestor", "budget_owner", "rka_category", "", "", "", "", "segment_code", "segment_name", "description"];
 const COA = [
   ["COA STRUCTURED – Referensi (impor dari COA Master.xlsx)"],
@@ -90,7 +80,7 @@ describe("parseCoaStructured", () => {
   });
 });
 
-// "Data Karyawan Estrada Group - Data Karyawan (Okt)": three note rows, header on row 4.
+// "Data Karyawan Estrada Group", sheet "Data Karyawan (Okt)": three note rows, header on row 4.
 const EMP_HEADER = ["Employee NIP", "Employee Name", "Employee Email", "Fungsi", "Kode", "Company Code", "Divisi", "Department", "Posisi", "Jabatan", "Cost Center Code", "Employment Status", "Join Date", "Direct Manager NIP", "Phone", "Photo URL", "Notes", "Source Note"];
 const emp = (over: Partial<Record<(typeof EMP_HEADER)[number], string>>) => {
   const base: Record<string, string> = { "Employee NIP": "E20190077", "Employee Name": "Kamal Abdillah", "Employee Email": "kamal@estrada.co.id", Fungsi: "Finance", Kode: "F9", "Company Code": "ESTRADA", Divisi: "Finance & Risk Management", Department: "-", Posisi: "Head", Jabatan: "Division of Finance & Risk Management", "Employment Status": "Active", "Join Date": "01 March 2019", "Direct Manager NIP": "-", Phone: "-", Notes: "-", ...over };
@@ -152,5 +142,20 @@ describe("parseEmployees", () => {
     expect(() => parseEmployees(EMP([emp({ "Company Code": "PAS" })]), CTX)).toThrow(/PAS/);
     expect(() => parseEmployees(EMP([emp({ Divisi: "Marketing" })]), CTX)).toThrow(/Marketing/);
     expect(() => parseEmployees(EMP([emp({ "Join Date": "2019/03/01" })]), CTX)).toThrow(/2019\/03\/01/);
+  });
+});
+
+describe("parseEmployees from the workbook (Data Karyawan Estrada Group)", () => {
+  it("reads a join date Excel stored as a date", () => {
+    const cols = ["Employee NIP", "Employee Name", "Employee Email", "Kode", "Company Code", "Divisi", "Department", "Posisi", "Jabatan", "Employment Status", "Join Date", "Direct Manager NIP", "Phone", "Notes"];
+    const row = ["E1", "Uji", "", "F1", "ESTRADA", "BOD", "", "Staff", "Staff", "Active", new Date("2015-04-01T00:00:00Z"), "", "", ""];
+    expect(parseEmployees([cols, row], { entities: ["ESTRADA"] })[0]!.joinedOn).toBe("2015-04-01");
+  });
+});
+
+describe("codesOutsideFile (client: use only COA Structured RKA 2027)", () => {
+  it("removes unused codes the file lacks and retires the ones still in use", () => {
+    const existing = ["4110", "5100-1", "1615", "9999"];
+    expect(codesOutsideFile(existing, ["4110"], new Set(["5100-1", "1615"]))).toEqual({ remove: ["9999"], retire: ["1615", "5100-1"] });
   });
 });

@@ -4,10 +4,14 @@ import { PipelineRegister, type RegisterDeal } from "./pipeline-register";
 
 // Deals as in the Pipeline sheet (rows 3 and 59), value excluding PPN.
 const deals: RegisterDeal[] = [
-  { id: "a", entity: "ESTRADA", customer: "Telkom", endCustomer: "Korlantas", segment: "Telco Business", project: "Sewa CPE SBST Online Korlantas", coaCode: "4100", value: "577320000", status: "WB", probability: "90", type: "renewal", startMonth: 1, endMonth: 12, editable: true },
-  { id: "b", entity: "MATRIK", customer: "Telkom", endCustomer: "Korlantas", segment: "Government Business", project: "Harwat Sistem Monitoring Center", coaCode: "4200", value: "6000000000", status: "PP", probability: "10", type: "new", startMonth: 7, endMonth: 12, editable: true },
+  { id: "a", entity: "ESTRADA", customer: "Telkom", customerId: "Cust-001", endCustomer: "Korlantas", segment: "Telco Business", project: "Sewa CPE SBST Online Korlantas", coaCode: "4100", value: "577320000", status: "WB", probability: "90", type: "renewal", startMonth: 1, endMonth: 12, editable: true },
+  { id: "b", entity: "MATRIK", customer: "Telkom", customerId: "Cust-001", endCustomer: "Korlantas", segment: "Government Business", project: "Harwat Sistem Monitoring Center", coaCode: "4200", value: "6000000000", status: "PP", probability: "10", type: "new", startMonth: 7, endMonth: 12, editable: true },
 ];
 const options = {
+  customers: [
+    { id: "Cust-003", nickname: "Korlantas", legalName: "Korlantas Polri" },
+    { id: "Cust-014", nickname: "Kemhan", legalName: "Kementerian Pertahanan" },
+  ],
   entities: ["ESTRADA", "MATRIK"],
   coa: [
     { code: "4100", name: "Pendapatan Sewa CPE (Router Gateway)" },
@@ -33,7 +37,7 @@ describe("PipelineRegister", () => {
     render(<PipelineRegister deals={deals} options={options} canAdd onSave={onSave} onDelete={ok()} />);
     fireEvent.click(screen.getByRole("button", { name: "Tambah deal" }));
     const form = within(screen.getByRole("form", { name: "Deal" }));
-    fireEvent.change(form.getByLabelText("Customer"), { target: { value: "Kemhan" } });
+    fireEvent.change(form.getByLabelText("Customer (Master Customer)"), { target: { value: "Cust-014" } });
     fireEvent.change(form.getByLabelText("Project"), { target: { value: "Platform Digital Workspace" } });
     fireEvent.change(form.getByLabelText("COA deal"), { target: { value: "4200" } });
     fireEvent.change(form.getByLabelText("Lead time (bulan)"), { target: { value: "3" } });
@@ -44,7 +48,7 @@ describe("PipelineRegister", () => {
     fireEvent.click(form.getByRole("button", { name: "Simpan deal" }));
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith(
-        expect.objectContaining({ id: null, customer: "Kemhan", project: "Platform Digital Workspace", value: "24379658426", status: "PP", probability: "90", entity: "ESTRADA", coaCode: "4200", leadTimeMonths: 3, termins: [] }),
+        expect.objectContaining({ id: null, customer: "Kemhan", customerId: "Cust-014", project: "Platform Digital Workspace", value: "24379658426", status: "PP", probability: "90", entity: "ESTRADA", coaCode: "4200", leadTimeMonths: 3, termins: [] }),
       ),
     );
     expect(await screen.findByText("Deal disimpan.")).toBeTruthy();
@@ -104,5 +108,27 @@ describe("PipelineRegister", () => {
     render(<PipelineRegister deals={deals.map((d) => ({ ...d, editable: false }))} options={options} canAdd={false} onSave={ok()} onDelete={ok()} />);
     expect(screen.queryByRole("button", { name: "Tambah deal" })).toBeNull();
     expect(screen.queryByRole("button", { name: /Ubah/ })).toBeNull();
+  });
+});
+
+// BR-SP-002: the deal's customer comes from Master Customer.
+describe("PipelineRegister: Master Customer", () => {
+  it("picks a customer from the master and saves its name", async () => {
+    const onSave = ok();
+    const { container } = render(<PipelineRegister deals={deals} options={options} canAdd onSave={onSave} onDelete={ok()} />);
+    fireEvent.click(within(container).getByRole("button", { name: /^Ubah Sewa CPE/ }));
+    const form = within(within(container).getByRole("form", { name: "Deal" }));
+    fireEvent.change(form.getByLabelText("Customer (Master Customer)"), { target: { value: "Cust-003" } });
+    fireEvent.click(form.getByRole("button", { name: "Simpan deal" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ id: "a", customerId: "Cust-003", customer: "Korlantas" })));
+  });
+
+  it("will not save a deal without one, and shows the name it was imported with", () => {
+    const { container } = render(<PipelineRegister deals={[{ ...deals[0]!, customer: "Icon", customerId: null }]} options={options} canAdd onSave={ok()} onDelete={ok()} />);
+    fireEvent.click(within(container).getByRole("button", { name: /^Ubah/ }));
+    const form = within(within(container).getByRole("form", { name: "Deal" }));
+    expect(form.getByText(/Tertulis di deal: Icon/)).toBeTruthy();
+    expect((form.getByRole("button", { name: "Simpan deal" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(form.queryByLabelText("Customer")).toBeNull();
   });
 });

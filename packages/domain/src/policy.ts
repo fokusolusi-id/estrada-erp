@@ -32,7 +32,15 @@ export type Permission =
   | "actual.edit"
   | "allocation.manage"
   | "bank.manage"
-  | "payment.report";
+  | "payment.report"
+  | "customer.manage"
+  | "partner.manage"
+  | "employee.view"
+  | "employee.manage";
+
+/** A unit's own people, as opposed to the company-wide seats. */
+const UNIT_STAFF: readonly Role[] = ["requestor", "default_owner", "division_owner"];
+const staffOf = (actor: Actor, unit: string, org: OrgTree) => UNIT_STAFF.includes(actor.role) && org.isWithin(actor.orgUnit, unit);
 
 const COMPANY_WIDE: readonly Role[] = ["finance", "director", "auditor", "admin"];
 
@@ -50,6 +58,17 @@ export function can(actor: Actor, permission: Permission, resource: LineResource
     case "coa.manage":
       // COA Master belongs to Finance alone (CARA PENGISIAN point 6, confirmed by the client).
       return actor.role === "finance";
+    // Each other master has one data steward (05_SoD_Matrix): Sales keeps Customer, SCM keeps Mitra and Produk Mitra,
+    // HCM keeps Karyawan. Admin may edit them too (client decision).
+    case "customer.manage":
+      return actor.role === "admin" || staffOf(actor, "BCD", org);
+    case "partner.manage":
+      return actor.role === "admin" || staffOf(actor, "SCM", org);
+    case "employee.manage":
+      return actor.role === "admin" || staffOf(actor, "HCM", org);
+    case "employee.view":
+      // Employee data is HR data (20_Navigation_IA, SCR-MD-02): its keepers, the Direktur and the Auditor.
+      return actor.role === "director" || actor.role === "auditor" || can(actor, "employee.manage", null, org);
     case "org.manage":
     case "user.manage":
       return actor.role === "admin";

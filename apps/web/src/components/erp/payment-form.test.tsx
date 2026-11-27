@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { EMPTY_PAYMENT, PaymentForm } from "./payment-form";
 
 const push = vi.fn();
@@ -45,5 +45,48 @@ describe("PaymentForm", () => {
     render(<PaymentForm initial={EMPTY_PAYMENT} entities={["ESTRADA"]} lines={lines} onSave={async () => ({ ok: false, message: "Nominal tidak terbaca." })} />);
     fireEvent.click(screen.getByRole("button", { name: "Simpan draft" }));
     expect(await screen.findByText("Nominal tidak terbaca.")).toBeTruthy();
+  });
+});
+
+// BR-SCM-002 / plan A4: a payment can name its payee from Master Mitra.
+describe("PaymentForm: Master Mitra", () => {
+  const partners = [
+    { id: "Mitra-001", name: "PT Lixa Teknologi Indonesia", npwp: "0435240478044000" },
+    { id: "Mitra-004", name: "PT Integrasi Data Nusantara", npwp: null },
+  ];
+  const view = (onSave = vi.fn(async () => ({ ok: true, message: "Draft disimpan." }))) => {
+    const { container } = render(<PaymentForm initial={EMPTY_PAYMENT} entities={["ESTRADA"]} lines={lines} partners={partners} onSave={onSave} />);
+    const form = within(container);
+    const pick = (id: string) => fireEvent.change(form.getByLabelText("Mitra (Master Mitra)"), { target: { value: id } });
+    const input = (label: string) => form.getByLabelText(label) as HTMLInputElement;
+    return { form, pick, input, onSave };
+  };
+
+  it("fills the payee from the picked partner and saves the link", async () => {
+    const { form, pick, input, onSave } = view();
+    fireEvent.change(input("Bank tujuan"), { target: { value: "BCA" } });
+    pick("Mitra-001");
+    expect(input("Dibayar kepada").value).toBe("PT Lixa Teknologi Indonesia");
+    expect(input("Dibayar kepada").readOnly).toBe(true);
+    expect(input("Bank tujuan").value).toBe("BCA");
+    fireEvent.click(form.getByRole("button", { name: "Simpan draft" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ partnerId: "Mitra-001", payeeName: "PT Lixa Teknologi Indonesia" })));
+  });
+
+  it("drops the previous partner's bank account when another partner is picked", () => {
+    const { pick, input } = view();
+    pick("Mitra-001");
+    fireEvent.change(input("Nomor rekening tujuan"), { target: { value: "123" } });
+    pick("Mitra-004");
+    expect(input("Nomor rekening tujuan").value).toBe("");
+  });
+
+  it("warns when the partner has no NPWP (BR-MD-005), and frees the name when unpicked", () => {
+    const { form, pick, input } = view();
+    pick("Mitra-004");
+    expect(form.getByText(/belum punya NPWP/)).toBeTruthy();
+    pick("");
+    expect(form.queryByText(/belum punya NPWP/)).toBeNull();
+    expect(input("Dibayar kepada").readOnly).toBe(false);
   });
 });

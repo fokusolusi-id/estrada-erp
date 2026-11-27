@@ -1,7 +1,7 @@
 /**
  * Master data from RKA_2027_Upd_Fin v2.xlsx (Mapping Entitas, COA Master).
  * The full COA Master and every RKA line come from @estrada/importers (pnpm db:import); this seeds the skeleton so the app runs.
- * With fixtures/coa-structured-rka-2027.csv present, `pnpm db:master` (run after this by `pnpm db:seed`) loads the full COA instead.
+ * With fixtures/COA Structured RKA 2027.xlsx present, `pnpm db:master` (run after this by `pnpm db:seed`) loads the full COA instead.
  */
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
@@ -18,7 +18,7 @@ async function main() {
     .onConflictDoUpdate({ target: orgUnit.code, set: { aliases: sql`excluded.aliases` } });
 
   // SEED_COA=skeleton keeps the starter COA (e2e), so tests never depend on a file outside git.
-  const structuredCoa = process.env.SEED_COA !== "skeleton" && existsSync(resolve(import.meta.dirname, "../../../fixtures/coa-structured-rka-2027.csv"));
+  const structuredCoa = process.env.SEED_COA !== "skeleton" && existsSync(resolve(import.meta.dirname, "../../../fixtures/COA Structured RKA 2027.xlsx"));
   if (!structuredCoa) {
     await db
       .insert(coaAccount)

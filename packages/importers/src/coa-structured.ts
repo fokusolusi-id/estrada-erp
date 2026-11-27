@@ -115,3 +115,10 @@ export function parseCoaStructured(rows: Cell[][], units: readonly UnitAlias[]):
   }
   return { accounts, segments };
 }
+
+/** Codes the structured COA does not list: unused ones can go; ones records still point at are retired until Finance moves them. */
+export function codesOutsideFile(existing: readonly string[], file: readonly string[], used: ReadonlySet<string>): { remove: string[]; retire: string[] } {
+  const listed = new Set(file);
+  const outside = existing.filter((c) => !listed.has(c)).sort();
+  return { remove: outside.filter((c) => !used.has(c)), retire: outside.filter((c) => used.has(c)) };
+}

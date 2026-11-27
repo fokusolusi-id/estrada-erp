@@ -1,0 +1,2 @@
+ALTER TABLE "pipeline_deal" ADD COLUMN "customer_id" text;--> statement-breakpoint
+ALTER TABLE "pipeline_deal" ADD CONSTRAINT "pipeline_deal_customer_id_customer_id_fk" FOREIGN KEY ("customer_id") REFERENCES "public"."customer"("id") ON DELETE no action ON UPDATE no action;

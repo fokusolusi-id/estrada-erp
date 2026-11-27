@@ -108,3 +108,11 @@ describe("coaTree and coaSubtree", () => {
     expect([...coaSubtree("5510", tree)]).toEqual(["5510"]);
   });
 });
+
+describe("remapProblem: lines move only to a code that takes them", () => {
+  it("refuses a parent code that takes no postings", () => {
+    const source = { code: "5100-1", category: "COGS" as const, provisional: true };
+    expect(remapProblem(source, { code: "5100", category: "COGS", active: true, provisional: false, postable: false }, 0)).toBe("target_not_postable");
+    expect(remapProblem(source, { code: "5110", category: "COGS", active: true, provisional: false, postable: true }, 0)).toBeNull();
+  });
+});

@@ -1,6 +1,6 @@
 import { date, index, integer, numeric, pgEnum, pgTable, primaryKey, smallint, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
-import { coaAccount, companyEntity } from "./master";
+import { coaAccount, companyEntity, customer } from "./master";
 
 export const dealStatusEnum = pgEnum("deal_status", ["PP", "PT", "QO", "WB", "CW"]);
 export const dealTypeEnum = pgEnum("deal_type", ["new", "renewal"]);
@@ -17,7 +17,10 @@ export const pipelineDeal = pgTable(
     entityCode: text("entity_code")
       .notNull()
       .references(() => companyEntity.code),
+    /** As typed or imported; follows the master's nickname once a customer is picked. */
     customer: text("customer").notNull(),
+    /** BR-SP-002; null until the text is matched to Master Customer. */
+    customerId: text("customer_id").references(() => customer.id),
     endCustomer: text("end_customer"),
     segment: text("segment").notNull(),
     project: text("project").notNull(),

@@ -1,4 +1,5 @@
-import { boolean, date, integer, numeric, pgEnum, pgTable, primaryKey, text, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { boolean, date, integer, numeric, pgEnum, pgTable, primaryKey, text, timestamp, unique, uniqueIndex, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
 /** RKA budgets the first five; TAX and BALANCE_SHEET complete the ledger from COA Structured RKA 2027. */
@@ -151,3 +152,74 @@ export const employee = pgTable("employee", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/** Master Customer (M Customer, BR-MD-004). NPWP is unique except the placeholder (PLACEHOLDER_NPWP in domain customer.ts). */
+export const customer = pgTable(
+  "customer",
+  {
+    id: text("id").primaryKey(),
+    nickname: text("nickname").notNull(),
+    legalName: text("legal_name").notNull(),
+    /** Telco, APH, K/L, Pemda, … (sheet ref). */
+    segment: text("segment").notNull(),
+    /** Sub-segmen / direktorat. */
+    subSegment: text("sub_segment"),
+    npwp: text("npwp"),
+    address: text("address"),
+    email: text("email"),
+    phone: text("phone"),
+    picName: text("pic_name"),
+    picPhone: text("pic_phone"),
+    picTitle: text("pic_title"),
+    picEmail: text("pic_email"),
+    /** Term of payment in days. */
+    paymentTermDays: integer("payment_term_days"),
+    /** Wajib pungut: the customer collects the PPN itself. */
+    wapu: boolean("wapu").notNull().default(false),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("customer_npwp_unique").on(t.npwp).where(sql`${t.npwp} <> '010611200093000'`)],
+);
+
+export const partnerCategoryEnum = pgEnum("partner_category", ["Distributor", "Principle"]);
+
+/** Master Mitra (BR-MD-005, BR-SCM-004). An empty NPWP is allowed but warned (domain partnerIssues). */
+export const partner = pgTable("partner", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  category: partnerCategoryEnum("category").notNull(),
+  npwp: text("npwp"),
+  city: text("city"),
+  address: text("address"),
+  email: text("email"),
+  phone: text("phone"),
+  picName: text("pic_name"),
+  picPhone: text("pic_phone"),
+  picTitle: text("pic_title"),
+  picEmail: text("pic_email"),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Master Produk Mitra: a partner has many products, each with its own ID (Produk-001, …). */
+export const partnerProduct = pgTable(
+  "partner_product",
+  {
+    id: text("id").primaryKey(),
+    partnerId: text("partner_id")
+      .notNull()
+      .references(() => partner.id),
+    /** Kategori: Hardware, … */
+    category: text("category").notNull(),
+    /** Jenis */
+    type: text("type").notNull(),
+    brand: text("brand").notNull(),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique("partner_product_unique").on(t.partnerId, t.category, t.type, t.brand)],
+);

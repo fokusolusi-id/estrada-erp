@@ -59,9 +59,10 @@ const COLS = ["Employee NIP", "Employee Name", "Employee Email", "Kode", "Compan
 const squash = (s: string) => s.replace(/\s+/g, " ").trim();
 const blank = (s: string) => (s === "" || s === "-" ? null : s);
 
-/** "01 April 2015" or "15 Agustus 2024" → 2015-04-01. */
+/** "01 April 2015", "15 Agustus 2024" or an Excel date (already ISO by now) → 2015-04-01. */
 function isoDate(nip: string, v: string): string | null {
   if (!blank(v)) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
   const m = /^(\d{1,2}) ([A-Za-z]+) (\d{4})$/.exec(squash(v));
   const month = m && MONTHS[m[2]!.toLowerCase()];
   const day = m ? Number(m[1]) : 0;

@@ -14,6 +14,8 @@ export interface PaymentFormValues {
   project: string;
   budgetLineId: string;
   description: string;
+  /** Master Mitra; "" when the payee is typed. */
+  partnerId: string;
   payeeName: string;
   payeeBank: string;
   payeeAccount: string;
@@ -29,6 +31,12 @@ export interface LineOption {
   label: string;
 }
 
+export interface PartnerOption {
+  id: string;
+  name: string;
+  npwp: string | null;
+}
+
 type Result = { ok: boolean; message: string; id?: string };
 
 const AREA =
@@ -42,6 +50,7 @@ export const EMPTY_PAYMENT: PaymentFormValues = {
   project: "",
   budgetLineId: "",
   description: "",
+  partnerId: "",
   payeeName: "",
   payeeBank: "",
   payeeAccount: "",
@@ -67,12 +76,15 @@ export function PaymentForm({
   initial,
   entities,
   lines,
+  partners = [],
   versionNote,
   onSave,
 }: {
   initial: PaymentFormValues;
   entities: string[];
   lines: LineOption[];
+  /** Active Master Mitra records, plus the one this request already names. */
+  partners?: PartnerOption[];
   /** Said beside the RKA line choice, e.g. that the RKA is not locked yet. */
   versionNote?: string;
   onSave: (v: PaymentFormValues) => Promise<Result>;
@@ -83,6 +95,18 @@ export function PaymentForm({
   const [pending, startTransition] = useTransition();
   const set = (k: keyof PaymentFormValues) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setV((p) => ({ ...p, [k]: e.target.value, ...(k === "entity" ? { budgetLineId: "" } : {}) }));
+
+  const partner = partners.find((p) => p.id === v.partnerId);
+  const pickPartner = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const picked = partners.find((p) => p.id === e.target.value);
+    setV((p) => ({
+      ...p,
+      partnerId: picked?.id ?? "",
+      payeeName: picked?.name ?? p.payeeName,
+      // Another partner's account must not follow the new name.
+      ...(picked && p.partnerId && p.partnerId !== picked.id ? { payeeBank: "", payeeAccount: "" } : {}),
+    }));
+  };
 
   const entityLines = lines.filter((l) => l.entity === v.entity);
   const nett = useMemo(() => {
@@ -152,9 +176,21 @@ export function PaymentForm({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-2 sm:col-span-3">
+          <Label htmlFor="pay-partner">Mitra (Master Mitra)</Label>
+          <select id="pay-partner" className={SELECT} value={v.partnerId} onChange={pickPartner}>
+            <option value="">— Bukan mitra / belum ada di master —</option>
+            {partners.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name} ({p.id})
+              </option>
+            ))}
+          </select>
+          {partner && !partner.npwp ? <p className="text-warning-foreground text-xs">Mitra ini belum punya NPWP di Master Mitra; NPWP wajib untuk bertransaksi.</p> : null}
+        </div>
         <div className="grid gap-2">
           <Label htmlFor="pay-payee">Dibayar kepada</Label>
-          <Input id="pay-payee" value={v.payeeName} onChange={set("payeeName")} placeholder="Nama vendor / penerima" />
+          <Input id="pay-payee" readOnly={!!partner} className={partner ? "bg-muted" : undefined} value={v.payeeName} onChange={set("payeeName")} placeholder="Nama vendor / penerima" />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="pay-payee-bank">Bank tujuan</Label>

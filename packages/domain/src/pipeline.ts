@@ -33,6 +33,8 @@ export interface TerminInput {
 export interface DealInput {
   entity: string;
   customer: string;
+  /** Its Master Customer record; null until the deal is matched. */
+  customerId?: string | null;
   endCustomer?: string | null;
   segment: string;
   project: string;

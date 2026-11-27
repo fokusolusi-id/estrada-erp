@@ -96,6 +96,10 @@ async function writeLine(user: Awaited<ReturnType<typeof requireUser>>, v: z.out
   // One line per COA, entity and budget owner for a requesting unit; headcount positions share a salary COA and are left out.
   // Lines the import already doubled stay editable: the check runs when a line is new or moves to another slot.
   const moved = !existing || existing.coaCode !== v.coaCode || existing.entityCode !== v.entityCode || existing.ownerUnit !== v.ownerUnit;
+  // A parent account takes no postings. Lines already on one (the 2027 workbook) stay editable until they move.
+  if (moved && coaRows[0]?.postable === false) {
+    return { ok: false, message: "Periksa isian baris.", errors: { coaCode: "Akun induk tidak menerima baris RKA; pilih akun turunannya" } };
+  }
   if (!plan && moved) {
     const same = await db
       .select({ id: schema.budgetLine.id, planned: schema.headcountPlan.lineId })

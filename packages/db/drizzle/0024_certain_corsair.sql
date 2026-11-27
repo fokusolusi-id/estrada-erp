@@ -1,0 +1,2 @@
+ALTER TABLE "payment_request" ADD COLUMN "partner_id" text;--> statement-breakpoint
+ALTER TABLE "payment_request" ADD CONSTRAINT "payment_request_partner_id_partner_id_fk" FOREIGN KEY ("partner_id") REFERENCES "public"."partner"("id") ON DELETE no action ON UPDATE no action;

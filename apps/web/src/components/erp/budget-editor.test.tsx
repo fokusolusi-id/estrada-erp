@@ -122,6 +122,15 @@ describe("BudgetEditor", () => {
     expect((screen.getByLabelText("Unit pemilik baris 2") as HTMLSelectElement).value).toBe("HCM");
   });
 
+  it("offers no parent COA, except the one a line already sits on", () => {
+    const parent = (code: string) => ({ code, name: `Induk ${code}`, category: "OPEX", defaultOwnerUnit: "SCM", postable: false });
+    render(<BudgetEditor priorYear={2026} lines={[{ ...lines[0]!, coaCode: "6240" }]} masters={{ ...masters, coa: [parent("6200"), parent("6240"), ...masters.coa] }} defaultEntity="ESTRADA" onSave={ok()} onDelete={ok()} onSubmit={ok()} />);
+    fireEvent.mouseDown(screen.getByLabelText("COA baris 1"));
+    expect(Array.from((screen.getByLabelText("COA baris 1") as HTMLSelectElement).options).map((o) => o.value)).toEqual(["6240", "6241", "6211"]);
+    fireEvent.click(screen.getByRole("button", { name: "Tambah baris" }));
+    expect((screen.getByLabelText("COA baris 2") as HTMLSelectElement).value).toBe("6241");
+  });
+
   it("keeps only the chosen option in each dropdown until it is touched, so a long draft stays light", () => {
     setup();
     const coa = screen.getByLabelText("COA baris 1") as HTMLSelectElement;

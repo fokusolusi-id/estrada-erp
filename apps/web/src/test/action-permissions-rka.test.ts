@@ -35,6 +35,14 @@ beforeEach(() => {
   applyTransition.mockClear();
 });
 
+describe("saveLine: a parent COA takes no new RKA line", () => {
+  it("refuses it before any write", async () => {
+    signInAs("requestor");
+    rows.current = [{ code: "SCM", category: "OPEX", active: true, postable: false }];
+    expect(await outcome(() => saveLine(newLine))).toMatchObject({ message: "Periksa isian baris." });
+  });
+});
+
 describe("saveLine: only a Requestor adds a line", () => {
   it.each(everyRole.map((r) => [r]))("as %s", async (role) => {
     signInAs(role);
