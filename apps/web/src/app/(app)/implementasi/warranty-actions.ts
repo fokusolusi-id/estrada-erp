@@ -161,6 +161,8 @@ export async function closeProject(projectId: string): Promise<Result> {
   const today = todayJakarta();
   const problem = closureProblems({ ...l.project, handoverStatus: handover.status, defects }, today)[0];
   if (problem) return { ok: false, message: CLOSURE_MESSAGE[problem] };
+  // BR-PRJ-001: no closing without the contract number.
+  if (!l.project.contract.number) return { ok: false, message: "Isi No Kontrak sebelum menutup proyek." };
   await db.transaction(async (tx) => {
     await tx.update(schema.project).set({ status: "Closing", closedOn: today, closedBy: l.user.id, updatedAt: new Date() }).where(eq(schema.project.id, projectId));
     await tx.update(schema.projectHandover).set({ status: "Selesai", updatedAt: new Date() }).where(eq(schema.projectHandover.projectId, projectId));

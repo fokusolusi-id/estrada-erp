@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq, ne } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@estrada/db";
-import { BUSINESS_MODELS, DEAL_STATUSES, DEAL_TYPES, LEGAL_DOC_STATUSES, SEGMENTS, STATUS_STEP_MESSAGE, statusStepProblem, canPipeline, canRecoveryPlan, dealProblems, duplicateProject, isWon, money, needsRecovery, pipelineBySegment, terminChangeProblem, type TerminInput } from "@estrada/domain";
+import { autoProject, BUSINESS_MODELS, DEAL_STATUSES, DEAL_TYPES, LEGAL_DOC_STATUSES, SEGMENTS, STATUS_STEP_MESSAGE, statusStepProblem, canPipeline, canRecoveryPlan, dealProblems, duplicateProject, isWon, money, needsRecovery, pipelineBySegment, terminChangeProblem, type TerminInput } from "@estrada/domain";
 import { loadPipeline, pipelineYear } from "@/lib/pipeline";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
@@ -30,6 +30,8 @@ const Deal = z.object({
   endMonth: z.number().int(),
   notes: z.string().max(1000).nullable().optional(),
   leadTimeMonths: z.number().nullable().optional(),
+  /** Asked when the deal becomes won: the project is opened with it. */
+  contractSites: z.number().int().min(1).max(100000).nullable().optional(),
   subSegment: z.string().max(100).nullable().optional(),
   businessModel: z.enum(BUSINESS_MODELS).nullable().optional(),
   productCategory: z.string().max(100).nullable().optional(),
@@ -108,6 +110,8 @@ export async function saveDeal(input: Omit<z.input<typeof Deal>, "termins"> & { 
   if (step) return { ok: false, message: STATUS_STEP_MESSAGE[step] };
   // A deal with a project is a won one in delivery: it does not fall back below Won Bidding.
   if (id && !isWon(deal.status) && (await hasProject(id))) return { ok: false, message: "Deal ini sudah memiliki proyek di Implementasi; statusnya tetap Won Bidding atau Closed Won." };
+  const opening = autoProject({ from: before?.status ?? null, to: deal.status, hasProject: !id || (await hasProject(id)), sites: deal.contractSites ?? null });
+  if ("problem" in opening) return { ok: false, message: "Isi jumlah lokasi kontrak: proyek dibuat otomatis saat deal menjadi Won Bidding." };
   if (id) {
     const invoiced = await db.select({ no: schema.invoice.terminNo, billed: schema.invoice.billed }).from(schema.invoice).where(and(eq(schema.invoice.dealId, id), ne(schema.invoice.state, "cancelled")));
     const touched = terminChangeProblem(
@@ -130,10 +134,16 @@ export async function saveDeal(input: Omit<z.input<typeof Deal>, "termins"> & { 
     }
     // Billing Termin is the only source of the invoice plan: replaced whole with the deal.
     if (termins.length) await tx.insert(schema.billingTermin).values(termins.map((t) => ({ ...t, dealId: dealId! })));
+    // Won Bidding opens the project (BR-SP-004); it takes its name, customer and company from the deal.
+    if (opening.open) {
+      const [made] = await tx.insert(schema.project).values({ dealId: dealId!, contractSites: opening.sites, createdBy: user.id }).returning({ id: schema.project.id });
+      await tx.insert(schema.auditLog).values({ actorUserId: user.id, action: "project.open", subjectType: "project", subjectId: made!.id, after: { dealId, contractSites: opening.sites, from: "won_bidding" } });
+    }
   });
   revalidatePath("/pipeline");
   revalidatePath("/summary");
-  return { ok: true, message: "Deal disimpan." };
+  revalidatePath("/implementasi");
+  return { ok: true, message: opening.open ? "Deal disimpan; proyeknya dibuat di Implementasi." : "Deal disimpan." };
 }
 
 export async function deleteDeal(id: string): Promise<Result> {

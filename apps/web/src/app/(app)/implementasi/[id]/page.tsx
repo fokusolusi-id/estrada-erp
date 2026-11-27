@@ -1,8 +1,12 @@
+import { ProjectRecord } from "@/components/erp/project-record";
+import { saveContractRecord, saveP8, savePics } from "../contract-actions";
+import { db, schema } from "@estrada/db";
+import { asc, eq } from "drizzle-orm";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
-import { PROJECT_STATUS_LABEL, baiKpi, bastProblems, canProject, delayDays, projectProgress, rfsProblems, siteDeleteProblems } from "@estrada/domain";
+import { PROJECT_STATUS_LABEL, baiKpi, bastProblems, canProject, delayDays, projectProgress, rfsProblems, siteDeleteProblems, PIC_ROLES, canContract } from "@estrada/domain";
 import { deliveryPeople, loadProjects, userNames } from "@/lib/implementasi";
 import { todayJakarta } from "@/lib/payment";
 import { requireUser } from "@/lib/session";
@@ -84,6 +88,30 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
           </div>
         ))}
       </dl>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Kontrak</CardTitle>
+          <CardDescription>Nama, customer dan PT diwarisi dari Pipeline. BCD mencatat P8/SPPBJ, Legal data kontrak, Head PMO para PIC. Proyek tidak bisa ditutup tanpa nomor kontrak.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ProjectRecord
+            initial={{
+              p8On: project.contract.p8On ?? "",
+              number: project.contract.number ?? "",
+              date: project.contract.date ?? "",
+              duration: project.contract.duration ?? "",
+              term: project.contract.term ?? "",
+              pics: Object.fromEntries(PIC_ROLES.map((r) => [r, project.contract.pics[r] ?? ""])) as Record<(typeof PIC_ROLES)[number], string>,
+            }}
+            employees={await db.select({ nip: schema.employee.nip, name: schema.employee.name }).from(schema.employee).where(eq(schema.employee.active, true)).orderBy(asc(schema.employee.name))}
+            may={{ p8: canContract(user.actor, "p8", project, org), contract: canContract(user.actor, "contract", project, org), pic: canContract(user.actor, "pic", project, org) }}
+            onP8={saveP8.bind(null, project.id)}
+            onContract={saveContractRecord.bind(null, project.id)}
+            onPics={savePics.bind(null, project.id)}
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
