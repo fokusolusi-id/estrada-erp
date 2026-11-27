@@ -4,6 +4,8 @@ import type { ProjectTemplate } from "./project-notices";
 import type { Role } from "./roles";
 
 export type EmailTemplate =
+  | "kpi_submitted"
+  | "kpi_decided"
   | "invoice_termin_ready"
   | "telkom_escalation"
   | "pr_review"

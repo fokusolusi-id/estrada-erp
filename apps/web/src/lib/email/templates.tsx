@@ -336,6 +336,18 @@ export const COPY: Record<EmailTemplate, Copy> = {
     body: (p) => `${p.event ?? "Serah terima"} proyek ${p.project ?? ""} (${p.entity ?? ""}) disahkan. Termin ${p.termin ?? ""} dapat dibuatkan invoice.`,
     cta: "Buka Invoice",
   },
+  kpi_submitted: {
+    subject: "Target KPI menunggu persetujuan BOD",
+    heading: "Persetujuan KPI",
+    body: (p) => `Target KPI ${p.year ?? ""} ${p.entity ?? ""} diajukan dan menunggu persetujuan Anda.`,
+    cta: "Buka Target KPI",
+  },
+  kpi_decided: {
+    subject: "Target KPI diputuskan BOD",
+    heading: "Keputusan KPI",
+    body: (p) => `Target KPI ${p.year ?? ""} ${p.entity ?? ""} ${p.result ?? "diputuskan"}.${p.comment ? ` Catatan: "${p.comment}"` : ""}`,
+    cta: "Lihat Target KPI",
+  },
   deadline_near: {
     subject: "Batas waktu RKA mendekat",
     heading: "Batas waktu mendekat",
