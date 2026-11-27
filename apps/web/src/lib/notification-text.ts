@@ -39,6 +39,7 @@ export const NOTIFICATION_TEXT: Record<EmailTemplate, string> = {
   po_approval: "PO menunggu persetujuan Anda",
   po_approved: "PO disetujui",
   po_returned: "PO dikembalikan",
+  telkom_escalation: "Penagihan Telkom melewati SLA",
   payment_submitted: "Permintaan Pembayaran menunggu persetujuan Anda",
   payment_review: "Permintaan Pembayaran perlu diperiksa",
   payment_approval: "Permintaan Pembayaran menunggu persetujuan",

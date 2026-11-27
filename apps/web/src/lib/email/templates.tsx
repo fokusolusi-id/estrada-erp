@@ -324,6 +324,12 @@ export const COPY: Record<EmailTemplate, Copy> = {
     body: (p) => `PO ${p.number ?? ""} dikembalikan. Catatan: "${p.comment ?? ""}"`,
     cta: "Perbaiki PO",
   },
+  telkom_escalation: {
+    subject: "Penagihan Telkom melewati SLA",
+    heading: "Eskalasi penagihan",
+    body: (p) => `Proyek ${p.project ?? ""}: tahap ${p.stage ?? ""} melewati SLA (eskalasi tier ${p.tier ?? ""}).`,
+    cta: "Buka tracker",
+  },
   deadline_near: {
     subject: "Batas waktu RKA mendekat",
     heading: "Batas waktu mendekat",
