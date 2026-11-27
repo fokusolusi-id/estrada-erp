@@ -29,6 +29,8 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | E1 Spending monitor (`budget-monitor.ts`, `/rka/monitor`: per cost center and COA with CFO summary) | Built and checked on the local DB. POs join "committed" after C3 |
 | E2 Variance commentary (`variance.ts`, `variance_note`, migration `0031`, `/rka/variance`) | Built and checked on the local DB. "Required at Escalate" is shown and counted, not enforced by another step |
 | E3 Budget vs actual as of a date (MTD/QTD/YTD; `actual_adjustment`, migration `0032`, Accounting entries on `/rka/monitor`) | Built and checked on the local DB. Cost side only; revenue after B1–B2 |
+| B1 Invoice per billing termin (`invoice`, migration `0033`, `/invoice`; draft → validated → approved → issued, number `INV/PT/YY/NNNN`) | Built and checked on the local DB. One invoice per termin (no separate lines table); voiding an issued invoice, print form and approval by amount (A10) not built |
+| B2 Cash receipts and AR aging (`cash_receipt`, migration `0034`, receipts on the invoice, `/piutang` with weekly review, aging and 12-month cash-in) | Built and checked on the local DB. One receipt pays one invoice: no unapplied credit or daily snapshots (`P1-M2`) |
 | Group E (E1–E9) | Not started; E1–E4 and E6–E8 need no new module |
 
 Overall order: **Phase A → E4, E7 → D0 → E1, E2, E3 → Phase B → E5, E6, E8 → Phase C → D1–D6 → E9**. The quick E items and D0 come early because they use data the app already has and give BOD and Finance something visible while Phase B is built. Ask the user before changing the order.
@@ -110,6 +112,7 @@ Answered by the user on 2026-11-27:
 31. **Closing** warns and still accepts postings; Finance Reviewer or FRM Division Owner moves a month on. Admin or FRM Division Owner reopens, with a reason (`MOD-F1` names Admin only).
 32. **SoD seats:** director = BOD / Direktur PT; finance and bfp = Finance-Pricing; cash_manager = Finance-CashMgmt; BCD head = Head BusDev, other BCD = Sales; PMO = PM; SCM = SCM; MSO and ISO = OPS; FRM-FIN-ATM = AR/Tax and Accounting. The check runs in the two transition paths rather than inside `can()`.
 33. **E4:** a project may be opened from a Won Bidding or Closed Won deal (`41_Pipeline_Projek_Sync`); a deal with a project cannot fall below Won Bidding or be deleted.
+34. **Invoices (B1):** number `INV/PT/YY/NNNN`; Wapu shows PPN without expecting it; Accounting creates and a second Accounting person validates tax; the FRM Division Owner approves and issues; only termin of deals with a project.
 
 ## 3. What the app already has
 

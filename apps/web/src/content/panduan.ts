@@ -322,6 +322,29 @@ Menu **Analisis Varians** (juga dari Monitor Anggaran) membandingkan realisasi (
 - **Catatan penyebab** ditulis pemilik cost center, yaitu Default Owner atau Division Owner unit tersebut atau di atasnya, minimal 10 karakter. Baris Escalate wajib punya catatan; yang belum punya dihitung di atas daftar dan dapat disaring lewat *Belum ada catatan*. Catatan tidak diubah atau dihapus: tulis catatan baru, riwayatnya tetap tampil.
 - Pada tanggal sebelum tahun anggaran belum ada varians.
 
+## Invoice
+
+Menu **Invoice** menagih satu billing termin per invoice. Termin yang bisa ditagih berasal dari deal yang sudah punya proyek (kartu **Termin siap ditagih**) dan terhubung ke Master Customer.
+
+| Langkah | Siapa | Keterangan |
+| --- | --- | --- |
+| Buat invoice (Draft) | Staf atau kepala Accounting (unit FRM-FIN-ATM) | Isi uraian, tanggal (tidak sesudah hari ini), rekening, penalti, denda dan PPh. Accounting lain menerima email |
+| Validasi pajak | Orang Accounting lain | Draft dapat disunting dulu; pembuat tidak dapat memvalidasi |
+| Setujui, lalu Terbitkan | Division Owner FRM | Bukan pembuat dan bukan validator. Terbit memberi nomor **INV/PT/YY/NNNN**; bulan yang sudah ditutup ditolak; rekening wajib terisi |
+| Kembalikan | Division Owner FRM | Wajib alasan; kembali ke Draft |
+| Batalkan | Accounting | Hanya Draft atau Pajak tervalidasi, wajib alasan; termin dapat ditagih lagi |
+
+- **Hitungan**: DPP = tagihan termin − penalti − denda; PPN 11% dari DPP; nilai invoice = DPP + PPN; PPh dihitung dari DPP (PPh 23 otomatis 2%, PPh 4(2) dan 22 diisi tarifnya). Diperkirakan diterima = nilai invoice − PPh, dan untuk customer **Wapu** juga dikurangi PPN: PPN tetap tertulis tetapi dipungut customer.
+- **Jatuh tempo** = tanggal invoice + term of payment customer di Master Customer, 30 hari bila kosong.
+- **Termin yang sudah ditagih** tidak dapat dihapus atau diubah nilainya di Pipeline.
+- Finance Reviewer, BFP, Cash Management, Direktur dan Auditor dapat membaca.
+
+## Penerimaan dan Piutang
+
+- **Catat penerimaan** (Cash Management) di halaman invoice yang sudah terbit: tanggal terima (antara tanggal invoice dan hari ini, di bulan yang terbuka), nilai bayar, rekening penerima dan referensi mutasi bank. Total penerimaan tidak boleh melebihi nilai invoice. Penerima tidak boleh pembuat, validator atau penyetuju invoice itu.
+- **Sisa** = nilai yang diperkirakan diterima dikurangi penerimaan. Penerimaan yang salah dibatalkan dengan alasan; barisnya tetap tampil.
+- Menu **Piutang** menampilkan **Tinjauan mingguan** (lewat jatuh tempo atau jatuh tempo dalam 7 hari), **Umur piutang per customer** (belum jatuh tempo, 1–30, 31–60, 61–90, di atas 90 hari) dan **Proyeksi cash-in 12 bulan** dari invoice terbuka dan termin yang belum ditagih.
+
 ## Master Data
 
 Menu *Master Data* memuat satu tab per master. Semua peran dapat membaca Customer, Mitra dan Produk Mitra; yang mengubah hanya pengelolanya:

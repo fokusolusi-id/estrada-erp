@@ -31,6 +31,10 @@ export type Permission =
   | "cycle.manage"
   | "actual.edit"
   | "actual.adjust"
+  | "invoice.create"
+  | "invoice.approve"
+  | "invoice.view"
+  | "receipt.record"
   | "allocation.manage"
   | "bank.manage"
   | "payment.report"
@@ -97,6 +101,16 @@ export function can(actor: Actor, permission: Permission, resource: LineResource
     case "actual.adjust":
       // Accruals and corrections beside the automatic feed are Accounting's (sheet 27a_Daily_Actuals).
       return staffOf(actor, "FRM-FIN-ATM", org);
+    case "invoice.create":
+      // Accounting raises invoices and validates their tax (client decision); two different people.
+      return staffOf(actor, "FRM-FIN-ATM", org);
+    case "invoice.approve":
+      return can(actor, "master.approve", null, org);
+    case "invoice.view":
+      return ["finance", "bfp", "cash_manager", "director", "auditor"].includes(actor.role) || can(actor, "invoice.approve", null, org) || can(actor, "invoice.create", null, org);
+    case "receipt.record":
+      // Cash Management records what the bank shows (FC07_Finance step 7).
+      return actor.role === "cash_manager";
     case "org.manage":
     case "user.manage":
       return actor.role === "admin";

@@ -18,6 +18,10 @@ export type EmailTemplate =
   | "line_comment"
   | "invitation"
   | "password_reset"
+  | "invoice_created"
+  | "invoice_validated"
+  | "invoice_issued"
+  | "invoice_returned"
   | "master_change_submitted"
   | "master_change_decided"
   | PaymentTemplate

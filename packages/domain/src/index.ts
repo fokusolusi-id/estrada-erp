@@ -39,3 +39,5 @@ export * from "./audit-catalogue";
 export * from "./home";
 export * from "./budget-monitor";
 export * from "./variance";
+export * from "./invoice";
+export * from "./receivable";

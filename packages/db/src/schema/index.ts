@@ -5,3 +5,4 @@ export * from "./pipeline";
 export * from "./cash";
 export * from "./payment";
 export * from "./project";
+export * from "./invoice";
