@@ -3,7 +3,7 @@
 import type { HiddenColumns } from "@estrada/domain";
 import { BadgeCheck, CheckCheck, CircleCheck, Lock, MessageCircleQuestion, Send, Undo2, type LucideIcon } from "lucide-react";
 import { Fragment, useState, useTransition } from "react";
-import { coaSubtree, coaTree, money, sum, type ApprovalAction, type ApprovalState, type Unit } from "@estrada/domain";
+import { TOTAL_KIND_LABEL, coaSubtree, coaTree, formatAmount, money, sum, totalsByKind, type ApprovalAction, type ApprovalState, type Category, type Unit } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -19,6 +19,7 @@ export interface QueueLine {
   id: string;
   coaCode: string;
   coaName: string;
+  category: Category;
   entity: string;
   requestorUnit: string;
   ownerUnit: string;
@@ -81,6 +82,11 @@ const ACTION_ICON: Record<ApprovalAction, LucideIcon> = {
   lock: Lock,
 };
 const NEEDS_COMMENT: readonly ApprovalAction[] = ["return", "send_back", "clarify"];
+/** Steps that cannot be taken back, so they are confirmed first. */
+const NEEDS_CONFIRM: Partial<Record<ApprovalAction, string>> = {
+  finalize: "Baris yang difinalisasi pindah ke Menunggu Kunci.",
+  lock: "Baris yang dikunci tidak dapat diubah lagi; perubahan hanya lewat revisi.",
+};
 const ORDER: readonly ApprovalAction[] = ["submit", "consolidate", "approve", "finalize", "lock", "return", "send_back", "clarify"];
 
 /**
@@ -94,7 +100,10 @@ export function ApprovalQueue({
   priorYear,
   onAction,
   hide = {},
+  upstream = 0,
 }: {
+  /** Lines still at earlier stages, so an empty queue does not read as a finished cycle. */
+  upstream?: number;
   lines: QueueLine[];
   /** The comparison year: the year before the one being planned. */
   priorYear: number;
@@ -111,6 +120,7 @@ export function ApprovalQueue({
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
   const [coaFilter, setCoaFilter] = useState("");
+  const [confirming, setConfirming] = useState<ApprovalAction | null>(null);
 
   const options = filterOptions(all, coa);
   const shown = coaFilter ? coaSubtree(coaFilter, options.map((o) => o.account)) : null;
@@ -124,7 +134,10 @@ export function ApprovalQueue({
     ? ORDER.filter((a) => chosen.every((l) => l.actions.includes(a)))
     : [];
 
-  const toggle = (ids: string[], on: boolean) =>
+  const kinds = (of: readonly QueueLine[]) => totalsByKind(of.map((l) => ({ category: l.category, months: l.months.map((m) => money(m)) })));
+
+  const toggle = (ids: string[], on: boolean) => {
+    setConfirming(null);
     setSelected((s) => {
       const next = new Set(s);
       for (const id of ids) {
@@ -133,8 +146,15 @@ export function ApprovalQueue({
       }
       return next;
     });
+  };
 
-  const run = (action: ApprovalAction) => {
+  const run = (action: ApprovalAction, confirmed = false) => {
+    if (NEEDS_CONFIRM[action] && !confirmed) {
+      setMessage(null);
+      setConfirming(action);
+      return;
+    }
+    setConfirming(null);
     if (NEEDS_COMMENT.includes(action) && !comment.trim()) {
       setMessage({ ok: false, text: "Catatan wajib diisi untuk aksi ini." });
       return;
@@ -160,6 +180,7 @@ export function ApprovalQueue({
         onChange={(e) => {
           setCoaFilter(e.target.value);
           setSelected(new Set());
+          setConfirming(null);
         }}
       >
         <option value="">Semua COA</option>
@@ -177,7 +198,7 @@ export function ApprovalQueue({
     return (
       <div className="grid gap-2 py-8 text-center">
         {message ? <p className={message.ok ? "text-success text-sm" : "text-destructive text-sm"}>{message.text}</p> : null}
-        <EmptyState icon={CircleCheck} title="Tidak ada baris yang menunggu Anda." description="Semua baris di tahap ini sudah diproses. Baris baru muncul di sini saat dikirim kepada Anda, dan Anda menerima email." />
+        <EmptyState icon={CircleCheck} title="Tidak ada baris yang menunggu Anda." description={`${upstream ? `${upstream} baris masih di tahap sebelumnya. ` : ""}Baris muncul di sini saat dikirim kepada Anda, dan Anda menerima email.`} />
       </div>
     );
   }
@@ -219,8 +240,15 @@ export function ApprovalQueue({
                   <TableCell colSpan={hide.entity ? 4 : 5}>
                     {owner} · {group.length} baris
                   </TableCell>
-                  <TableCell className="text-right" data-testid={`subtotal-${owner}`}>
-                    <MoneyCell value={sum(group.map((l) => totals.get(l.id)!))} unit={unit} />
+                  <TableCell className="text-right">
+                    {kinds(group).map((t) => (
+                      <div key={t.kind} className="whitespace-nowrap">
+                        <span className="text-muted-foreground mr-1.5 text-xs font-normal">{TOTAL_KIND_LABEL[t.kind]}</span>
+                        <span data-testid={`subtotal-${owner}-${t.kind}`}>
+                          <MoneyCell value={t.total} unit={unit} />
+                        </span>
+                      </div>
+                    ))}
                   </TableCell>
                   <TableCell colSpan={3} />
                 </TableRow>
@@ -304,9 +332,26 @@ export function ApprovalQueue({
           className="border-input focus-visible:ring-ring/50 rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-[3px]"
         />
       </div>
+      {confirming ? (
+        <div role="group" aria-label={`Konfirmasi ${ACTION_LABEL[confirming]}`} className="border-warning bg-warning/15 grid gap-2 rounded-md border p-3 text-sm sm:max-w-xl">
+          <p className="font-medium">
+            {ACTION_LABEL[confirming]}: {chosen.length} baris dari {[...new Set(chosen.map((l) => l.ownerUnit))].join(", ")}.
+          </p>
+          <p className="tabular">{kinds(chosen).map((t) => `${TOTAL_KIND_LABEL[t.kind]} ${formatAmount(t.total, unit)}`).join(" · ")}</p>
+          <p>{NEEDS_CONFIRM[confirming]}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" disabled={pending} onClick={() => run(confirming, true)}>
+              Ya, {ACTION_LABEL[confirming]}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setConfirming(null)}>
+              Batal
+            </Button>
+          </div>
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-muted-foreground text-sm">{chosen.length} baris dipilih</span>
-        {available.map((a) => {
+        {(confirming ? [] : available).map((a) => {
           const Icon = ACTION_ICON[a];
           return (
             <Button key={a} type="button" variant={NEEDS_COMMENT.includes(a) ? "outline" : "default"} disabled={pending} onClick={() => run(a)}>

@@ -1,6 +1,7 @@
 import type { ApprovalState } from "./approval";
 import { APPROVAL_STATES } from "./approval";
 import type { Category } from "./budget";
+import type { Role } from "./roles";
 import { sum, ZERO, type Money } from "./money";
 
 type Headline = "Revenue" | "TotalCost" | "ProfitBeforeTax" | "CAPEX";
@@ -89,4 +90,62 @@ export function cashWaterfall(rows: {
   }
   steps.push({ key: "closing", start: ZERO, end: rows.closing[11] ?? at });
   return steps;
+}
+
+/** Lines Finance has not finalised: what a report that includes them may still change by. */
+export function notFinal(lines: readonly { state: ApprovalState }[]): number {
+  return lines.filter((l) => l.state !== "awaiting_lock" && l.state !== "locked").length;
+}
+
+/** The lines behind a status board cell. A state the cycle does not have filters nothing. */
+export function filterByBoard<L extends { ownerUnit: string; state: ApprovalState }>(
+  lines: readonly L[],
+  filter: { division?: string | undefined; state?: string | undefined },
+  divisionOf: (unit: string) => string,
+): L[] {
+  const state = APPROVAL_STATES.find((s) => s === filter.state);
+  return lines.filter((l) => (!state || l.state === state) && (!filter.division || divisionOf(l.ownerUnit) === filter.division));
+}
+
+export interface PendingStage {
+  state: ApprovalState;
+  /** The seat that moves lines on from this state. */
+  role: Role;
+  count: number;
+  /** The divisions holding them, most lines first. */
+  divisions: { division: string; count: number }[];
+}
+
+const HOLDER = { draft: "requestor", consolidation: "default_owner", division_approval: "division_owner", finance_review: "finance" } as const satisfies Partial<Record<ApprovalState, Role>>;
+
+/** Where the unfinished lines are waiting, in cycle order. */
+export function pendingByStage(lines: readonly { state: ApprovalState; ownerUnit: string }[], divisionOf: (unit: string) => string): PendingStage[] {
+  return (Object.keys(HOLDER) as (keyof typeof HOLDER)[]).flatMap((state) => {
+    const held = lines.filter((l) => l.state === state);
+    if (!held.length) return [];
+    const by = new Map<string, number>();
+    for (const l of held) by.set(divisionOf(l.ownerUnit), (by.get(divisionOf(l.ownerUnit)) ?? 0) + 1);
+    const divisions = [...by].map(([division, count]) => ({ division, count })).sort((a, b) => b.count - a.count || a.division.localeCompare(b.division));
+    return [{ state, role: HOLDER[state], count: held.length, divisions }];
+  });
+}
+
+/** Lines moved together are logged one by one, moments apart. */
+const SAME_HANDOFF_MS = 2 * 60 * 1000;
+
+/** Folds each handoff (same person, same action, moments apart) into one activity entry, newest first. */
+export function groupActivity<E extends { actorName: string; action: string; at: string }>(events: readonly E[]) {
+  const groups: { actorName: string; action: E["action"]; at: string; events: E[] }[] = [];
+  for (const e of [...events].sort((a, b) => b.at.localeCompare(a.at))) {
+    const last = groups.at(-1);
+    const previous = last?.events.at(-1);
+    if (last && previous && last.actorName === e.actorName && last.action === e.action && Date.parse(previous.at) - Date.parse(e.at) <= SAME_HANDOFF_MS) last.events.push(e);
+    else groups.push({ actorName: e.actorName, action: e.action, at: e.at, events: [e] });
+  }
+  return groups;
+}
+
+/** A position's entities as a person reads them. */
+export function entityScopeLabel(entities: readonly string[]): string {
+  return entities.includes("*") ? "Semua entitas" : `Entitas: ${entities.join(", ")}`;
 }

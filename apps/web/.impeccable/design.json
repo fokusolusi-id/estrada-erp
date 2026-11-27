@@ -1,0 +1,684 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-27T01:58:51.465234+00:00",
+  "title": "Design System: ERP Estrada",
+  "extensions": {
+    "colorMeta": {
+      "estrada-indigo": {
+        "role": "primary",
+        "displayName": "Estrada Indigo",
+        "canonical": "oklch(0.42 0.22 268)",
+        "tonalRamp": [
+          "oklch(0.15 0.13 268)",
+          "oklch(0.27 0.167 268)",
+          "oklch(0.39 0.204 268)",
+          "oklch(0.5 0.22 268)",
+          "oklch(0.62 0.22 268)",
+          "oklch(0.73 0.198 268)",
+          "oklch(0.84 0.164 268)",
+          "oklch(0.95 0.13 268)"
+        ]
+      },
+      "brand-deep": {
+        "role": "primary",
+        "displayName": "Logo Deep Blue",
+        "canonical": "oklch(0.3 0.14 268)",
+        "tonalRamp": [
+          "oklch(0.15 0.083 268)",
+          "oklch(0.27 0.106 268)",
+          "oklch(0.39 0.13 268)",
+          "oklch(0.5 0.14 268)",
+          "oklch(0.62 0.14 268)",
+          "oklch(0.73 0.126 268)",
+          "oklch(0.84 0.104 268)",
+          "oklch(0.95 0.083 268)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Ledger Paper",
+        "canonical": "oklch(1 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.27 0 0)",
+          "oklch(0.39 0 0)",
+          "oklch(0.5 0 0)",
+          "oklch(0.62 0 0)",
+          "oklch(0.73 0 0)",
+          "oklch(0.84 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ledger Ink",
+        "canonical": "oklch(0.145 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.27 0 0)",
+          "oklch(0.39 0 0)",
+          "oklch(0.5 0 0)",
+          "oklch(0.62 0 0)",
+          "oklch(0.73 0 0)",
+          "oklch(0.84 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "sidebar-wash": {
+        "role": "neutral",
+        "displayName": "Margin Wash",
+        "canonical": "oklch(0.975 0.015 265)",
+        "tonalRamp": [
+          "oklch(0.15 0.009 265)",
+          "oklch(0.27 0.011 265)",
+          "oklch(0.39 0.014 265)",
+          "oklch(0.5 0.015 265)",
+          "oklch(0.62 0.015 265)",
+          "oklch(0.73 0.013 265)",
+          "oklch(0.84 0.011 265)",
+          "oklch(0.95 0.009 265)"
+        ]
+      },
+      "muted-fill": {
+        "role": "neutral",
+        "displayName": "Column Tint",
+        "canonical": "oklch(0.965 0.012 265)",
+        "tonalRamp": [
+          "oklch(0.15 0.007 265)",
+          "oklch(0.27 0.009 265)",
+          "oklch(0.39 0.011 265)",
+          "oklch(0.5 0.012 265)",
+          "oklch(0.62 0.012 265)",
+          "oklch(0.73 0.011 265)",
+          "oklch(0.84 0.009 265)",
+          "oklch(0.95 0.007 265)"
+        ]
+      },
+      "secondary-fill": {
+        "role": "neutral",
+        "displayName": "Secondary Tint",
+        "canonical": "oklch(0.96 0.02 265)",
+        "tonalRamp": [
+          "oklch(0.15 0.012 265)",
+          "oklch(0.27 0.015 265)",
+          "oklch(0.39 0.019 265)",
+          "oklch(0.5 0.02 265)",
+          "oklch(0.62 0.02 265)",
+          "oklch(0.73 0.018 265)",
+          "oklch(0.84 0.015 265)",
+          "oklch(0.95 0.012 265)"
+        ]
+      },
+      "accent-fill": {
+        "role": "neutral",
+        "displayName": "Hover Tint",
+        "canonical": "oklch(0.94 0.04 265)",
+        "tonalRamp": [
+          "oklch(0.15 0.024 265)",
+          "oklch(0.27 0.03 265)",
+          "oklch(0.39 0.037 265)",
+          "oklch(0.5 0.04 265)",
+          "oklch(0.62 0.04 265)",
+          "oklch(0.73 0.036 265)",
+          "oklch(0.84 0.03 265)",
+          "oklch(0.95 0.024 265)"
+        ]
+      },
+      "selected-fill": {
+        "role": "neutral",
+        "displayName": "Selected Tint",
+        "canonical": "oklch(0.92 0.05 265)",
+        "tonalRamp": [
+          "oklch(0.15 0.03 265)",
+          "oklch(0.27 0.038 265)",
+          "oklch(0.39 0.046 265)",
+          "oklch(0.5 0.05 265)",
+          "oklch(0.62 0.05 265)",
+          "oklch(0.73 0.045 265)",
+          "oklch(0.84 0.037 265)",
+          "oklch(0.95 0.03 265)"
+        ]
+      },
+      "muted-ink": {
+        "role": "neutral",
+        "displayName": "Pencil Grey",
+        "canonical": "oklch(0.5 0.03 265)",
+        "tonalRamp": [
+          "oklch(0.15 0.018 265)",
+          "oklch(0.27 0.023 265)",
+          "oklch(0.39 0.028 265)",
+          "oklch(0.5 0.03 265)",
+          "oklch(0.62 0.03 265)",
+          "oklch(0.73 0.027 265)",
+          "oklch(0.84 0.022 265)",
+          "oklch(0.95 0.018 265)"
+        ]
+      },
+      "secondary-ink": {
+        "role": "neutral",
+        "displayName": "Indigo Ink",
+        "canonical": "oklch(0.3 0.12 268)",
+        "tonalRamp": [
+          "oklch(0.15 0.071 268)",
+          "oklch(0.27 0.091 268)",
+          "oklch(0.39 0.111 268)",
+          "oklch(0.5 0.12 268)",
+          "oklch(0.62 0.12 268)",
+          "oklch(0.73 0.108 268)",
+          "oklch(0.84 0.089 268)",
+          "oklch(0.95 0.071 268)"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Ruled Line",
+        "canonical": "oklch(0.91 0.02 265)",
+        "tonalRamp": [
+          "oklch(0.15 0.012 265)",
+          "oklch(0.27 0.015 265)",
+          "oklch(0.39 0.019 265)",
+          "oklch(0.5 0.02 265)",
+          "oklch(0.62 0.02 265)",
+          "oklch(0.73 0.018 265)",
+          "oklch(0.84 0.015 265)",
+          "oklch(0.95 0.012 265)"
+        ]
+      },
+      "focus-ring": {
+        "role": "primary",
+        "displayName": "Focus Indigo",
+        "canonical": "oklch(0.62 0.17 268)",
+        "tonalRamp": [
+          "oklch(0.15 0.1 268)",
+          "oklch(0.27 0.129 268)",
+          "oklch(0.39 0.157 268)",
+          "oklch(0.5 0.17 268)",
+          "oklch(0.62 0.17 268)",
+          "oklch(0.73 0.153 268)",
+          "oklch(0.84 0.126 268)",
+          "oklch(0.95 0.1 268)"
+        ]
+      },
+      "destructive": {
+        "role": "semantic",
+        "displayName": "Correction Red",
+        "canonical": "oklch(0.53 0.216 27.325)",
+        "tonalRamp": [
+          "oklch(0.15 0.145 27.325)",
+          "oklch(0.27 0.186 27.325)",
+          "oklch(0.39 0.227 27.325)",
+          "oklch(0.5 0.245 27.325)",
+          "oklch(0.62 0.245 27.325)",
+          "oklch(0.73 0.22 27.325)",
+          "oklch(0.84 0.182 27.325)",
+          "oklch(0.95 0.145 27.325)"
+        ]
+      },
+      "success": {
+        "role": "semantic",
+        "displayName": "Success Green",
+        "canonical": "oklch(0.5 0.13 150)",
+        "tonalRamp": [
+          "oklch(0.15 0.089 150)",
+          "oklch(0.27 0.114 150)",
+          "oklch(0.39 0.139 150)",
+          "oklch(0.5 0.15 150)",
+          "oklch(0.62 0.15 150)",
+          "oklch(0.73 0.135 150)",
+          "oklch(0.84 0.112 150)",
+          "oklch(0.95 0.089 150)"
+        ]
+      },
+      "warning": {
+        "role": "semantic",
+        "displayName": "Warning Amber",
+        "canonical": "oklch(0.75 0.15 75)",
+        "tonalRamp": [
+          "oklch(0.15 0.089 75)",
+          "oklch(0.27 0.114 75)",
+          "oklch(0.39 0.139 75)",
+          "oklch(0.5 0.15 75)",
+          "oklch(0.62 0.15 75)",
+          "oklch(0.73 0.135 75)",
+          "oklch(0.84 0.112 75)",
+          "oklch(0.95 0.089 75)"
+        ]
+      },
+      "info": {
+        "role": "semantic",
+        "displayName": "Info Blue",
+        "canonical": "oklch(0.6 0.13 240)",
+        "tonalRamp": [
+          "oklch(0.15 0.077 240)",
+          "oklch(0.27 0.099 240)",
+          "oklch(0.39 0.12 240)",
+          "oklch(0.5 0.13 240)",
+          "oklch(0.62 0.13 240)",
+          "oklch(0.73 0.117 240)",
+          "oklch(0.84 0.097 240)",
+          "oklch(0.95 0.077 240)"
+        ]
+      },
+      "state-draft": {
+        "role": "state",
+        "displayName": "Draft",
+        "canonical": "oklch(0.55 0.02 260)",
+        "tonalRamp": [
+          "oklch(0.15 0.012 260)",
+          "oklch(0.27 0.015 260)",
+          "oklch(0.39 0.019 260)",
+          "oklch(0.5 0.02 260)",
+          "oklch(0.62 0.02 260)",
+          "oklch(0.73 0.018 260)",
+          "oklch(0.84 0.015 260)",
+          "oklch(0.95 0.012 260)"
+        ]
+      },
+      "state-consolidation": {
+        "role": "state",
+        "displayName": "Konsolidasi",
+        "canonical": "oklch(0.62 0.13 230)",
+        "tonalRamp": [
+          "oklch(0.15 0.077 230)",
+          "oklch(0.27 0.099 230)",
+          "oklch(0.39 0.12 230)",
+          "oklch(0.5 0.13 230)",
+          "oklch(0.62 0.13 230)",
+          "oklch(0.73 0.117 230)",
+          "oklch(0.84 0.097 230)",
+          "oklch(0.95 0.077 230)"
+        ]
+      },
+      "state-division": {
+        "role": "state",
+        "displayName": "Persetujuan Divisi",
+        "canonical": "oklch(0.52 0.18 275)",
+        "tonalRamp": [
+          "oklch(0.15 0.106 275)",
+          "oklch(0.27 0.136 275)",
+          "oklch(0.39 0.167 275)",
+          "oklch(0.5 0.18 275)",
+          "oklch(0.62 0.18 275)",
+          "oklch(0.73 0.162 275)",
+          "oklch(0.84 0.134 275)",
+          "oklch(0.95 0.106 275)"
+        ]
+      },
+      "state-finance": {
+        "role": "state",
+        "displayName": "Review Finance",
+        "canonical": "oklch(0.7 0.15 70)",
+        "tonalRamp": [
+          "oklch(0.15 0.089 70)",
+          "oklch(0.27 0.114 70)",
+          "oklch(0.39 0.139 70)",
+          "oklch(0.5 0.15 70)",
+          "oklch(0.62 0.15 70)",
+          "oklch(0.73 0.135 70)",
+          "oklch(0.84 0.112 70)",
+          "oklch(0.95 0.089 70)"
+        ]
+      },
+      "state-finance-text": {
+        "role": "state",
+        "displayName": "Review Finance, as text",
+        "canonical": "oklch(0.5 0.12 65)",
+        "tonalRamp": [
+          "oklch(0.15 0.071 65)",
+          "oklch(0.27 0.091 65)",
+          "oklch(0.39 0.111 65)",
+          "oklch(0.5 0.12 65)",
+          "oklch(0.62 0.12 65)",
+          "oklch(0.73 0.108 65)",
+          "oklch(0.84 0.089 65)",
+          "oklch(0.95 0.071 65)"
+        ]
+      },
+      "state-awaiting": {
+        "role": "state",
+        "displayName": "Menunggu Kunci",
+        "canonical": "oklch(0.55 0.2 300)",
+        "tonalRamp": [
+          "oklch(0.15 0.118 300)",
+          "oklch(0.27 0.152 300)",
+          "oklch(0.39 0.185 300)",
+          "oklch(0.5 0.2 300)",
+          "oklch(0.62 0.2 300)",
+          "oklch(0.73 0.18 300)",
+          "oklch(0.84 0.149 300)",
+          "oklch(0.95 0.118 300)"
+        ]
+      },
+      "state-locked": {
+        "role": "state",
+        "displayName": "Terkunci",
+        "canonical": "oklch(0.6 0.14 160)",
+        "tonalRamp": [
+          "oklch(0.15 0.083 160)",
+          "oklch(0.27 0.106 160)",
+          "oklch(0.39 0.13 160)",
+          "oklch(0.5 0.14 160)",
+          "oklch(0.62 0.14 160)",
+          "oklch(0.73 0.126 160)",
+          "oklch(0.84 0.104 160)",
+          "oklch(0.95 0.083 160)"
+        ]
+      },
+      "cat-revenue": {
+        "role": "category",
+        "displayName": "Revenue",
+        "canonical": "oklch(0.62 0.15 160)",
+        "tonalRamp": [
+          "oklch(0.15 0.089 160)",
+          "oklch(0.27 0.114 160)",
+          "oklch(0.39 0.139 160)",
+          "oklch(0.5 0.15 160)",
+          "oklch(0.62 0.15 160)",
+          "oklch(0.73 0.135 160)",
+          "oklch(0.84 0.112 160)",
+          "oklch(0.95 0.089 160)"
+        ]
+      },
+      "cat-cogs": {
+        "role": "category",
+        "displayName": "COGS",
+        "canonical": "oklch(0.68 0.17 50)",
+        "tonalRamp": [
+          "oklch(0.15 0.1 50)",
+          "oklch(0.27 0.129 50)",
+          "oklch(0.39 0.157 50)",
+          "oklch(0.5 0.17 50)",
+          "oklch(0.62 0.17 50)",
+          "oklch(0.73 0.153 50)",
+          "oklch(0.84 0.126 50)",
+          "oklch(0.95 0.1 50)"
+        ]
+      },
+      "cat-opex": {
+        "role": "category",
+        "displayName": "OPEX",
+        "canonical": "oklch(0.58 0.1 235)",
+        "tonalRamp": [
+          "oklch(0.15 0.059 235)",
+          "oklch(0.27 0.076 235)",
+          "oklch(0.39 0.093 235)",
+          "oklch(0.5 0.1 235)",
+          "oklch(0.62 0.1 235)",
+          "oklch(0.73 0.09 235)",
+          "oklch(0.84 0.074 235)",
+          "oklch(0.95 0.059 235)"
+        ]
+      },
+      "cat-others": {
+        "role": "category",
+        "displayName": "Others",
+        "canonical": "oklch(0.6 0.02 260)",
+        "tonalRamp": [
+          "oklch(0.15 0.012 260)",
+          "oklch(0.27 0.015 260)",
+          "oklch(0.39 0.019 260)",
+          "oklch(0.5 0.02 260)",
+          "oklch(0.62 0.02 260)",
+          "oklch(0.73 0.018 260)",
+          "oklch(0.84 0.015 260)",
+          "oklch(0.95 0.012 260)"
+        ]
+      },
+      "cat-capex": {
+        "role": "category",
+        "displayName": "CAPEX",
+        "canonical": "oklch(0.52 0.2 310)",
+        "tonalRamp": [
+          "oklch(0.15 0.118 310)",
+          "oklch(0.27 0.152 310)",
+          "oklch(0.39 0.185 310)",
+          "oklch(0.5 0.2 310)",
+          "oklch(0.62 0.2 310)",
+          "oklch(0.73 0.18 310)",
+          "oklch(0.84 0.149 310)",
+          "oklch(0.95 0.118 310)"
+        ]
+      },
+      "entity-estrada": {
+        "role": "entity",
+        "displayName": "ESTRADA",
+        "canonical": "oklch(0.36 0.15 265)",
+        "tonalRamp": [
+          "oklch(0.15 0.089 265)",
+          "oklch(0.27 0.114 265)",
+          "oklch(0.39 0.139 265)",
+          "oklch(0.5 0.15 265)",
+          "oklch(0.62 0.15 265)",
+          "oklch(0.73 0.135 265)",
+          "oklch(0.84 0.112 265)",
+          "oklch(0.95 0.089 265)"
+        ]
+      },
+      "entity-matrik": {
+        "role": "entity",
+        "displayName": "MATRIK",
+        "canonical": "oklch(0.62 0.11 190)",
+        "tonalRamp": [
+          "oklch(0.15 0.065 190)",
+          "oklch(0.27 0.083 190)",
+          "oklch(0.39 0.102 190)",
+          "oklch(0.5 0.11 190)",
+          "oklch(0.62 0.11 190)",
+          "oklch(0.73 0.099 190)",
+          "oklch(0.84 0.082 190)",
+          "oklch(0.95 0.065 190)"
+        ]
+      },
+      "entity-djalu": {
+        "role": "entity",
+        "displayName": "DJALU",
+        "canonical": "oklch(0.66 0.15 110)",
+        "tonalRamp": [
+          "oklch(0.15 0.089 110)",
+          "oklch(0.27 0.114 110)",
+          "oklch(0.39 0.139 110)",
+          "oklch(0.5 0.15 110)",
+          "oklch(0.62 0.15 110)",
+          "oklch(0.73 0.135 110)",
+          "oklch(0.84 0.112 110)",
+          "oklch(0.95 0.089 110)"
+        ]
+      },
+      "entity-pas": {
+        "role": "entity",
+        "displayName": "PAS",
+        "canonical": "oklch(0.6 0.2 350)",
+        "tonalRamp": [
+          "oklch(0.15 0.118 350)",
+          "oklch(0.27 0.152 350)",
+          "oklch(0.39 0.185 350)",
+          "oklch(0.5 0.2 350)",
+          "oklch(0.62 0.2 350)",
+          "oklch(0.73 0.18 350)",
+          "oklch(0.84 0.149 350)",
+          "oklch(0.95 0.118 350)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "KPI values and totals."
+      },
+      "page": {
+        "displayName": "Page title",
+        "purpose": "One per screen."
+      },
+      "section": {
+        "displayName": "Section title",
+        "purpose": "Card and section headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Tables, forms, controls."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Captions and badges; the smallest size."
+      }
+    },
+    "shadows": [
+      {
+        "name": "control",
+        "value": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        "purpose": "Buttons and inputs."
+      },
+      {
+        "name": "card",
+        "value": "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+        "purpose": "Cards."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-transition",
+        "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Hover and focus colour changes."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      },
+      {
+        "name": "2xl",
+        "value": "1536px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Simpan: the main action",
+      "html": "<button class=\"ds-button-primary\">Kirim</button>",
+      "css": ".ds-button-primary{display:inline-flex;align-items:center;height:36px;padding:0 16px;border-radius:8px;font:500 14px 'Inter Variable',system-ui,sans-serif;cursor:pointer;border:0;background:oklch(0.42 0.22 268);color:oklch(1 0 0)}.ds-button-primary:hover{opacity:.9}.ds-button-primary:focus-visible{outline:2px solid oklch(0.62 0.17 268);outline-offset:2px}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Batal: secondary action",
+      "html": "<button class=\"ds-button-outline\">Batal</button>",
+      "css": ".ds-button-outline{display:inline-flex;align-items:center;height:36px;padding:0 16px;border-radius:8px;font:500 14px 'Inter Variable',system-ui,sans-serif;cursor:pointer;border:1px solid oklch(0.91 0.02 265);background:oklch(1 0 0);color:oklch(0.145 0 0)}.ds-button-outline:hover{background:oklch(0.94 0.04 265)}.ds-button-outline:focus-visible{outline:2px solid oklch(0.62 0.17 268);outline-offset:2px}"
+    },
+    {
+      "name": "Destructive Button",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Hapus: destructive action",
+      "html": "<button class=\"ds-button-destructive\">Hapus</button>",
+      "css": ".ds-button-destructive{display:inline-flex;align-items:center;height:36px;padding:0 16px;border-radius:8px;font:500 14px 'Inter Variable',system-ui,sans-serif;cursor:pointer;border:0;background:oklch(0.53 0.216 27.325);color:#fff}.ds-button-destructive:hover{opacity:.9}.ds-button-destructive:focus-visible{outline:2px solid oklch(0.62 0.17 268);outline-offset:2px}"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Text field.",
+      "html": "<input class=\"ds-input\" placeholder=\"Uraian\">",
+      "css": ".ds-input{height:36px;padding:4px 12px;border:1px solid oklch(0.91 0.02 265);border-radius:8px;background:transparent;color:oklch(0.145 0 0);font:400 14px 'Inter Variable',system-ui,sans-serif}.ds-input:focus-visible{outline:2px solid oklch(0.62 0.17 268);outline-offset:2px}"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "status-badge",
+      "description": "Approval state with dot and label.",
+      "html": "<span class=\"ds-badge\"><i></i>Review Finance</span>",
+      "css": ".ds-badge{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:8px;background:oklch(0.7 0.15 70 / .15);color:oklch(0.145 0 0);font:500 12px 'Inter Variable',system-ui,sans-serif}.ds-badge i{width:6px;height:6px;border-radius:50%;background:oklch(0.7 0.15 70)}"
+    },
+    {
+      "name": "KPI Cell",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "One cell of the KPI strip.",
+      "html": "<div class=\"ds-kpi\"><small>Revenue (contoh)</small><b>1.250</b></div>",
+      "css": ".ds-kpi{display:grid;gap:12px;padding:16px 20px;border:1px solid oklch(0.91 0.02 265);border-radius:14px;background:oklch(1 0 0);color:oklch(0.145 0 0);font-family:'Inter Variable',system-ui,sans-serif}.ds-kpi small{font-size:14px;font-weight:500;color:oklch(0.5 0.03 265)}.ds-kpi b{font-size:28px;font-weight:650;letter-spacing:-.025em;font-variant-numeric:tabular-nums slashed-zero}"
+    },
+    {
+      "name": "Menu Item",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Current menu item.",
+      "html": "<a class=\"ds-nav\" href=\"#\" aria-current=\"page\">RKA Saya</a>",
+      "css": ".ds-nav{display:flex;padding:8px 12px;border-radius:8px;background:oklch(0.92 0.05 265);color:oklch(0.42 0.22 268);box-shadow:inset 3px 0 0 oklch(0.42 0.22 268);font:500 14px 'Inter Variable',system-ui,sans-serif;text-decoration:none}.ds-nav:focus-visible{outline:2px solid oklch(0.62 0.17 268);outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Budget Ledger",
+    "overview": "ERP Estrada reads like a well-kept ledger: white paper, ruled lines, figures aligned and exact. It is an Operate surface used at office desktops during the budget cycle and payment runs, so density and scanability come first. Colour is rationed: Estrada Indigo marks the brand and the action to take, and every other hue says something specific (approval state, P&L category, company entity).\n\nComponents are quiet and flat. Hairline borders and pale indigo tints separate things; shadows are barely there and only overlays lift. Light, dark and follow-system themes share one token set.",
+    "keyCharacteristics": [
+      "Exact rupiah in tabular figures with a slashed zero",
+      "Hairline rules and tonal fills before shadows",
+      "Three meaning families: state, category, entity",
+      "One typeface, four hierarchy steps, nothing under 12px",
+      "Every screen fits a phone without sideways page scroll"
+    ],
+    "rules": [
+      {
+        "name": "The One Meaning Rule",
+        "body": "A state, category or entity colour means only that thing. It is never decoration, and state colours are not charted beside category or entity colours.",
+        "section": "colors"
+      },
+      {
+        "name": "The Never Colour Alone Rule",
+        "body": "Every meaning colour travels with a label, dot-plus-text or icon.",
+        "section": "colors"
+      },
+      {
+        "name": "The Reserved Amber Rule",
+        "body": "Amber belongs to Review Finance and warnings. Amber text uses Review Finance, as text.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ledger Figures Rule",
+        "body": "Every rupiah figure uses tabular, slashed-zero numerals and the screen states its unit.",
+        "section": "typography"
+      },
+      {
+        "name": "The Four Steps Rule",
+        "body": "Hierarchy comes from Figure, Page title, Section title and body; do not invent in-between sizes.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Page Rule",
+        "body": "Surfaces rest on borders and tint. Only popovers, menus and dialogs may cast a visible shadow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do apply the `tabular` class to every column of money and every KPI figure.",
+      "Do use the ERP composites (`components/erp`) on screens rather than raw primitives.",
+      "Do use Estrada Indigo for the primary action, links, focus and the current menu item.",
+      "Do take colours from the tokens in `globals.css` so light and dark stay in step.",
+      "Do keep wide tables scrolling inside their own container.",
+      "Do meet WCAG 2.2 AA in both themes."
+    ],
+    "donts": [
+      "Don't use a state, category or entity colour as decoration.",
+      "Don't convey status by colour alone.",
+      "Don't set text below 12px.",
+      "Don't add shadows to separate sections; use a rule or a tint.",
+      "Don't recolour, redraw or restyle the Estrada logo.",
+      "Don't use the BRD sample figures as real data."
+    ]
+  }
+}

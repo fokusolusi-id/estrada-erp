@@ -32,7 +32,7 @@ Setiap pengguna memegang posisi: peran, unit organisasi, dan entitas yang boleh 
 | Requestor | Beranda, RKA Saya, Permintaan Pembayaran | Baris unitnya selama Draft | Kirim ke Default Owner |
 | Default Owner | Beranda, RKA Saya, Antrean Konsolidasi, Permintaan Pembayaran | Baris dalam cakupannya selama Konsolidasi | Kirim ke Division Owner, Kembalikan (catatan wajib) |
 | Division Owner | Beranda, RKA Divisi, Permintaan Pembayaran, Management Summary | Tidak | Setujui & kirim ke Finance, Kembalikan ke Default Owner (catatan wajib) |
-| Finance Reviewer | Beranda, Status Board Finance, Kunci RKA, Siklus RKA, Permintaan Pembayaran, Rekap Pembayaran, Implementasi, Management Summary, Pipeline, Arus Kas, Realisasi, Biaya Bersama, COA Master | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
+| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Permintaan Pembayaran, Rekap Pembayaran, Implementasi, Management Summary, Pipeline, Arus Kas, Realisasi, Biaya Bersama, COA Master | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
 | Business Finance (BFP) | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Panduan | Tidak | Memeriksa Permintaan Pembayaran (lihat bagian Permintaan Pembayaran) |
 | Cash Management | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Rekening Bank, Panduan | Tidak | Menjadwalkan dan membayar Permintaan Pembayaran |
 | Direktur | Beranda, Kunci RKA, Siklus RKA, Permintaan Pembayaran, Rekap Pembayaran, Implementasi, Management Summary, Pipeline, Arus Kas | Tidak | Tidak ada, hanya membaca |
@@ -44,7 +44,7 @@ Orang BCD dengan peran Requestor, Default Owner atau Division Owner juga melihat
 ## Memulai
 
 - **Masuk**: gunakan email kantor dan kata sandi. Akun dibuat oleh Admin lewat undangan email; tidak ada pendaftaran mandiri. *Lupa kata sandi?* mengirim tautan untuk membuat kata sandi baru.
-- **Beranda**: ringkasan untuk peran Anda. Tiga kartu di atas menunjukkan *Menunggu tindakan Anda* (baris di antrean Anda), *Batas pengajuan* (sisa hari) dan *Sudah final* (porsi baris yang sudah difinalisasi atau dikunci). Di bawahnya ada tombol ke layar kerja Anda, *Posisi RKA*, serta *Aktivitas terbaru*. *Posisi RKA* berupa tabel: satu baris per divisi, satu kolom per tahap (Draft sampai Terkunci) berisi jumlah baris, lalu total baris dan porsi yang sudah final.
+- **Beranda**: ringkasan untuk peran Anda. Tiga kartu di atas menunjukkan *Menunggu tindakan Anda* (baris di antrean Anda), *Batas pengajuan* (sisa hari) dan *Sudah final* (porsi baris yang sudah difinalisasi atau dikunci). Di bawahnya ada tombol ke layar kerja Anda, daftar *Belum final* (jumlah baris per tahap, peran yang memegangnya dan divisinya; daftar ini naik ke atas tombol bila tidak ada yang menunggu Anda; Requestor, Default Owner dan Finance dapat mengkliknya untuk membuka baris itu), *Posisi RKA*, serta *Aktivitas terbaru* (baris yang dipindahkan sekaligus diringkas menjadi satu entri). *Posisi RKA* berupa tabel: satu baris per divisi, satu kolom per tahap (Draft sampai Terkunci) berisi jumlah baris, lalu total baris dan porsi yang sudah final.
 - **Menu**: dikelompokkan menjadi Anggaran, Laporan, Data dan Admin. Tombol panah di samping logo melipat menu menjadi ikon; pilihan ini diingat.
 - **Posisi aktif**: pengguna yang memegang lebih dari satu posisi, atau menjadi pjs, berganti posisi di kepala halaman. Menu, cakupan dan antrean mengikuti posisi yang aktif.
 - **Tampilan** (tombol di kepala halaman, misalnya *RKA 2027 · MATRIK · Juta*): klik untuk mengatur *Tahun anggaran*, *Entitas*, *Divisi* dan *Satuan*. Pengaturan berlaku untuk semua layar dan diingat per pengguna; tombol diberi warna saat entitas atau divisi dipersempit. Tahun standarnya tahun yang sedang terbuka; tahun yang sudah dikunci bertanda *(terkunci)* dan tetap dapat dibaca. Angka pembanding selalu dari tahun sebelumnya: membuka RKA 2028 menampilkan RKA 2027 dan Actual 2027. Entitas dan Divisi hanya mempersempit baris yang memang boleh Anda lihat; bila cakupan Anda hanya satu entitas atau satu divisi, namanya tampil tanpa pilihan. Divisi mengikuti unit Default Owner baris. Di ponsel tombol hanya menampilkan tahun dan jumlah filter yang aktif.
@@ -127,11 +127,19 @@ Finance Reviewer memeriksa RKA semua divisi, meminta klarifikasi atau memfinalis
 Di atas, *Posisi RKA per divisi* berupa tabel dengan jumlah baris per tahap untuk setiap divisi, total baris dan porsi yang sudah final. Di bawahnya antrean baris di Review Finance.
 
 1. Periksa konsistensi; Finance masih boleh mengoreksi nominal baris di Review Finance.
-2. Centang baris lalu pilih *Minta klarifikasi* (kembali ke Persetujuan Divisi, catatan wajib) atau *Finalisasi* (pindah ke Menunggu Kunci).
+2. Centang baris lalu pilih *Minta klarifikasi* (kembali ke Persetujuan Divisi, catatan wajib) atau *Finalisasi* (pindah ke Menunggu Kunci). *Finalisasi* meminta konfirmasi yang menyebut jumlah baris, divisi dan totalnya; pilih *Ya, Finalisasi* atau *Batal*.
+
+Angka di tabel *Posisi RKA per divisi* dapat diklik untuk membuka baris di divisi dan tahap itu.
+
+Di setiap antrean persetujuan, subtotal per unit memisahkan Pendapatan, Biaya dan CAPEX.
+
+### Daftar Baris RKA
+
+Semua baris RKA, 50 per halaman. *Cari baris* mencari kode COA, nama COA atau uraian, dan *Tahap* menyaring menurut tahap persetujuan. Tiap baris menampilkan kode COA dan uraiannya, dengan *Total RKA* sebelum Januari; judul kolom dan baris total tetap terlihat saat digulir. Total dipisah menjadi *Total Pendapatan*, *Total Biaya* (COGS, OPEX, OTHERS) dan *Total CAPEX*; pendapatan tidak pernah dijumlahkan dengan biaya. Nol ditulis sebagai garis, dan satuan ada di judul kolom COA.
 
 ### Kunci RKA
 
-Daftar baris yang sudah difinalisasi. *Kunci versi* menguncinya: versi tidak dapat diubah lagi dan diskusinya ditutup. Semua peserta siklus menerima satu email. Direktur dapat membuka layar ini untuk membaca, tetapi penguncian adalah tugas Finance.
+Daftar baris yang sudah difinalisasi. *Kunci versi* menguncinya, setelah Anda mengonfirmasi dengan *Ya, Kunci versi*: versi tidak dapat diubah lagi dan diskusinya ditutup. Semua peserta siklus menerima satu email. Direktur dapat membuka layar ini untuk membaca, tetapi penguncian adalah tugas Finance.
 
 ### Siklus RKA
 
@@ -196,8 +204,10 @@ Admin mengelola orang dan data master, tidak pernah isi anggaran; baris anggaran
 Ringkasan RKA untuk Division Owner, Finance Reviewer, Direktur dan Auditor.
 
 - **Filter**: Entitas, Divisi dan Satuan dari Tampilan di kepala halaman di kepala halaman; Versi dan Status di bilah atas layar ini. *Unduh Excel* di kanan atas mengunduh versi itu sebagai workbook dengan susunan RKA Data, Rekap, Kontribusi Divisi dan Per Entitas.
-- **Empat kartu**: Pendapatan, Total Biaya, Laba Sebelum Pajak dan CAPEX, masing-masing dengan garis tren 12 bulan. Lencana perubahan terhadap tahun lalu muncul bila cukup baris punya angka RKA tahun lalu, dan dibandingkan atas baris yang sama.
+- **Peringatan belum final**: bila angka memuat baris yang belum difinalisasi, jumlahnya disebut di atas kartu.
+- **Empat kartu**: Pendapatan, Total Biaya, Laba Sebelum Pajak dan CAPEX, masing-masing dengan garis tren 12 bulan. Lencana perubahan terhadap tahun lalu muncul bila cukup baris punya angka RKA tahun lalu, dan dibandingkan atas baris yang sama. Di bawah kartu, satu kalimat menunjukkan hitungannya: Laba Sebelum Pajak = Pendapatan − (Total Biaya − CAPEX).
 - **Grafik**: pendapatan dan total biaya per bulan (batang) dengan laba sebelum pajak (garis), serta kontribusi per divisi.
+- Di tabel per bulan, kolom *Total* berada di samping uraian, sebelum Januari (juga di Arus Kas).
 - **Ringkasan per bulan**, **Kontribusi Divisi** dan **Per entitas** dalam tabel. Per entitas menampilkan alokasi biaya bersama bila ada.
 - Pipeline tertimbang tampil sebagai satu baris terpisah di bawah kartu, di luar RKA.
 
@@ -329,7 +339,7 @@ Proyeksi arus kas bulanan per entitas dan konsolidasi, menggantikan Forecast CF 
 
 - **Halaman baris** (klik baris mana pun): bulan, Total RKA, dasar perhitungan, Actual tahun lalu dan perubahannya, dengan dua panel. **Riwayat** mencatat setiap perpindahan tahap: siapa, kapan dan catatannya; tidak bisa diubah. **Diskusi** untuk tanya jawab; berkomentar tidak mengubah tahap baris. Pembuat baris, pemegang saat ini dan pemberi komentar sebelumnya diberi tahu. Diskusi baris yang terkunci ditutup.
 - **Satuan**: Angka penuh, Juta atau Miliar dari Tampilan di kepala halaman, untuk layar mana pun yang berisi angka. Pilihan diingat per pengguna; standarnya Juta. Nominal selalu disimpan sampai sen.
-- **Angka laporan**: satuan tertulis sekali di kepala kolom (misalnya Rp juta), angka negatif dalam kurung, dan nol tampil sebagai tanda pisah. Merah hanya untuk hasil yang perlu diperhatikan, seperti laba atau saldo kas negatif. Kolom Uraian dan Total tetap di tempat saat bulan digeser.
+- **Angka laporan**: satuan tertulis sekali di kepala kolom (misalnya Rp juta), angka negatif dalam kurung, dan nol tampil sebagai tanda pisah. Merah hanya untuk hasil yang perlu diperhatikan, seperti laba atau saldo kas negatif. Kolom Uraian tetap di tempat saat bulan digulir, dan kolom Total berada di sampingnya, sebelum Januari.
 - **Warna tahap**: Draft abu-abu, Konsolidasi biru muda, Persetujuan Divisi nila, Review Finance kuning, Menunggu Kunci ungu, Terkunci hijau; selalu disertai nama tahapnya.
 - **Daftar kosong** menampilkan penjelasan dan langkah berikutnya, bukan halaman kosong.
 

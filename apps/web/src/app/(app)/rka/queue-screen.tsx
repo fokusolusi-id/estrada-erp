@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { cycleProgress, type ApprovalState, type Role } from "@estrada/domain";
+import { APPROVAL_STATES, cycleProgress, type ApprovalState, type Role } from "@estrada/domain";
 import { db, schema } from "@estrada/db";
 import { requireUser } from "@/lib/session";
 import { loadScopedLines, openVersion } from "@/lib/rka";
@@ -37,13 +37,14 @@ export async function QueueScreen({
     loadScopedLines(user, states),
     db.select({ code: schema.coaAccount.code, name: schema.coaAccount.name, parentCode: schema.coaAccount.parentCode }).from(schema.coaAccount),
     displayUnit(),
-    board ? loadScopedLines(user) : Promise.resolve([]),
+    loadScopedLines(user),
     loadOrg(),
   ]);
   const lines: QueueLine[] = (await viewLines(scoped)).map((l) => ({
     id: l.id,
     coaCode: l.coaCode,
     coaName: l.coaName,
+    category: l.category,
     entity: l.entity,
     requestorUnit: l.requestorUnit,
     ownerUnit: l.ownerUnit,
@@ -60,6 +61,9 @@ export async function QueueScreen({
     ...(l.basis ? { basis: l.basis } : {}),
   }));
 
+  const earlier = APPROVAL_STATES.slice(0, Math.min(...states.map((s) => APPROVAL_STATES.indexOf(s))));
+  const upstream = (await viewLines(everyLine)).filter((l) => earlier.includes(l.state)).length;
+
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <PageHeader
@@ -74,7 +78,10 @@ export async function QueueScreen({
             <CardDescription>Jumlah baris di setiap tahap, dan porsi yang sudah difinalisasi atau dikunci.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ProgressBoard rows={cycleProgress(await viewLines(everyLine), (u) => org.divisionOf(u))} />
+            <ProgressBoard
+              rows={cycleProgress(await viewLines(everyLine), (u) => org.divisionOf(u))}
+              hrefFor={(division, state) => `/rka?${new URLSearchParams({ divisi: division, status: state })}`}
+            />
           </CardContent>
         </Card>
       ) : null}
@@ -84,7 +91,7 @@ export async function QueueScreen({
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <ApprovalQueue lines={lines} coa={coa} unit={unit} priorYear={(version?.fiscalYear ?? new Date().getFullYear()) - 1} onAction={actOnLines} hide={await hiddenColumns(lines)} />
+          <ApprovalQueue lines={lines} coa={coa} unit={unit} priorYear={(version?.fiscalYear ?? new Date().getFullYear()) - 1} onAction={actOnLines} upstream={upstream} hide={await hiddenColumns(lines)} />
         </CardContent>
       </Card>
     </div>

@@ -30,14 +30,24 @@ export function figureFormatter(decimals: number) {
   return (v: number) => (v < 0 ? `(${f.format(-v)})` : f.format(v));
 }
 
-function ChartTooltip({ decimals, unitLabel }: { decimals: number; unitLabel: string }) {
+/** Legend labels read in the text colour; the series colour stays on the marker, which only needs 3:1. */
+export const legendText = (label: string) => <span className="text-foreground">{label}</span>;
+
+export const TOOLTIP_ITEM = { color: "var(--popover-foreground)" } as const;
+
+export function tooltipEntry(decimals: number, unitLabel: string) {
   const fmt = figureFormatter(decimals);
+  return (v: unknown, name: unknown): [string, string] => [`${fmt(Number(v))} ${unitLabel}`, String(name)];
+}
+
+function ChartTooltip({ decimals, unitLabel }: { decimals: number; unitLabel: string }) {
   return (
     <Tooltip
+      itemStyle={TOOLTIP_ITEM}
       cursor={{ fill: "var(--muted)", opacity: 0.5 }}
       contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12, color: "var(--popover-foreground)" }}
       labelStyle={{ fontWeight: 600, marginBottom: 4 }}
-      formatter={(v) => [`${fmt(Number(v))} ${unitLabel}`]}
+      formatter={tooltipEntry(decimals, unitLabel)}
     />
   );
 }
@@ -53,7 +63,7 @@ export function PnlChart({ data, decimals, unitLabel }: { data: { month: string;
           <XAxis dataKey="month" {...AXIS} />
           <YAxis {...AXIS} width={64} tickFormatter={(v) => fmt(Number(v))} />
           <ChartTooltip decimals={decimals} unitLabel={unitLabel} />
-          <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+          <Legend formatter={legendText} iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
           <ReferenceLine y={0} stroke="var(--border)" />
           <Bar dataKey="revenue" name="Pendapatan" fill="var(--cat-revenue)" radius={[3, 3, 0, 0]} maxBarSize={18} />
           <Bar dataKey="cost" name="Total Biaya" fill="var(--cat-cogs)" radius={[3, 3, 0, 0]} maxBarSize={18} />
@@ -123,6 +133,7 @@ export function WaterfallChart({ steps, decimals, unitLabel }: { steps: { label:
           <XAxis dataKey="label" {...AXIS} interval={0} fontSize={10} />
           <YAxis {...AXIS} width={64} tickFormatter={(v) => fmt(Number(v))} />
           <Tooltip
+            itemStyle={TOOLTIP_ITEM}
             cursor={{ fill: "var(--muted)", opacity: 0.5 }}
             contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
             formatter={(_, __, item) => [`${full((item.payload as { total?: boolean; end: number; change: number }).total ? (item.payload as { end: number }).end : (item.payload as { change: number }).change)} ${unitLabel}`]}

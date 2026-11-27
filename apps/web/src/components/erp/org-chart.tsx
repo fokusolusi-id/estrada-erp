@@ -78,7 +78,7 @@ function UnitCard({ node, nameOf, className }: { node: ChartNode; nameOf: Readon
                     <span className="min-w-0">
                       <span className="block truncate">{sec.name}</span>
                       {sec.positions.length ? (
-                        <span className={cn("block truncate", sec.positions.some((p) => seatStatus(p) === "vacant") ? "text-warning" : "text-muted-foreground")}>
+                        <span className={cn("block truncate", sec.positions.some((p) => seatStatus(p) === "vacant") ? "text-state-finance-text" : "text-muted-foreground")}>
                           {sec.positions.map((p) => who(p, nameOf)).join(", ")}
                         </span>
                       ) : null}

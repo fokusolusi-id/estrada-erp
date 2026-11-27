@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Download } from "lucide-react";
 import Link from "next/link";
-import { ALLOCATION_PROBLEM_LABEL, canPipeline, contribution, formatAmount, headlinePrior, pipelineTotals, pnl, scaleTo, unitDecimals, unitLabel, type Money } from "@estrada/domain";
+import { ALLOCATION_PROBLEM_LABEL, canPipeline, contribution, formatAmount, headlinePrior, notFinal, pipelineTotals, pnl, scaleTo, unitDecimals, unitLabel, type Money } from "@estrada/domain";
 import { loadPipeline } from "@/lib/pipeline";
 import { requireUser } from "@/lib/session";
 import { loadSummary, SUMMARY_ROLES, SUMMARY_STATUS, type SummaryParams } from "@/lib/summary";
@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { KpiCard, KpiStrip } from "@/components/erp/kpi-card";
 import { PageHeader } from "@/components/erp/page-header";
 import { PnlTable } from "@/components/erp/pnl-table";
+import { DraftNotice, ProfitReconciliation } from "@/components/erp/summary-notes";
 import { ScopeBar } from "@/components/erp/scope-bar";
 import { displayUnit } from "@/lib/display-unit";
 import { activeView } from "@/lib/view-filter";
@@ -90,12 +91,17 @@ export default async function SummaryPage({
         }
       />
 
+      <DraftNotice pending={notFinal(lines)} total={lines.length} />
+
       <KpiStrip>
         <KpiCard label="Pendapatan" value={total("Revenue")} unit={unit} note="Rencana invoice" change={change("Revenue", true)} trend={trend("Revenue")} />
         <KpiCard label="Total Biaya" value={total("TotalCost")} unit={unit} note="COGS + OPEX + OTHERS + CAPEX" change={change("TotalCost", false)} trend={trend("TotalCost")} />
         <KpiCard label="Laba Sebelum Pajak" value={total("ProfitBeforeTax")} unit={unit} signal change={change("ProfitBeforeTax", true)} trend={trend("ProfitBeforeTax")} />
         <KpiCard label="CAPEX" value={total("CAPEX")} unit={unit} change={change("CAPEX", false)} trend={trend("CAPEX")} />
       </KpiStrip>
+      <div className="-mt-3">
+        <ProfitReconciliation rows={rows} unit={unit} />
+      </div>
       {pipeline ? (
         <p className="text-muted-foreground -mt-3 text-sm" data-testid="summary-pipeline">
           Di luar RKA: pipeline tertimbang {formatAmount(pipeline.weighted, unit)} dari nilai {formatAmount(pipeline.value, unit)}.{" "}
@@ -139,7 +145,7 @@ export default async function SummaryPage({
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Kontribusi Divisi</CardTitle>

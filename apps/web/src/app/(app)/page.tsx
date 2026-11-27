@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { ArrowRight, CalendarClock, CircleCheck, Inbox } from "lucide-react";
-import { ROLE_LABEL, cycleProgress, daysLeft, type ApprovalAction, type Role } from "@estrada/domain";
+import { ROLE_LABEL, cycleProgress, daysLeft, entityScopeLabel, groupActivity, pendingByStage, type Role } from "@estrada/domain";
+import { ActivityList, PendingStages } from "@/components/erp/home-overview";
 import { loadScopedLines, openVersion } from "@/lib/rka";
 import { viewLines } from "@/lib/view-filter";
 import { ViewNote } from "@/components/erp/view-note";
 import { loadOrg } from "@/lib/workflow";
+import { navFor } from "@/lib/nav";
 import { PageHeader } from "@/components/erp/page-header";
 import { ProgressBoard } from "@/components/erp/progress-board";
 import { requireUser } from "@/lib/session";
@@ -61,24 +63,11 @@ const HOME: Record<Role, { title: string; body: string; cta?: { href: string; la
   },
 };
 
-/** What each handoff is called in the activity list. */
-const DID: Record<ApprovalAction, string> = {
-  submit: "mengirim ke Default Owner",
-  return: "mengembalikan",
-  send_back: "mengembalikan ke Default Owner",
-  consolidate: "mengirim ke Division Owner",
-  approve: "menyetujui ke Finance",
-  clarify: "meminta klarifikasi",
-  finalize: "memfinalisasi",
-  lock: "mengunci",
-};
-const WHEN = new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" });
-
 export default async function HomePage() {
   const user = await requireUser();
   const home = HOME[user.actor.role];
   const header = (
-    <PageHeader title={`Halo, ${user.name}`} description={`${ROLE_LABEL[user.actor.role]} · ${user.actor.orgUnit} · Entitas: ${user.actor.entities.join(", ")}`} note={<ViewNote />} />
+    <PageHeader title={`Halo, ${user.name}`} description={`${ROLE_LABEL[user.actor.role]} · ${user.actor.orgUnit} · ${entityScopeLabel(user.actor.entities)}`} note={<ViewNote />} />
   );
   const action = (
     <Card>
@@ -112,10 +101,24 @@ export default async function HomePage() {
   const waiting = lines.filter((l) => l.actions.length).length;
   const final = lines.filter((l) => l.state === "awaiting_lock" || l.state === "locked").length;
   const left = version?.submissionDeadline ? daysLeft(version.submissionDeadline, new Date()) : null;
-  const activity = lines
-    .flatMap((l) => l.history.map((e) => ({ ...e, line: l })))
-    .sort((a, b) => b.at.localeCompare(a.at))
-    .slice(0, 8);
+  const activity = groupActivity(
+    lines.flatMap((l) => l.history.map((e) => ({ ...e, lineId: l.id, coaCode: l.coaCode, name: l.item || l.coaName }))),
+  ).slice(0, 8);
+  // Only roles with the line list in their menu get links into it.
+  const hasList = navFor(user.actor.role).some((n) => n.href === "/rka");
+
+  // With nothing waiting on this person, who is holding the rest matters more than their empty queue.
+  const chase = (
+        <Card>
+          <CardHeader>
+            <CardTitle>Belum final</CardTitle>
+            <CardDescription>Baris dalam cakupan Anda yang belum difinalisasi, menurut siapa yang memegangnya.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PendingStages pending={pendingByStage(lines, (u) => org.divisionOf(u))} {...(hasList ? { hrefFor: (state, divisi) => `/rka?${new URLSearchParams({ status: state, ...(divisi ? { divisi } : {}) })}` } : {})} />
+          </CardContent>
+        </Card>
+  );
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
@@ -145,7 +148,9 @@ export default async function HomePage() {
       </div>
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 2xl:grid-cols-3">
         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-6 2xl:col-span-2">
-          {action}
+          {waiting ? action : null}
+          {chase}
+          {waiting ? null : action}
           <Card>
             <CardHeader>
               <CardTitle>Posisi {version ? rkaLabel(version) : "RKA"}</CardTitle>
@@ -162,25 +167,7 @@ export default async function HomePage() {
             <CardDescription>Perpindahan baris terakhir dalam cakupan Anda.</CardDescription>
           </CardHeader>
           <CardContent>
-            {activity.length ? (
-              <ol className="grid gap-3" aria-label="Aktivitas terbaru">
-                {activity.map((e, i) => (
-                  <li key={i} className="grid gap-0.5 border-l-2 pl-3 text-sm">
-                    <span>
-                      <span className="font-medium">{e.actorName}</span> {DID[e.action]}{" "}
-                      <Link href={`/rka/line/${e.line.id}`} className="text-primary hover:underline">
-                        {e.line.coaCode}
-                      </Link>
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {e.actorRole} · {WHEN.format(new Date(e.at))}
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <p className="text-muted-foreground text-sm">Belum ada aktivitas.</p>
-            )}
+            <ActivityList groups={activity} />
           </CardContent>
         </Card>
       </div>
@@ -200,7 +187,7 @@ function StatCard({ label, value, note, tone, icon }: { label: string; value: st
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-1 px-4">
-        <span className="text-section">{value}</span>
+        <span className="tabular text-figure">{value}</span>
         <span className="text-muted-foreground text-xs">{note}</span>
       </CardContent>
     </Card>

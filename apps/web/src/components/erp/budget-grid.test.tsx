@@ -6,32 +6,32 @@ import { BudgetGrid, type GridLine } from "./budget-grid";
 const flat = (a: string) => Array.from({ length: 12 }, () => money(a));
 
 const lines: GridLine[] = [
-  { id: "a", coaCode: "6241", coaName: "Beban internet", entity: "ESTRADA", requestorUnit: "SCM", ownerUnit: "SCM", months: flat("19821320"), state: "draft" },
-  { id: "c", coaCode: "6291", coaName: "Beban penyusutan gedung", entity: "ESTRADA", requestorUnit: "FRM", ownerUnit: "FRM", months: flat("11145836"), state: "draft", priorRka: null, priorActual: money("127920227"), flags: ["Cek potensi double counting dengan RKA HCM"] },
-  { id: "b", coaCode: "6243", coaName: "Beban telekomunikasi", entity: "ESTRADA", requestorUnit: "SCM", ownerUnit: "SCM", months: flat("1648000"), state: "consolidation" },
+  { id: "a", category: "OPEX", item: "Langganan fiber kantor", coaCode: "6241", coaName: "Beban internet", entity: "ESTRADA", requestorUnit: "SCM", ownerUnit: "SCM", months: flat("19821320"), state: "draft" },
+  { id: "c", category: "OPEX", coaCode: "6291", coaName: "Beban penyusutan gedung", entity: "ESTRADA", requestorUnit: "FRM", ownerUnit: "FRM", months: flat("11145836"), state: "draft", priorRka: null, priorActual: money("127920227"), flags: ["Cek potensi double counting dengan RKA HCM"] },
+  { id: "b", category: "OPEX", coaCode: "6243", coaName: "Beban telekomunikasi", entity: "ESTRADA", requestorUnit: "SCM", ownerUnit: "SCM", months: flat("1648000"), state: "consolidation" },
 ];
 
 describe("BudgetGrid", () => {
   it("computes each line total from the 12 months", () => {
     render(<BudgetGrid priorYear={2026} lines={lines} unit="rp" />);
-    expect(screen.getByTestId("total-a").textContent).toBe("Rp 237.855.840");
+    expect(screen.getByTestId("total-a").textContent).toBe("237.855.840");
   });
 
   it("shows a grand total across lines", () => {
     render(<BudgetGrid priorYear={2026} lines={lines} unit="rp" />);
-    expect(screen.getByTestId("grand-total").textContent).toBe("Rp 391.381.872");
+    expect(screen.getByTestId("grand-total-Cost").textContent).toBe("391.381.872");
   });
 
   it("adds the Total row over every line when only one page is shown", () => {
     render(<BudgetGrid priorYear={2026} lines={lines.slice(0, 1)} totalOf={lines} unit="rp" />);
     expect(screen.queryByTestId("total-b")).toBeNull();
-    expect(screen.getByTestId("grand-total").textContent).toBe("Rp 391.381.872");
+    expect(screen.getByTestId("grand-total-Cost").textContent).toBe("391.381.872");
   });
 
   it("drops the Entitas column once the header narrows to one entity", () => {
     render(<BudgetGrid priorYear={2026} lines={lines} unit="rp" hide={{ entity: true }} />);
     expect(screen.queryByRole("columnheader", { name: "Entitas" })).toBeNull();
-    expect(screen.getByTestId("grand-total").textContent).toBe("Rp 391.381.872");
+    expect(screen.getByTestId("grand-total-Cost").textContent).toBe("391.381.872");
   });
 
   it("labels approval state in Bahasa Indonesia", () => {
@@ -41,7 +41,7 @@ describe("BudgetGrid", () => {
 
   it("shows Actual 2026 and the change beside each line", () => {
     render(<BudgetGrid priorYear={2026} lines={lines} unit="rp" />);
-    expect(screen.getByTestId("actual-c").textContent).toBe("Rp 127.920.227");
+    expect(screen.getByTestId("actual-c").textContent).toBe("127.920.227");
     expect(screen.getByTestId("actual-a").textContent).toBe("—");
   });
 
@@ -62,5 +62,25 @@ describe("BudgetGrid", () => {
   it("leaves the link out on the line's own page", () => {
     render(<BudgetGrid priorYear={2026} lines={lines} unit="rp" discussion={false} />);
     expect(screen.queryAllByRole("link")).toEqual([]);
+  });
+
+  it("totals revenue and cost separately", () => {
+    render(<BudgetGrid priorYear={2026} lines={[lines[0]!, { ...lines[2]!, category: "Revenue" }]} unit="rp" />);
+    expect(screen.getByTestId("grand-total-Revenue").textContent).toBe("19.776.000");
+    expect(screen.getByTestId("grand-total-Cost").textContent).toBe("237.855.840");
+    expect(screen.getByText("Total Pendapatan")).toBeTruthy();
+    expect(screen.getByText("Total Biaya")).toBeTruthy();
+  });
+
+  it("puts the year total before the months, so it shows without scrolling", () => {
+    render(<BudgetGrid priorYear={2026} lines={lines} unit="rp" />);
+    const heads = screen.getAllByRole("columnheader").map((h) => h.textContent);
+    expect(heads.indexOf("Total RKA")).toBeLessThan(heads.indexOf("Jan"));
+  });
+
+  it("names each line's item and states the unit once", () => {
+    render(<BudgetGrid priorYear={2026} lines={lines} unit="juta" />);
+    expect(screen.getByText("Langganan fiber kantor")).toBeTruthy();
+    expect(screen.getByRole("columnheader", { name: /COA \(.*jt.*\)|COA \(.*[Jj]uta.*\)/ })).toBeTruthy();
   });
 });

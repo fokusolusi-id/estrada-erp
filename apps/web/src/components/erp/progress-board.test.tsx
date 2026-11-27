@@ -23,6 +23,13 @@ describe("ProgressBoard", () => {
     expect(within(screen.getByTestId("progress-total")).getByTestId("state-locked").textContent).toBe("2");
   });
 
+  it("links each non-empty count to the lines behind it", () => {
+    render(<ProgressBoard rows={rows} hrefFor={(division, state) => `/rka?divisi=${division}&status=${state}`} />);
+    const pdms = within(screen.getByTestId("progress-PDMS"));
+    expect(pdms.getByRole("link", { name: "1 baris PDMS Draft" }).getAttribute("href")).toBe("/rka?divisi=PDMS&status=draft");
+    expect(pdms.queryByRole("link", { name: /Konsolidasi/ })).toBeNull();
+  });
+
   it("says so when the cycle has no lines", () => {
     render(<ProgressBoard rows={[]} />);
     expect(screen.getByText("Belum ada baris RKA di siklus ini.")).toBeTruthy();
