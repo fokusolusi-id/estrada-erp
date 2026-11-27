@@ -26,6 +26,7 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | B8 P&L (`/pnl`: Revenue to Net Profit per PT and consolidated with intercompany elimination, against the RKA, Excel; `invoice.revenue_coa`, `group_entity_code` on customer and partner, migration `0041`) | Built and checked on the local DB. Not built from `P1-M6`/`P1-M9`: configurable line layout, drill-down to transactions, MoM/YoY view, intercompany review and settlement |
 | E5 Termin schedule defaults (*Isi jadwal default* from the SPPBJ date; planned vs billed per month and overdue list on `/pipeline`) | Built and checked on the local DB. Percentages and offsets are constants, not settings |
 | E6 Scenarios (`scenario_setting`, migration `0042`; `/cash/skenario`: three scenarios, monthly P&L and cash, burn and runway, sensitivity grid) | Built and checked on the local DB. Not built: AR/AP forecast of `28_AR_AP_Forecast`, budget-vs-actual of `27` (covered by `/rka/monitor` and `/pnl`) |
+| E8 Compliance tracker (`compliance_record`, migration `0043`; `/kepatuhan`: the 17 rows of `06_Compliance` with status, evidence link and note) | Built and checked on the local DB. Evidence is a link, not an upload |
 | Phase B (B1–B8) | Not started |
 | Phase C (C1–C5) | Not started |
 | Phase D (D0–D6) | Not started; D0 can start after Phase A |
@@ -134,6 +135,7 @@ Answered by the user on 2026-11-27:
 45. **P&L (B8):** group companies are marked in Master Customer and Mitra; invoices must carry a revenue account; closed months read their snapshot.
 46. **Termin defaults (E5):** DP 15% at SPPBJ + 30 days, progress 80% at + 3 months, retention 5% six months after progress; all editable.
 47. **Scenarios (E6):** Finance types the drivers per RKA year, starting from `22_Assumptions`; the cashflow uses the Arus Kas rules with DSO and DPO as month lags, not sheet 26's collection percentage.
+48. **Compliance tracker (E8):** the Head of FRM and the Auditor update it; Finance, Direktur and Admin read.
 
 ## 3. What the app already has
 
