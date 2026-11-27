@@ -36,14 +36,14 @@ Setiap pengguna memegang posisi: peran, unit organisasi, dan entitas yang boleh 
 | Requestor | Beranda, RKA Saya, Permintaan Pembayaran, Master Data, Panduan | Baris unitnya selama Draft | Kirim ke Default Owner |
 | Default Owner | Beranda, RKA Saya, Antrean Konsolidasi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Master Data, Panduan | Baris dalam cakupannya selama Konsolidasi | Kirim ke Division Owner, Kembalikan (catatan wajib) |
 | Division Owner | Beranda, RKA Divisi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Management Summary, Master Data, Panduan | Tidak | Setujui & kirim ke Finance, Kembalikan ke Default Owner (catatan wajib) |
-| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Realisasi, Biaya Bersama, COA Master, Kepatuhan, Panduan | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
+| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Tracker Telkom, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Realisasi, Biaya Bersama, COA Master, Kepatuhan, Panduan | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
 | Business Finance (BFP) | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pengadaan, SPH, Master Data, Panduan | Tidak | Memeriksa Permintaan Pembayaran (lihat bagian Permintaan Pembayaran) |
-| Cash Management | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Rekening Bank, Invoice, Piutang, Kas Mingguan, Obligo Bank, Master Data, Panduan | Tidak | Menjadwalkan dan membayar Permintaan Pembayaran |
-| Direktur | Beranda, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, hanya membaca |
-| Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
+| Cash Management | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Rekening Bank, Invoice, Piutang, Tracker Telkom, Kas Mingguan, Obligo Bank, Master Data, Panduan | Tidak | Menjadwalkan dan membayar Permintaan Pembayaran |
+| Direktur | Beranda, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Tracker Telkom, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, hanya membaca |
+| Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Tracker Telkom, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
 | Admin | Beranda, Rekening Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Pengguna, Unit & Entitas, Struktur Organisasi, Panduan | Tidak | Tidak ada; tidak melihat angka anggaran |
 
-Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner) juga melihat Pipeline dan SPH; orang BCD, PDMS (PMO, SCM, ISO, MSO) dan Legal & Contract Management (FRM-LCM) dengan peran yang sama juga melihat Implementasi; orang PDMS juga Pengadaan. Unit Accounting & Tax Management (FRM-FIN-ATM) dengan peran yang sama melihat Invoice, Piutang, Pajak, Laba Rugi dan Tutup Buku, dan Requestor-nya juga Monitor Anggaran. Orang PMO dengan peran Requestor, Default Owner atau Division Owner juga melihat Obligo Bank. Division Owner FRM juga melihat Pengadaan, Invoice, Piutang, Pajak, Laba Rugi, Tutup Buku, Kas Mingguan, Obligo Bank, Persetujuan Master dan Kepatuhan. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
+Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner) juga melihat Pipeline dan SPH; orang BCD, PDMS (PMO, SCM, ISO, MSO) dan Legal & Contract Management (FRM-LCM) dengan peran yang sama juga melihat Implementasi; orang PDMS juga Pengadaan. Orang BCD, PDMS, FRM-LCM, FRM-FIN-ATM dan Division Owner FRM melihat Tracker Telkom. Unit Accounting & Tax Management (FRM-FIN-ATM) dengan peran yang sama melihat Invoice, Piutang, Pajak, Laba Rugi dan Tutup Buku, dan Requestor-nya juga Monitor Anggaran. Orang PMO dengan peran Requestor, Default Owner atau Division Owner juga melihat Obligo Bank. Division Owner FRM juga melihat Pengadaan, Invoice, Piutang, Pajak, Laba Rugi, Tutup Buku, Kas Mingguan, Obligo Bank, Persetujuan Master dan Kepatuhan. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
 
 ## Memulai
 
@@ -347,6 +347,11 @@ Menu **Invoice** menagih satu billing termin per invoice. Termin yang bisa ditag
 - **Termin yang sudah ditagih** tidak dapat dihapus atau diubah nilainya di Pipeline.
 - Finance Reviewer, BFP, Cash Management, Direktur dan Auditor dapat membaca.
 
+### Pemicu penagihan (RFS dan BAST)
+
+- Proyek **layanan** (model bisnis deal **Recurring**) tidak bisa menerbitkan invoice apa pun, termasuk DP, sebelum **RFS** disahkan. Draft boleh disiapkan; daftar termin menandai *Menunggu RFS*. Model Project, Trading atau yang belum diisi tidak ditahan.
+- Saat Head PMO mengesahkan **RFS** atau **BAST**, Accounting mendapat email berisi termin berikutnya yang siap dibuatkan invoice.
+
 ## Penerimaan dan Piutang
 
 - **Catat penerimaan** (Cash Management) di halaman invoice yang sudah terbit: tanggal terima (antara tanggal invoice dan hari ini, di bulan yang terbuka), nilai bayar, rekening penerima dan referensi mutasi bank. Total penerimaan tidak boleh melebihi nilai invoice. Penerima tidak boleh pembuat, validator atau penyetuju invoice itu.
@@ -438,6 +443,16 @@ Menu **Proyek → Pengadaan** dari kebutuhan proyek sampai penerimaan barang.
 6. Pada **Permintaan Pembayaran** ke mitra, pilih *Purchase order*; baris RKA mengikuti permintaannya. **BFP** tidak bisa meneruskan tagihan bila total tagihan PO melebihi nilai yang sudah diterima. Tagihan tanpa PO tetap boleh.
 
 PO yang disetujui dan belum ditagih dihitung sebagai **komitmen** pada sisa anggaran baris RKA dan Monitor Anggaran; Realisasi tetap tercatat saat dibayar.
+
+## Tracker Telkom
+
+Menu **Penagihan → Tracker Telkom** mengikuti proyek **skema TELKOM** (ditandai di halaman proyek) dari tender sampai uang masuk.
+
+- **Sales (BCD)** menekan *Mulai pelacakan*; SLA tahap pertama dihitung dari tanggal itu.
+- Dua belas tahap berurutan: P6, P8, Kontrak Layanan, BAI, BAUT/BARD, BAST, Close WFM PSB, Close WFM Existing, BAK/BAPL, BA Kesepakatan, OGP/SPB, Cash In. Tiap tahap diisi unit penanggung jawabnya (Sales, Legal, PM/OPS, Finance AR, Cash Management) dengan **tanggal dan dokumen bukti**. Close WFM PSB, Close WFM Existing dan BA Kesepakatan boleh ditandai **Tidak berlaku** dengan alasan. Tahap terakhir bisa dibatalkan dengan alasan.
+- **Eskalasi** otomatis tiap hari: lewat batas SLA menjadi tier 1, naik satu tier tiap satu periode SLA lagi sampai tier 5. Email tier 1–3 ke orang unit penanggung jawab, tier 4 ke head-nya, tier 5 ke Direktur. Tahap tanpa durasi SLA tidak dieskalasi.
+- **Kendala** (kontrak, BAST, BAPL) dengan penyebab dan perkembangan dicatat tim delivery atau pemilik tahapnya.
+- **Assurance JPMB** tujuh area (OBL Govsol, OBL PSS, Legal, GSPO, ASC, PIA, Finance) diisi tim delivery per proyek dan diringkas untuk semua proyek.
 
 ## Master Data
 

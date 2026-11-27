@@ -4,6 +4,7 @@ import { db, schema } from "@estrada/db";
 import { deadlineReminderDay, obligoReminders, seatFor, type ApprovalState, type EmailTemplate, type Role } from "@estrada/domain";
 import { enqueueEmail } from "./email/outbox";
 import { cashManagers, loadObligo } from "./obligo";
+import { escalate } from "./telkom";
 import { env } from "./env";
 import { approvalConfig, loadOrg } from "./workflow";
 
@@ -101,7 +102,7 @@ export async function runReminders(now = new Date()) {
       }
     }
   }
-  return { deadline, pending, obligo: await obligoAlerts(today) };
+  return { deadline, pending, obligo: await obligoAlerts(today), telkom: await escalate(today) };
 }
 
 

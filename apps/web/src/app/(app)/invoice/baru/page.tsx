@@ -30,7 +30,7 @@ export default async function NewInvoicePage({ searchParams }: PageProps<"/invoi
       <Link href="/invoice" className="text-muted-foreground hover:text-foreground w-fit text-sm">
         ← Invoice
       </Link>
-      <PageHeader title="Buat Invoice" description={`${termin.entity} · ${customer!.legalName} · ${termin.project} · termin ${termin.no}`} />
+      <PageHeader title="Buat Invoice" description={`${termin.entity} · ${customer!.legalName} · ${termin.project} · termin ${termin.no}${termin.waitingRfs ? " · menunggu RFS: draft boleh disiapkan, belum bisa diterbitkan" : ""}`} />
       <Card>
         <CardContent>
           <NewInvoice
