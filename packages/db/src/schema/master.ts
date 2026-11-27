@@ -187,6 +187,8 @@ export const customer = pgTable(
     /** Sub-segmen / direktorat. */
     subSegment: text("sub_segment"),
     npwp: text("npwp"),
+    /** Set when this record is one of the group's own companies: its sales and costs are eliminated on consolidation. */
+    groupEntityCode: text("group_entity_code").references(() => companyEntity.code),
     address: text("address"),
     email: text("email"),
     phone: text("phone"),
@@ -213,6 +215,8 @@ export const partner = pgTable("partner", {
   name: text("name").notNull(),
   category: partnerCategoryEnum("category").notNull(),
   npwp: text("npwp"),
+  /** Set when this record is one of the group's own companies: its sales and costs are eliminated on consolidation. */
+  groupEntityCode: text("group_entity_code").references(() => companyEntity.code),
   city: text("city"),
   address: text("address"),
   email: text("email"),

@@ -1,15 +1,15 @@
 import ExcelJS from "exceljs";
 import type { Money } from "@estrada/domain";
 
-export interface TaxExportSheet {
+export interface ExportSheet {
   name: string;
   columns: string[];
   /** Money cells become numbers with two decimals. */
   rows: (string | Money)[][];
 }
 
-/** The month's tax lists, one sheet each. DJP's own upload format is not in the sheets, so this is a plain workbook. */
-export async function writeTaxWorkbook(title: string, sheets: readonly TaxExportSheet[]): Promise<ExcelJS.Buffer> {
+/** Plain lists, one sheet each: the tax lists (DJP's upload format is not in the sheets) and the profit and loss. */
+export async function writeSheets(title: string, sheets: readonly ExportSheet[]): Promise<ExcelJS.Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = "ERP Estrada";
   for (const s of sheets) {

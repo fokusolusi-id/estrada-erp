@@ -10,6 +10,7 @@ import { MoneyInput } from "./money-input";
 
 export interface InvoiceValues {
   description: string;
+  revenueCoa: string;
   penalty: string;
   fine: string;
   pphType: PphType;
@@ -37,6 +38,7 @@ export function InvoiceFormFields({
   wapu,
   termDays,
   banks,
+  accounts,
   onSave,
 }: {
   initial: InvoiceValues;
@@ -45,6 +47,7 @@ export function InvoiceFormFields({
   wapu: boolean;
   termDays: number | null;
   banks: readonly { id: string; label: string }[];
+  accounts: readonly { code: string; label: string }[];
   onSave: (v: InvoiceValues) => Promise<Result>;
 }) {
   const router = useRouter();
@@ -82,6 +85,19 @@ export function InvoiceFormFields({
     >
       <div className="grid gap-4 sm:grid-cols-2">
         {text("inv-desc", "Uraian", <Input id="inv-desc" value={v.description} onChange={(e) => set({ description: e.target.value })} />, true)}
+        {text(
+          "inv-account",
+          "Akun pendapatan",
+          <select id="inv-account" className={SELECT} value={v.revenueCoa} onChange={(e) => set({ revenueCoa: e.target.value })}>
+            <option value="">— Pilih akun —</option>
+            {accounts.map((a) => (
+              <option key={a.code} value={a.code}>
+                {a.label}
+              </option>
+            ))}
+          </select>,
+          true,
+        )}
         {text("inv-date", "Tanggal invoice", <Input id="inv-date" type="date" value={v.invoicedOn} onChange={(e) => set({ invoicedOn: e.target.value })} />)}
         {text(
           "inv-bank",

@@ -30,27 +30,46 @@ export interface PnlLine {
   amount: Money;
 }
 
+/** A sale to, or a cost from, another company of the group. */
+export interface IntercompanyAmount extends PnlLine {
+  counterparty: string;
+}
+
+export interface PnlPosting {
+  coaCode: string | null;
+  amount: Money;
+  /** The group company on the other side, when there is one. */
+  counterparty?: string | null;
+}
+
 /**
  * A company's month: revenue from the invoices issued in it, costs paid or accrued in it by account, and loan interest.
  * Capital spending and balance sheet accounts are not profit and loss.
  */
 export function monthPnl(input: {
-  revenue: readonly Money[];
-  costs: readonly { coaCode: string | null; amount: Money }[];
+  revenue: readonly PnlPosting[];
+  costs: readonly PnlPosting[];
   interest: readonly Money[];
   accounts: ReadonlyMap<string, { name: string; category: Category }>;
 }) {
   const lines: PnlLine[] = [];
-  if (input.revenue.length) lines.push({ coaCode: "", name: "Pendapatan (invoice terbit)", category: "Revenue", amount: sum([...input.revenue]) });
-  const codes = [...new Set(input.costs.map((c) => c.coaCode ?? ""))].sort((a, b) => (a === "" ? 1 : b === "" ? -1 : a.localeCompare(b)));
-  for (const coaCode of codes) {
-    const account = input.accounts.get(coaCode);
-    const category = account?.category ?? "OTHERS";
-    if (category === "CAPEX" || category === "BALANCE_SHEET") continue;
-    lines.push({ coaCode, name: account?.name ?? "Biaya tanpa akun", category, amount: sum(input.costs.filter((c) => (c.coaCode ?? "") === coaCode).map((c) => c.amount)) });
-  }
-  if (input.interest.length) lines.push({ coaCode: "", name: "Bunga pinjaman", category: "OTHERS", amount: sum([...input.interest]) });
+  const intercompany: IntercompanyAmount[] = [];
+  const add = (postings: readonly PnlPosting[], describe: (coaCode: string) => { name: string; category: Category }) => {
+    const codes = [...new Set(postings.map((p) => p.coaCode ?? ""))].sort((a, b) => (a === "" ? 1 : b === "" ? -1 : a.localeCompare(b)));
+    for (const coaCode of codes) {
+      const { name, category } = describe(coaCode);
+      if (category === "CAPEX" || category === "BALANCE_SHEET") continue;
+      const here = postings.filter((p) => (p.coaCode ?? "") === coaCode);
+      lines.push({ coaCode, name, category, amount: sum(here.map((p) => p.amount)) });
+      for (const counterparty of [...new Set(here.flatMap((p) => (p.counterparty ? [p.counterparty] : [])))].sort()) {
+        intercompany.push({ coaCode, name, category, counterparty, amount: sum(here.filter((p) => p.counterparty === counterparty).map((p) => p.amount)) });
+      }
+    }
+  };
+  add(input.revenue, (code) => ({ name: input.accounts.get(code)?.name ?? "Pendapatan (tanpa akun)", category: "Revenue" }));
+  add(input.costs, (code) => input.accounts.get(code) ?? { name: "Biaya tanpa akun", category: "OTHERS" });
+  if (input.interest.length) lines.push({ coaCode: "7220", name: "Bunga pinjaman", category: "OTHERS", amount: sum([...input.interest]) });
   const revenue = sum(lines.filter((l) => l.category === "Revenue").map((l) => l.amount));
   const cost = sum(lines.filter((l) => l.category !== "Revenue").map((l) => l.amount));
-  return { lines, revenue, cost, profit: revenue.minus(cost) };
+  return { lines, intercompany, revenue, cost, profit: revenue.minus(cost) };
 }

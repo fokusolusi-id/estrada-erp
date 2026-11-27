@@ -42,6 +42,7 @@ async function takeSnapshot(tx: Parameters<Parameters<typeof db.transaction>[0]>
     version: Math.max(0, ...taken.map((t) => t.version)) + 1,
     data: {
       lines: pnl.lines.map((l) => ({ ...l, amount: l.amount.toFixed(2) })),
+      intercompany: pnl.intercompany.map((l) => ({ ...l, amount: l.amount.toFixed(2) })),
       balance: Object.fromEntries(Object.entries(balance!).map(([k, v]) => [k, v.toFixed(2)])),
     },
     takenBy: userId,

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { asc } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import { customerIssues } from "@estrada/domain";
-import { formValues, masterAccess } from "@/lib/master";
+import { formValues, groupCompanyField, masterAccess } from "@/lib/master";
 import { MasterTable, type MasterField } from "@/components/erp/master-table";
 import { MasterWorkspace } from "@/components/erp/master-workspace";
 import { saveCustomer } from "../actions";
@@ -31,6 +31,7 @@ export default async function CustomerMasterPage() {
     { name: "picTitle", label: "Jabatan PIC" },
     { name: "picPhone", label: "Telepon PIC" },
     { name: "picEmail", label: "Email PIC" },
+    await groupCompanyField(),
   ];
   const names = fields.map((f) => f.name);
 

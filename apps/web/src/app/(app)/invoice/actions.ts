@@ -23,6 +23,7 @@ const Form = z.object({
   dealId: z.string().uuid(),
   terminNo: z.number().int().min(1),
   description: z.string().trim().min(3).max(500),
+  revenueCoa: z.string().max(20),
   penalty: z.string().max(40),
   fine: z.string().max(40),
   pphType: z.enum(PPH_TYPES),
@@ -50,6 +51,8 @@ async function figures(user: CurrentUser, v: z.output<typeof Form>, billed: stri
   if (!covers(user, entity)) return { refused: "Entitas di luar cakupan posisi Anda." };
   const [customer] = await db.select().from(schema.customer).where(eq(schema.customer.id, customerId));
   if (!customer || !customer.active) return { refused: "Customer deal ini tidak aktif di Master Customer." };
+  const [account] = v.revenueCoa ? await db.select().from(schema.coaAccount).where(eq(schema.coaAccount.code, v.revenueCoa)) : [];
+  if (!account || account.category !== "Revenue" || !account.postable || !account.active) return { refused: "Pilih akun pendapatan (COA 4xxx)." };
   if (v.bankAccountId) {
     const [bank] = await db.select().from(schema.companyBankAccount).where(eq(schema.companyBankAccount.id, v.bankAccountId));
     if (!bank || !bank.active || bank.entityCode !== entity) return { refused: "Pilih rekening aktif milik entitas invoice ini." };
@@ -58,6 +61,7 @@ async function figures(user: CurrentUser, v: z.output<typeof Form>, billed: stri
   return {
     values: {
       description: v.description,
+      revenueCoa: v.revenueCoa,
       billed,
       penalty: penalty.toFixed(2),
       fine: fine.toFixed(2),

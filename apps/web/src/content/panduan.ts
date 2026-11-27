@@ -36,14 +36,14 @@ Setiap pengguna memegang posisi: peran, unit organisasi, dan entitas yang boleh 
 | Requestor | Beranda, RKA Saya, Permintaan Pembayaran, Master Data, Panduan | Baris unitnya selama Draft | Kirim ke Default Owner |
 | Default Owner | Beranda, RKA Saya, Antrean Konsolidasi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Master Data, Panduan | Baris dalam cakupannya selama Konsolidasi | Kirim ke Division Owner, Kembalikan (catatan wajib) |
 | Division Owner | Beranda, RKA Divisi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Management Summary, Master Data, Panduan | Tidak | Setujui & kirim ke Finance, Kembalikan ke Default Owner (catatan wajib) |
-| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Tutup Buku, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Realisasi, Biaya Bersama, COA Master, Panduan | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
+| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Laba Rugi, Tutup Buku, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Realisasi, Biaya Bersama, COA Master, Panduan | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
 | Business Finance (BFP) | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Master Data, Panduan | Tidak | Memeriksa Permintaan Pembayaran (lihat bagian Permintaan Pembayaran) |
 | Cash Management | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Rekening Bank, Invoice, Piutang, Kas Mingguan, Obligo Bank, Master Data, Panduan | Tidak | Menjadwalkan dan membayar Permintaan Pembayaran |
-| Direktur | Beranda, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Tutup Buku, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Audit Log, Panduan | Tidak | Tidak ada, hanya membaca |
-| Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Tutup Buku, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
+| Direktur | Beranda, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Laba Rugi, Tutup Buku, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Audit Log, Panduan | Tidak | Tidak ada, hanya membaca |
+| Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Laba Rugi, Tutup Buku, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
 | Admin | Beranda, Rekening Bank, Master Data, Persetujuan Master, Audit Log, Pengguna, Unit & Entitas, Struktur Organisasi, Panduan | Tidak | Tidak ada; tidak melihat angka anggaran |
 
-Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner) juga melihat Pipeline; orang BCD dan PDMS (PMO, SCM, ISO, MSO) dengan peran yang sama juga melihat Implementasi. Unit Accounting & Tax Management (FRM-FIN-ATM) dengan peran yang sama melihat Invoice, Piutang, Pajak dan Tutup Buku, dan Requestor-nya juga Monitor Anggaran. Orang PMO dengan peran Requestor, Default Owner atau Division Owner juga melihat Obligo Bank. Division Owner FRM juga melihat Invoice, Piutang, Pajak, Tutup Buku, Kas Mingguan, Obligo Bank dan Persetujuan Master. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
+Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner) juga melihat Pipeline; orang BCD dan PDMS (PMO, SCM, ISO, MSO) dengan peran yang sama juga melihat Implementasi. Unit Accounting & Tax Management (FRM-FIN-ATM) dengan peran yang sama melihat Invoice, Piutang, Pajak, Laba Rugi dan Tutup Buku, dan Requestor-nya juga Monitor Anggaran. Orang PMO dengan peran Requestor, Default Owner atau Division Owner juga melihat Obligo Bank. Division Owner FRM juga melihat Invoice, Piutang, Pajak, Laba Rugi, Tutup Buku, Kas Mingguan, Obligo Bank dan Persetujuan Master. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
 
 ## Memulai
 
@@ -400,6 +400,18 @@ Menu **Laporan → Tutup Buku** menyiapkan dan menyimpan angka akhir bulan per P
 2. Periksa **laba rugi** berjalan: pendapatan dari invoice terbit (DPP) pada bulan itu; biaya dari Permintaan Pembayaran yang **dibayar** pada bulan itu, akrual dan koreksi, biaya di Kas Mingguan; serta bunga pinjaman. Belanja modal (CAPEX) dan akun neraca tidak masuk.
 3. **Finance Reviewer atau Division Owner FRM** menutup bulan di *Periode* (Master Data). Penutupan ditolak bila neraca belum diisi atau aset tidak sama dengan liabilitas ditambah ekuitas.
 4. Saat ditutup, laba rugi dan neraca disimpan sebagai **snapshot** yang tidak bisa diubah. Bila periode dibuka kembali lalu ditutup lagi, terbentuk versi baru; versi lama tetap bisa dibuka dari *Riwayat snapshot*.
+
+## Laba Rugi
+
+Menu **Laporan → Laba Rugi** menyusun realisasi dari Pendapatan sampai Laba Bersih dan membandingkannya dengan RKA. Dibaca Accounting, Finance, Division Owner FRM, Direktur dan Auditor.
+
+- Pilih **Bulan** dan **Periode** (bulan berjalan, kuartal berjalan atau tahun berjalan sampai bulan itu). Bulan yang sudah ditutup memakai snapshot **Tutup Buku**; bulan yang belum ditutup dihitung dari pembukuan saat ini.
+- Urutan: Pendapatan, Beban Pokok, Laba Kotor, Beban Operasional, EBITDA, Penyusutan dan amortisasi (COA 58xx dan 629x), EBIT, pendapatan lain (71xx), beban bunga (722x–723x), beban lain, Laba sebelum pajak, Pajak, Laba bersih. Rincian per akun dibuka pada barisnya.
+- Kolom **RKA** memakai versi terkunci tahun itu (atau versi berjalan) untuk bulan dan PT yang sama; CAPEX tidak masuk laba rugi.
+- Tanpa filter Entitas, angka adalah **konsolidasi**: penjualan dan biaya antar perusahaan grup **dieliminasi**. Centang *Sebelum eliminasi* untuk melihat angka mentah. Tabel antar perusahaan menunjukkan pasangan yang belum cocok.
+- Perusahaan grup dikenali dari isian **Perusahaan grup** pada Master Customer dan Master Mitra.
+- Invoice baru wajib memilih **Akun pendapatan** (COA 4xxx). Invoice lama tampil sebagai *Pendapatan (tanpa akun)*.
+- **Unduh Excel** mengunduh laporan yang sama beserta rincian akunnya.
 
 ## Master Data
 

@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import { can } from "@estrada/domain";
-import { billableTermins, covers } from "@/lib/invoice";
+import { billableTermins, covers, revenueAccounts } from "@/lib/invoice";
 import { todayJakarta } from "@/lib/payment";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
@@ -36,10 +36,11 @@ export default async function NewInvoicePage({ searchParams }: PageProps<"/invoi
           <NewInvoice
             dealId={termin.dealId}
             terminNo={termin.no}
-            initial={{ description: `${termin.description ?? `Termin ${termin.no}`} — ${termin.project}`, penalty: "", fine: "", pphType: "pph23", pphRate: "2", invoicedOn: todayJakarta(), bankAccountId: banks[0]?.id ?? "" }}
+            initial={{ revenueCoa: "", description: `${termin.description ?? `Termin ${termin.no}`} — ${termin.project}`, penalty: "", fine: "", pphType: "pph23", pphRate: "2", invoicedOn: todayJakarta(), bankAccountId: banks[0]?.id ?? "" }}
             billed={termin.amount}
             wapu={customer!.wapu}
             termDays={customer!.paymentTermDays}
+            accounts={await revenueAccounts()}
             banks={banks.map((b) => ({ id: b.id, label: `${b.bankName} ${b.accountNumber} a.n. ${b.accountName}` }))}
           />
         </CardContent>

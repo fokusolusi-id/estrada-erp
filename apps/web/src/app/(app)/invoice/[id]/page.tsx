@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import { INVOICE_STATE_LABEL, PPH_LABEL, can, formatIdr, invoiceActions, money, outstandingOf, sum } from "@estrada/domain";
-import { covers } from "@/lib/invoice";
+import { covers, revenueAccounts } from "@/lib/invoice";
 import { formatDate, todayJakarta } from "@/lib/payment";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
@@ -84,10 +84,11 @@ export default async function InvoiceDetailPage({ params }: PageProps<"/invoice/
               id={r.id}
               dealId={r.dealId}
               terminNo={r.terminNo}
-              initial={{ description: r.description, penalty: rupiahInput(r.penalty), fine: rupiahInput(r.fine), pphType: r.pphType, pphRate: money(r.pphRate).toString().replace(".", ","), invoicedOn: r.invoicedOn, bankAccountId: r.bankAccountId ?? "" }}
+              initial={{ description: r.description, revenueCoa: r.revenueCoa ?? "", penalty: rupiahInput(r.penalty), fine: rupiahInput(r.fine), pphType: r.pphType, pphRate: money(r.pphRate).toString().replace(".", ","), invoicedOn: r.invoicedOn, bankAccountId: r.bankAccountId ?? "" }}
               billed={r.billed}
               wapu={r.wapu}
               termDays={r.termDays}
+              accounts={await revenueAccounts()}
               banks={banks.filter((b) => b.active).map((b) => ({ id: b.id, label: `${b.bankName} ${b.accountNumber} a.n. ${b.accountName}` }))}
             />
           ) : (

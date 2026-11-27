@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { asc } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import { PARTNER_CATEGORIES, partnerIssues } from "@estrada/domain";
-import { formValues, masterAccess } from "@/lib/master";
+import { formValues, groupCompanyField, masterAccess } from "@/lib/master";
 import { MasterTable, type MasterField } from "@/components/erp/master-table";
 import { MasterWorkspace } from "@/components/erp/master-workspace";
 import { savePartner } from "../actions";
@@ -27,13 +27,14 @@ export default async function PartnerMasterPage() {
   const { may, employees, requests, costCenters, periods } = await masterAccess();
   const partners = await db.select().from(schema.partner).orderBy(asc(schema.partner.id));
   const issues = Map.groupBy(partnerIssues(partners), (i) => i.id);
-  const names = FIELDS.map((f) => f.name);
+  const fields = [...FIELDS, await groupCompanyField()];
+  const names = fields.map((f) => f.name);
 
   return (
     <MasterWorkspace active="/master/mitra" periods={periods} costCenters={costCenters} employees={employees} requests={requests} steward="Master Mitra dikelola SCM. Peran lain hanya membaca.">
       <MasterTable
         noun="mitra"
-        fields={FIELDS}
+        fields={fields}
         rows={partners.map((p) => ({ id: p.id, values: formValues(p, names), issues: (issues.get(p.id) ?? []).map((i) => i.message) }))}
         onSave={may("partner.manage") ? savePartner : undefined}
       />

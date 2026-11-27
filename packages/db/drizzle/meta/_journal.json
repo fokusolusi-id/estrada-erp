@@ -288,6 +288,13 @@
       "when": 1795777713943,
       "tag": "0040_giant_felicia_hardy",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1795778541625,
+      "tag": "0041_broken_songbird",
+      "breakpoints": true
     }
   ]
 }
