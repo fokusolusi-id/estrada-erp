@@ -58,6 +58,10 @@ export default async function FormulirPage({ params }: { params: Promise<{ id: s
     sign("Atasan", "Atasan", find((e) => e.action === "approve" && e.fromState === "submitted")),
     sign("BFP", ROLE_LABEL.bfp, find((e) => e.action === "verify")),
     sign("Head Divisi", "Head Divisi", find((e) => e.action === "approve" && e.fromState === "pending_approval")),
+    ...(["frm_approval", "director_approval"] as const).flatMap((state) => {
+      const e = find((x) => x.action === "approve" && x.fromState === state);
+      return e ? [sign(state === "frm_approval" ? "Head FRM" : "Direktur", state === "frm_approval" ? "Head FRM" : ROLE_LABEL.director, e)] : [];
+    }),
     sign("Cash Management", ROLE_LABEL.cash_manager, find((e) => e.action === "pay") ?? find((e) => e.action === "schedule")),
   ];
 

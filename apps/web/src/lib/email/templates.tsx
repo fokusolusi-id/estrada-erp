@@ -139,8 +139,8 @@ export const COPY: Record<EmailTemplate, Copy> = {
     cta: "Periksa permintaan",
   },
   payment_approval: {
-    subject: "Permintaan Pembayaran menunggu persetujuan Head Divisi",
-    heading: "Persetujuan Head Divisi",
+    subject: "Permintaan Pembayaran menunggu persetujuan Anda",
+    heading: "Persetujuan pembayaran",
     body: (p) => `Permintaan Pembayaran ${p.number ?? ""} (${p.entity ?? ""}) dari ${p.requester ?? "staf"} sudah diperiksa BFP dan menunggu persetujuan Anda.`,
     cta: "Buka permintaan",
   },

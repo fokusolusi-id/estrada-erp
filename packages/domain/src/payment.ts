@@ -6,8 +6,9 @@ import type { Role } from "./roles";
 /**
  * Permintaan Pembayaran, from the client's flow:
  * Staff → Approval Atasan → Pemeriksaan BFP → Approval Head Divisi → Pembayaran (CM) → Informasi Pembayaran.
+ * Above the cost center's limit, the FRM head and then the Direktur approve after the Head Divisi.
  */
-export const PAYMENT_STATES = ["draft", "submitted", "returned", "under_review", "pending_approval", "approved", "scheduled", "paid"] as const;
+export const PAYMENT_STATES = ["draft", "submitted", "returned", "under_review", "pending_approval", "frm_approval", "director_approval", "approved", "scheduled", "paid"] as const;
 export type PaymentState = (typeof PAYMENT_STATES)[number];
 
 /** The status names the team wrote on the flow, with their own explanation. */
@@ -17,6 +18,8 @@ export const PAYMENT_STATE_LABEL: Record<PaymentState, string> = {
   returned: "Returned",
   under_review: "Under Review",
   pending_approval: "Pending Approval",
+  frm_approval: "Approval FRM",
+  director_approval: "Approval Direktur",
   approved: "Approved",
   scheduled: "Scheduled",
   paid: "Paid",
@@ -27,6 +30,8 @@ export const PAYMENT_STATE_HINT: Record<PaymentState, string> = {
   returned: "Dikembalikan untuk perbaikan",
   under_review: "Sedang diperiksa BFP",
   pending_approval: "Menunggu persetujuan Head Divisi",
+  frm_approval: "Di atas limit cost center, menunggu persetujuan Head FRM",
+  director_approval: "Di atas limit cost center, menunggu persetujuan Direktur",
   approved: "Disetujui, menunggu dijadwalkan Cash Management",
   scheduled: "Sudah masuk jadwal pembayaran",
   paid: "Pembayaran sudah berhasil dilakukan",
@@ -55,6 +60,8 @@ export interface PaymentRequestLike {
   requesterUnit: string;
   requesterRole: Role;
   entity: string;
+  /** The amount (DPP) is above the requester's cost center limit; read when a transition picks the next approver. */
+  overLimit?: boolean;
 }
 
 export interface PaymentAmounts {
@@ -138,6 +145,47 @@ function isDivisionApprover(actor: Actor, r: PaymentRequestLike, org: OrgTree): 
   return actor.role === who.role && (who.role === "director" || actor.orgUnit === who.unit);
 }
 
+/** The approval limit of the nearest cost center at or above the unit (33_Master_CostCenter), or null. */
+export function limitFor(unit: string, limits: ReadonlyMap<string, Money>, org: OrgTree): Money | null {
+  for (let u: string | null = unit; u; u = org.parent(u)) {
+    const limit = limits.get(u);
+    if (limit) return limit;
+  }
+  return null;
+}
+
+/** The head of Finance & Risk Management, the second approval above a limit. */
+const isFrmHead = (actor: Actor, r: PaymentRequestLike) => actor.role === "division_owner" && actor.orgUnit === "FRM" && actor.userId !== r.requesterId && covers(actor, r.entity);
+
+/** The FRM head's step, unless the request is the FRM head's own. */
+const frmStep = (r: PaymentRequestLike): PaymentState => (r.requesterUnit === "FRM" && r.requesterRole === "division_owner" ? "director_approval" : "frm_approval");
+
+/**
+ * Where a checked or approved request goes next. Above the limit, a Head Divisi who is not FRM's approves first;
+ * FRM's own head and the Direktur act once, in their own steps.
+ */
+function nextApproval(r: PaymentRequestLike, org: OrgTree): PaymentState | null {
+  if (!r.overLimit) return null;
+  if (r.state === "pending_approval") return frmStep(r);
+  if (r.state !== "under_review") return null;
+  const head = divisionApprover(r, org);
+  return head.role === "division_owner" && head.unit !== "FRM" ? "pending_approval" : frmStep(r);
+}
+
+/** The approvals between BFP's check and Cash Management, in order. */
+export function approvalSteps(r: PaymentRequestLike, org: OrgTree): PaymentState[] {
+  const steps: PaymentState[] = [];
+  let state: PaymentState = "under_review";
+  while (state !== "approved") {
+    state = nextApproval({ ...r, state }, org) ?? NEXT[state]![state === "under_review" ? "verify" : "approve"]!;
+    if (state !== "approved") steps.push(state);
+  }
+  return steps;
+}
+
+/** Scheduling or paying a request one raised: allowed, with a warning (client decision). */
+export const paysOwnRequest = (action: PaymentAction, userId: string, r: { requesterId: string }) => (action === "schedule" || action === "pay") && r.requesterId === userId;
+
 const READERS: readonly Role[] = ["finance", "bfp", "cash_manager", "director", "auditor"];
 
 /** Who may open a request: the requester, the heads above them, the Finance side, the Direktur and the Auditor. A draft stays the requester's. */
@@ -171,6 +219,10 @@ export function paymentRecipients(to: PaymentRecipient, r: PaymentRequestLike, s
       const who = divisionApprover(r, org);
       return people(seats.filter((s) => s.role === who.role && (who.role === "director" || s.orgUnit === who.unit) && covering(s) && s.occupant !== r.requesterId));
     }
+    case "frm_head":
+      return people(seats.filter((s) => s.role === "division_owner" && s.orgUnit === "FRM" && covering(s) && s.occupant !== r.requesterId));
+    case "director":
+      return people(seats.filter((s) => s.role === "director" && covering(s) && s.occupant !== r.requesterId));
     case "atasan": {
       // The nearest unit above the requester with a head in it, Manager first, then Kepala Divisi, then Direktur.
       for (let unit: string | null = r.requesterUnit; unit; unit = org.parent(unit)) {
@@ -207,6 +259,10 @@ export function paymentActions(actor: Actor, r: PaymentRequestLike, org: OrgTree
       return actor.role === "bfp" && covers(actor, r.entity) ? ["verify", "return"] : [];
     case "pending_approval":
       return isDivisionApprover(actor, r, org) ? ["approve", "return"] : [];
+    case "frm_approval":
+      return isFrmHead(actor, r) ? ["approve", "return"] : [];
+    case "director_approval":
+      return actor.role === "director" && actor.userId !== r.requesterId && covers(actor, r.entity) ? ["approve", "return"] : [];
     case "approved":
       return actor.role === "cash_manager" && covers(actor, r.entity) ? ["schedule"] : [];
     case "scheduled":
@@ -222,6 +278,8 @@ const NEXT: Partial<Record<PaymentState, Partial<Record<PaymentAction, PaymentSt
   submitted: { approve: "under_review", return: "returned" },
   under_review: { verify: "pending_approval", return: "returned" },
   pending_approval: { approve: "approved", return: "returned" },
+  frm_approval: { approve: "director_approval", return: "returned" },
+  director_approval: { approve: "approved", return: "returned" },
   approved: { schedule: "scheduled" },
   scheduled: { pay: "paid" },
 };
@@ -261,7 +319,8 @@ export function paymentTransition(r: PaymentRequestLike, t: PaymentTransitionReq
     if (!t.paidOn || !DATE.test(t.paidOn)) throw new Error("Isi tanggal pembayaran");
     if (!t.proof) throw new Error("Lampirkan bukti bayar");
   }
-  return { from: r.state, to, action: t.action, ...(t.comment ? { comment: t.comment } : {}) };
+  const step = t.action === "verify" || t.action === "approve" ? nextApproval(r, org) : null;
+  return { from: r.state, to: step ?? to, action: t.action, ...(t.comment ? { comment: t.comment } : {}) };
 }
 
 export type PaymentTemplate =
@@ -274,7 +333,7 @@ export type PaymentTemplate =
   | "payment_returned";
 
 /** Who gets the email: resolved to people by the app from the request and the org. */
-export type PaymentRecipient = "atasan" | "bfp" | "division_head" | "cash_manager" | "requester";
+export type PaymentRecipient = "atasan" | "bfp" | "division_head" | "frm_head" | "director" | "cash_manager" | "requester";
 
 export interface PaymentNotice {
   template: PaymentTemplate;
@@ -286,6 +345,8 @@ const NOTICE: Record<Exclude<PaymentState, "draft" | "returned">, PaymentNotice>
   submitted: { template: "payment_submitted", to: "atasan" },
   under_review: { template: "payment_review", to: "bfp" },
   pending_approval: { template: "payment_approval", to: "division_head" },
+  frm_approval: { template: "payment_approval", to: "frm_head" },
+  director_approval: { template: "payment_approval", to: "director" },
   approved: { template: "payment_approved", to: "cash_manager" },
   scheduled: { template: "payment_scheduled", to: "requester" },
   paid: { template: "payment_paid", to: "requester" },
@@ -408,7 +469,7 @@ export function recapPeriod(by: "day" | "month", from: string | undefined, to: s
 }
 
 /** States in which a request already holds part of its RKA line: past the atasan, not yet paid. */
-export const COMMITTED_STATES: readonly PaymentState[] = ["under_review", "pending_approval", "approved", "scheduled"];
+export const COMMITTED_STATES: readonly PaymentState[] = ["under_review", "pending_approval", "frm_approval", "director_approval", "approved", "scheduled"];
 
 export interface LineRealisasi {
   /** DPP of Paid requests within the year. */

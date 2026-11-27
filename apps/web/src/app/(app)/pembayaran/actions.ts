@@ -202,7 +202,7 @@ const DONE: Record<PaymentAction, string> = {
   submit: "Permintaan dikirim ke atasan.",
   approve: "Permintaan disetujui.",
   return: "Permintaan dikembalikan ke pemohon.",
-  verify: "Pemeriksaan selesai; diteruskan ke Head Divisi.",
+  verify: "Pemeriksaan selesai; diteruskan untuk persetujuan.",
   schedule: "Pembayaran dijadwalkan.",
   pay: "Pembayaran dicatat sebagai Paid.",
 };

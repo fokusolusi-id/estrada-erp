@@ -11,6 +11,12 @@ describe("PaymentStepper", () => {
     expect(screen.getByText("Head Divisi")).toBeTruthy();
   });
 
+  it("adds the FRM and Direktur steps above the limit", () => {
+    render(<PaymentStepper state="frm_approval" approvals={["pending_approval", "frm_approval", "director_approval"]} />);
+    expect(states()).toEqual(["done", "done", "done", "current", "todo", "todo", "todo", "todo"]);
+    expect(screen.getByText("Head FRM")).toBeTruthy();
+  });
+
   it("marks where a returned request was sent back from", () => {
     render(<PaymentStepper state="returned" returnedFrom="under_review" />);
     expect(states()).toEqual(["done", "returned", "todo", "todo", "todo", "todo"]);

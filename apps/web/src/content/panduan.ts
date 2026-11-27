@@ -239,6 +239,8 @@ Di *Unit & Entitas*, tiap entitas punya bagian *Data perusahaan*: NPWP, NIB, mod
 
 Cost center adalah unit organisasi. Di *Master Data*, tab **Cost Center** menampilkan *Function group* (Revenue, Delivery, Support, Governance) dan *Limit persetujuan* tiap unit. Finance Reviewer dan Admin mengubahnya lewat *Ubah*; Direktur dan Auditor hanya membaca. Nilai awal berasal dari sheet 33_Master_CostCenter, dan kode CC lamanya tercatat sebagai nama lain unit. CC-008 IT & Infrastructure tidak punya unit.
 
+*Limit persetujuan* dipakai Permintaan Pembayaran: nominal di atas limit menambah persetujuan Head FRM dan Direktur. Limit yang kosong berarti tanpa batas tambahan.
+
 Di *Struktur Organisasi*, Admin mengisi *Level organisasi* (1 sampai 4) dan *Kode fungsi* (F0 sampai F6) pada halaman edit posisi. Aplikasi hanya mengisi sendiri posisi yang jelas cocok dengan sheet M Organisasi dan 07_Org_Chart.
 
 ## Periode bulanan
@@ -572,6 +574,8 @@ Menu **Permintaan Pembayaran** memuat semua permintaan yang boleh Anda lihat, da
 | Submitted | Permohonan dikirim, menunggu persetujuan atasan | Atasan pemohon: Manager, Kepala Divisi atau Direktur |
 | Under Review | Sedang diperiksa BFP | Business Finance (BFP) |
 | Pending Approval | Menunggu persetujuan Head Divisi | Head Divisi pemohon; Direktur bila pemohon sendiri Head Divisi atau berada di luar divisi |
+| Approval FRM | Di atas limit cost center, menunggu persetujuan Head FRM | Head Finance & Risk Management |
+| Approval Direktur | Di atas limit cost center, menunggu persetujuan Direktur | Direktur |
 | Approved | Disetujui, menunggu dijadwalkan | Cash Management |
 | Scheduled | Sudah masuk jadwal pembayaran | Cash Management |
 | Paid | Pembayaran sudah berhasil dilakukan | Selesai |
@@ -588,6 +592,8 @@ Menu **Permintaan Pembayaran** memuat semua permintaan yang boleh Anda lihat, da
 ### Menyetujui, memeriksa, membayar
 
 - Atasan dan Head Divisi membuka permintaan dari tab *Perlu tindakan*, lalu *Setujui* atau *Kembalikan* dengan alasan. Tidak ada yang bisa menyetujui permintaannya sendiri.
+- **Di atas limit cost center:** bila Nominal (DPP) melebihi *Limit persetujuan* unit pemohon (atau unit terdekat di atasnya yang punya limit), sesudah Head Divisi permintaan disetujui **Head FRM** lalu **Direktur**. Untuk permintaan unit FRM, Head FRM hanya menyetujui sekali; permintaan Head FRM sendiri langsung ke Direktur. Unit tanpa limit mengikuti alur biasa.
+- Menjadwalkan atau membayar permintaan yang Anda ajukan sendiri tetap bisa, tetapi diberi peringatan.
 - BFP memeriksa dokumen dan kotak *Sisa anggaran baris RKA*, lalu *Teruskan ke Head Divisi* atau *Kembalikan*.
 - Cash Management menjadwalkan: pilih *Tanggal jadwal* dan *Bank asal* dari Rekening Bank entitas itu, lalu *Jadwalkan*. Setelah transfer, isi *Tanggal bayar*, lampirkan *Bukti bayar*, lalu *Tandai sudah dibayar*.
 - Dokumen dan bukti bayar hanya dibuka melalui aplikasi oleh orang yang boleh melihat permintaannya.
@@ -605,7 +611,7 @@ Menu **Permintaan Pembayaran** memuat semua permintaan yang boleh Anda lihat, da
 
 ### Formulir Permohonan Pembayaran
 
-Setelah permintaan bernomor (sudah pernah dikirim), tautan *Formulir Permohonan Pembayaran* di kanan atas halaman permintaan membuka formulir siap cetak di tab baru: nomor, pemohon, baris RKA, deskripsi, penerima, rincian nominal (DPP, PPN, PPh dan nett) dengan terbilang, dokumen terlampir, bank asal, jadwal dan tanggal bayar. Kotak persetujuan (Pemohon, Atasan, BFP, Head Divisi, Cash Management) terisi nama, peran dan waktu persetujuan dari riwayat; persetujuan sebelum permintaan terakhir dikembalikan tidak dihitung. Klik *Cetak / simpan PDF* untuk mencetak satu lembar A4 atau menyimpannya sebagai PDF. Formulir tidak memerlukan tanda tangan basah.
+Setelah permintaan bernomor (sudah pernah dikirim), tautan *Formulir Permohonan Pembayaran* di kanan atas halaman permintaan membuka formulir siap cetak di tab baru: nomor, pemohon, baris RKA, deskripsi, penerima, rincian nominal (DPP, PPN, PPh dan nett) dengan terbilang, dokumen terlampir, bank asal, jadwal dan tanggal bayar. Kotak persetujuan (Pemohon, Atasan, BFP, Head Divisi, bila ada Head FRM dan Direktur, Cash Management) terisi nama, peran dan waktu persetujuan dari riwayat; persetujuan sebelum permintaan terakhir dikembalikan tidak dihitung. Klik *Cetak / simpan PDF* untuk mencetak satu lembar A4 atau menyimpannya sebagai PDF. Formulir tidak memerlukan tanda tangan basah.
 
 ### Rekap Pembayaran
 

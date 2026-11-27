@@ -5,6 +5,8 @@ import { db, schema } from "@estrada/db";
 import {
   budgetHeadroom,
   canViewPayment,
+  limitFor,
+  paysOwnRequest,
   chargeableVersion,
   money,
   paymentActions,
@@ -78,6 +80,13 @@ export async function storeDocument(
   });
 }
 
+/** Whether the request's DPP is above its requester's cost center limit. */
+export async function isOverLimit(tx: Pick<typeof db, "select">, r: Pick<RequestRow, "requesterUnit" | "gross">, org: Awaited<ReturnType<typeof loadOrg>>) {
+  const units = await tx.select({ code: schema.orgUnit.code, limit: schema.orgUnit.approvalLimit }).from(schema.orgUnit);
+  const limit = limitFor(r.requesterUnit, new Map(units.flatMap((u) => (u.limit ? [[u.code, money(u.limit)] as const] : []))), org);
+  return !!limit && money(r.gross).gt(limit);
+}
+
 /** The next PP number for the entity and month, from the highest already given. */
 async function nextNumber(tx: Pick<typeof db, "select">, entity: string, date: string) {
   const prefix = paymentNumber(entity, date, 0).slice(0, -4);
@@ -129,14 +138,16 @@ export async function applyPaymentTransition(actor: Actor, requestId: string, ac
 
     let t;
     try {
-      t = paymentTransition(asLike(r), { action, actor, ...extra, proof: !!extra.proof }, org);
+      t = paymentTransition({ ...asLike(r), overLimit: await isOverLimit(tx, r, org) }, { action, actor, ...extra, proof: !!extra.proof }, org);
     } catch (e) {
       throw new WorkflowError((e as Error).message);
     }
 
     // The dates a request is posted on must fall in an open month of its PT.
     const postingDate = action === "schedule" ? extra.scheduledOn : action === "pay" ? extra.paidOn : undefined;
-    const warning = postingDate ? await assertOpenPeriod(tx, r.entityCode, postingDate) : null;
+    const period = postingDate ? await assertOpenPeriod(tx, r.entityCode, postingDate) : null;
+    const own = paysOwnRequest(action, actor.userId, r) ? "Perhatian: Anda memproses pembayaran permintaan yang Anda ajukan sendiri." : null;
+    const warning = [period, own].filter(Boolean).join(" ") || null;
 
     if (!SENDS_BACK.includes(action)) {
       const events = await tx.select().from(schema.paymentEvent).where(eq(schema.paymentEvent.requestId, r.id));
@@ -245,7 +256,7 @@ export async function paymentQueue(actor: Actor) {
   const rows = await db
     .select()
     .from(schema.paymentRequest)
-    .where(inArray(schema.paymentRequest.state, ["submitted", "under_review", "pending_approval", "approved", "scheduled"]))
+    .where(inArray(schema.paymentRequest.state, ["submitted", "under_review", "pending_approval", "frm_approval", "director_approval", "approved", "scheduled"]))
     .orderBy(asc(schema.paymentRequest.submittedAt));
   return rows.filter((r) => paymentActions(actor, asLike(r), org).length);
 }

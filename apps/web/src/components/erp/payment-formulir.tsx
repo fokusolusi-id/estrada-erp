@@ -122,7 +122,7 @@ export function PaymentFormulir({ d }: { d: FormulirData }) {
         </tbody>
       </table>
 
-      <section aria-label="Persetujuan" className="grid grid-cols-5 border border-neutral-400 text-center">
+      <section aria-label="Persetujuan" className="grid auto-cols-fr grid-flow-col border border-neutral-400 text-center">
         {d.signs.map((s) => (
           <div key={s.step} className="grid grid-rows-[auto_4.5rem_auto] border-l border-neutral-400 first:border-l-0">
             <p className="border-b border-neutral-400 px-1 py-1 text-xs font-semibold">{s.step}</p>
