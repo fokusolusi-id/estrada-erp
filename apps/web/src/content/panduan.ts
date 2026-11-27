@@ -283,6 +283,45 @@ Di bawah antrean dan progres RKA, Beranda menampilkan kartu sesuai peran. Angka 
 
 Anggaran diambil dari versi RKA yang terkunci; selama belum ada, dari versi yang berjalan dan diberi tanda *belum dikunci*. Division Owner FRM bertindak sebagai CFO dan melihat angka seluruh perusahaan.
 
+## Monitor Anggaran
+
+Menu **Monitor Anggaran** menampilkan anggaran biaya terhadap pembayaran per cost center (unit pemilik); klik nama unit untuk melihat per COA. Finance Reviewer, Direktur, Auditor dan Division Owner FRM (CFO) melihat seluruh perusahaan; Default Owner dan Division Owner melihat unitnya.
+
+Pilih **Per tanggal** dan **Periode** (bulan berjalan, kuartal berjalan, atau tahun berjalan) lalu *Terapkan*.
+
+| Kolom | Arti |
+| --- | --- |
+| Anggaran setahun | Baris biaya RKA yang terkunci; selama belum ada, versi yang berjalan dan diberi tanda *belum dikunci* |
+| Anggaran periode | Rencana bulanan periode itu sampai tanggal yang dipilih; bulan berjalan dihitung menurut harinya |
+| Realisasi periode | Pembayaran berstatus Paid dalam periode |
+| Penyesuaian | Akrual dan koreksi dalam periode, dicatat Accounting |
+| Komitmen | Permintaan Pembayaran dari Submitted sampai Scheduled, keadaan sekarang |
+| Sisa | Anggaran setahun dikurangi realisasi, penyesuaian sejak awal tahun, dan komitmen |
+| Terpakai | Bagian anggaran setahun yang sudah terpakai |
+| Selisih periode | Realisasi dan penyesuaian dikurangi anggaran periode |
+| Perkiraan akhir tahun | Realisasi sejak awal tahun dengan laju sejauh ini |
+| Status | **Aman** di bawah 80%, **Waspada** 80 sampai 95%, **Melebihi** di atas 95% |
+
+Lima kartu di atas tabel meringkas anggaran, realisasi periode, komitmen, sisa dan persen terpakai.
+
+### Penyesuaian manual
+
+Staf dan kepala Accounting (unit FRM-FIN-ATM) mencatat akrual atau koreksi di bagian bawah layar: tanggal (di dalam tahun anggaran dan tidak sesudah hari ini), entitas, cost center, COA, jenis, nominal (negatif untuk mengurangi) dan alasan. Bulan yang sudah ditutup menolak penyesuaian. Penyesuaian tidak diubah atau dihapus; koreksi dengan entri berlawanan. Pembayaran sudah masuk otomatis dan tidak diisi ulang.
+
+## Analisis Varians
+
+Menu **Analisis Varians** (juga dari Monitor Anggaran) membandingkan realisasi (termasuk penyesuaian) dengan anggaran periode per cost center, dengan pilihan tanggal dan periode yang sama, dan per COA, dengan satu kalimat otomatis tiap baris (sheet 37_Variance_Analysis).
+
+| Tingkat | Selisih, naik atau turun |
+| --- | --- |
+| Wajar | di bawah 5% |
+| Watch | mulai 5% |
+| Investigate | mulai 10% |
+| Escalate | mulai 15% |
+
+- **Catatan penyebab** ditulis pemilik cost center, yaitu Default Owner atau Division Owner unit tersebut atau di atasnya, minimal 10 karakter. Baris Escalate wajib punya catatan; yang belum punya dihitung di atas daftar dan dapat disaring lewat *Belum ada catatan*. Catatan tidak diubah atau dihapus: tulis catatan baru, riwayatnya tetap tampil.
+- Pada tanggal sebelum tahun anggaran belum ada varians.
+
 ## Master Data
 
 Menu *Master Data* memuat satu tab per master. Semua peran dapat membaca Customer, Mitra dan Produk Mitra; yang mengubah hanya pengelolanya:

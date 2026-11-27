@@ -22,6 +22,8 @@ export const NAV: readonly NavItem[] = [
   { href: "/rka", icon: "file", label: "Daftar Baris RKA", roles: ["finance"], group: "Anggaran" },
   { href: "/rka/lock", icon: "lock", label: "Kunci RKA", roles: ["finance", "director"], group: "Anggaran" },
   { href: "/rka/cycle", icon: "cycle", label: "Siklus RKA", roles: ["finance", "director"], group: "Anggaran" },
+  { href: "/rka/monitor", icon: "actual", label: "Monitor Anggaran", roles: ["finance", "director", "auditor", "division_owner", "default_owner"], alsoIn: { unit: "FRM-FIN-ATM", roles: ["requestor"] }, group: "Anggaran" },
+  { href: "/rka/variance", icon: "chart", label: "Analisis Varians", roles: ["finance", "director", "auditor", "division_owner", "default_owner"], group: "Anggaran" },
   { href: "/pembayaran", icon: "pay", label: "Permintaan Pembayaran", roles: ["requestor", "default_owner", "division_owner", "finance", "bfp", "cash_manager", "director", "auditor"], group: "Pembayaran" },
   { href: "/pembayaran/rekap", icon: "recap", label: "Rekap Pembayaran", roles: ["finance", "bfp", "cash_manager", "director", "auditor"], group: "Pembayaran" },
   { href: "/pembayaran/rekening", icon: "bank", label: "Rekening Bank", roles: ["cash_manager", "admin"], group: "Pembayaran" },
