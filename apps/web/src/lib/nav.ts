@@ -34,7 +34,7 @@ export const NAV: readonly NavItem[] = [
   { href: "/piutang", icon: "wallet", label: "Piutang", roles: [], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Penagihan" },
   { href: "/pajak", icon: "recap", label: "Pajak", roles: ["finance", "director", "auditor"], alsoIn: { unit: "FRM-FIN-ATM", roles: ["requestor", "default_owner", "division_owner"] }, group: "Penagihan" },
   { href: "/pajak", icon: "recap", label: "Pajak", roles: [], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Penagihan" },
-  { href: "/implementasi", icon: "project", label: "Implementasi", roles: ["finance", "director", "auditor"], alsoIn: { unit: ["BCD", "PDMS"], roles: ["requestor", "default_owner", "division_owner"] }, group: "Proyek" },
+  { href: "/implementasi", icon: "project", label: "Implementasi", roles: ["finance", "director", "auditor"], alsoIn: { unit: ["BCD", "PDMS", "FRM-LCM"], roles: ["requestor", "default_owner", "division_owner"] }, group: "Proyek" },
   { href: "/pnl", icon: "chart", label: "Laba Rugi", roles: ["finance", "director", "auditor"], alsoIn: { unit: "FRM-FIN-ATM", roles: ["requestor", "default_owner", "division_owner"] }, group: "Laporan" },
   { href: "/pnl", icon: "chart", label: "Laba Rugi", roles: [], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Laporan" },
   { href: "/closing", icon: "check", label: "Tutup Buku", roles: ["finance", "director", "auditor"], alsoIn: { unit: "FRM-FIN-ATM", roles: ["requestor", "default_owner", "division_owner"] }, group: "Laporan" },

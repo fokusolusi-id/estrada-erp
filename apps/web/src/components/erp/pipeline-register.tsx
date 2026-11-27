@@ -15,6 +15,7 @@ import {
   pipelineTotals,
   statusBand,
   terminTotal,
+  isWon,
   AFFILIATES,
   BUSINESS_MODELS,
   BUSINESS_MODEL_LABEL,
@@ -36,7 +37,7 @@ export interface RegisterDeal extends DealInput {
   id: string;
   editable: boolean;
 }
-export type DealSave = DealInput & { id: string | null };
+export type DealSave = DealInput & { id: string | null; contractSites?: number | null };
 type Result = { ok: boolean; message: string };
 interface Options {
   /** Active Karyawan, for the PIC fields. */
@@ -279,6 +280,8 @@ function DealForm({
   });
   const [pending, startTransition] = useTransition();
   const [sppbj, setSppbj] = useState("");
+  const [sites, setSites] = useState("");
+  const becomingWon = !!initial.id && isWon(d.status) && !isWon(initial.status);
   const set = (patch: Partial<typeof d>) => setD((cur) => ({ ...cur, ...patch }));
   const { leadTime, ...rest } = d;
   const normal: DealSave = {
@@ -308,7 +311,7 @@ function DealForm({
       className="bg-muted/30 grid gap-3 rounded-lg border p-4 sm:grid-cols-4"
       onSubmit={(e) => {
         e.preventDefault();
-        startTransition(async () => void (await onSave(normal)));
+        startTransition(async () => void (await onSave(becomingWon ? { ...normal, contractSites: sites ? Number(sites) : null } : normal)));
       }}
     >
       {field(
@@ -488,6 +491,13 @@ function DealForm({
           )}
         </Fragment>
       ))}
+      {becomingWon
+        ? field(
+            "Jumlah lokasi kontrak (proyek dibuat saat disimpan)",
+            <Input aria-label="Jumlah lokasi kontrak" type="number" min={1} value={sites} onChange={(e) => setSites(e.target.value)} />,
+            true,
+          )
+        : null}
       <fieldset className="grid gap-2 sm:col-span-4" aria-label="Billing Termin">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <legend className="text-sm font-medium">

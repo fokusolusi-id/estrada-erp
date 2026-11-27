@@ -43,7 +43,7 @@ Setiap pengguna memegang posisi: peran, unit organisasi, dan entitas yang boleh 
 | Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Laba Rugi, Tutup Buku, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
 | Admin | Beranda, Rekening Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Pengguna, Unit & Entitas, Struktur Organisasi, Panduan | Tidak | Tidak ada; tidak melihat angka anggaran |
 
-Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner) juga melihat Pipeline dan SPH; orang BCD dan PDMS (PMO, SCM, ISO, MSO) dengan peran yang sama juga melihat Implementasi. Unit Accounting & Tax Management (FRM-FIN-ATM) dengan peran yang sama melihat Invoice, Piutang, Pajak, Laba Rugi dan Tutup Buku, dan Requestor-nya juga Monitor Anggaran. Orang PMO dengan peran Requestor, Default Owner atau Division Owner juga melihat Obligo Bank. Division Owner FRM juga melihat Invoice, Piutang, Pajak, Laba Rugi, Tutup Buku, Kas Mingguan, Obligo Bank, Persetujuan Master dan Kepatuhan. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
+Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner) juga melihat Pipeline dan SPH; orang BCD, PDMS (PMO, SCM, ISO, MSO) dan Legal & Contract Management (FRM-LCM) dengan peran yang sama juga melihat Implementasi. Unit Accounting & Tax Management (FRM-FIN-ATM) dengan peran yang sama melihat Invoice, Piutang, Pajak, Laba Rugi dan Tutup Buku, dan Requestor-nya juga Monitor Anggaran. Orang PMO dengan peran Requestor, Default Owner atau Division Owner juga melihat Obligo Bank. Division Owner FRM juga melihat Invoice, Piutang, Pajak, Laba Rugi, Tutup Buku, Kas Mingguan, Obligo Bank, Persetujuan Master dan Kepatuhan. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
 
 ## Memulai
 
@@ -495,6 +495,12 @@ Probabilitas di luar rentang statusnya memunculkan peringatan, tetapi tetap bisa
 - Kartu **Termin: rencana dan tagihan** membandingkan rencana per bulan dengan invoice yang sudah terbit, dan mendaftar termin yang **Terlambat** (lewat tanggal rencana, invoice belum terbit) atau invoicenya masih disiapkan.
 
 ## Implementasi
+
+### Pembukaan proyek dan kontrak
+
+- Saat deal berpindah ke **Won Bidding**, form Pipeline meminta **jumlah lokasi kontrak** dan proyek dibuat otomatis; nama, customer dan PT diwarisi dari deal dan tidak diubah di proyek. Deal won lama tanpa proyek tetap bisa dibuka manual oleh BCD.
+- Kartu **Kontrak** di halaman proyek: **BCD** mencatat tanggal terima P8/SPPBJ; **Legal & Contract Management** mencatat nomor, tanggal (tidak sebelum P8), durasi dan term of payment (Lumpsum, Turnkey, Termin); **Head PMO** menetapkan PIC Legal, SCM, PM, OPS, HRD dan Finance.
+- Nomor kontrak tidak boleh sama untuk customer yang sama, dan proyek **tidak bisa ditutup** tanpa nomor kontrak.
 
 Proyek pelaksanaan dicatat **per lokasi (site)**, lalu diringkas ke proyek. PDMS (PMO, SCM, ISO, MSO), BCD, Finance Reviewer, Direktur dan Auditor membacanya, dalam entitas masing-masing.
 

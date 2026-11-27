@@ -29,7 +29,8 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | E8 Compliance tracker (`compliance_record`, migration `0043`; `/kepatuhan`: the 17 rows of `06_Compliance` with status, evidence link and note) | Built and checked on the local DB. Evidence is a link, not an upload |
 | Phase B (B1–B8) | Not started |
 | C1 Pipeline statuses and SPH (statuses of `FC03`, sequence and SPH gate; `sph` with Pricing review and approval on `/pipeline/sph`; deal fields and legal document statuses; migration `0044`) | Built and checked on the local DB. Not built from `FC03`: minimum margin rule, SPH print form, PT/year-unique pipeline name beyond the existing project rule |
-| Phase C (C2–C5) | Not started |
+| C2 Project contract (auto-open at Won Bidding; P8 date, contract number/date/duration/term and PICs on `project`, migration `0045`; closing needs the number) | Built and checked on the local DB. Not built from `FC04`: contract file attachment, term of payment driving the termin, status sequence of `BR-PRJ-002` (the app keeps its project statuses) |
+| Phase C (C3–C5) | Not started |
 | Phase D (D0–D6) | Not started; D0 can start after Phase A |
 | E4 Won deals without a project (control list on `/implementasi`, count on `/pipeline`; a project may open from Won Bidding or Closed Won) | Built and checked on the local DB |
 | E7 Audit event catalogue (`audit-catalogue.ts`; logout and failed sign-ins recorded; RKA steps now written to `audit_log`; `/audit` viewer with CSV export) | Built and checked on the local DB. Not done: `SEC.FAILEDACCESS`, role on each row, purging past retention |
@@ -138,6 +139,7 @@ Answered by the user on 2026-11-27:
 47. **Scenarios (E6):** Finance types the drivers per RKA year, starting from `22_Assumptions`; the cashflow uses the Arus Kas rules with DSO and DPO as month lags, not sheet 26's collection percentage.
 48. **Compliance tracker (E8):** the Head of FRM and the Auditor update it; Finance, Direktur and Admin read.
 49. **Pipeline (C1):** codes PP, PT (Qualified), QO (SPH), WB stay, POC, Negotiation, Admin Kontrak, Drop and Cancel added, Closed Won kept; new bands POC 30–60, Negotiation 60–70, Admin Kontrak 70–80, Drop/Cancel 0; BFP reviews pricing, Head BusDev approves (Direktur if the Head wrote it); passing beyond SPH needs an approved SPH.
+50. **Project contract (C2):** the deal asks the number of sites when it becomes won and opens the project; BCD records the P8 date, FRM-LCM the contract, the Head PMO the PICs.
 
 ## 3. What the app already has
 

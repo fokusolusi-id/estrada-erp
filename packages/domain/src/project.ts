@@ -151,7 +151,8 @@ export function canProject(actor: Actor, action: ProjectAction, project: { entit
   if (action !== "view" && (project?.status === "Drop" || project?.status === "Closing")) return false;
   switch (action) {
     case "view":
-      return READERS.includes(actor.role) || org.isWithin(actor.orgUnit, DELIVERY_DIVISION) || canPipeline(actor, "view", null, org);
+      // Legal signs the contracts, so it reads the projects too (sheet FC04_Projek).
+      return READERS.includes(actor.role) || org.isWithin(actor.orgUnit, DELIVERY_DIVISION) || org.isWithin(actor.orgUnit, "FRM-LCM") || canPipeline(actor, "view", null, org);
     case "open":
       return !!project && canPipeline(actor, "edit", project.entity, org);
     case "assign":

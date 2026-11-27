@@ -1,7 +1,7 @@
 import "server-only";
 import { asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
-import { DELIVERY_UNIT, type DefectStatus, type HandoverStatus, type ProjectStatus, type ProjectTeam, type SiteBai, type SiteInput } from "@estrada/domain";
+import { DELIVERY_UNIT, type DefectStatus, type HandoverStatus, type ProjectStatus, type ProjectTeam, type SiteBai, type SiteInput, type PaymentTerm, type PicRole } from "@estrada/domain";
 import { loadOrg } from "./workflow";
 
 export interface SiteRow extends SiteInput {
@@ -31,6 +31,14 @@ export interface ProjectRow {
   fiscalYear: number;
   status: ProjectStatus;
   contractSites: number;
+  contract: {
+    p8On: string | null;
+    number: string | null;
+    date: string | null;
+    duration: string | null;
+    term: PaymentTerm | null;
+    pics: Record<PicRole, string | null>;
+  };
   rfs: Signoff;
   bast: Signoff;
   telkomScheme: boolean;
@@ -94,6 +102,14 @@ export async function loadProjects(id?: string): Promise<ProjectRow[]> {
     fiscalYear: d.fiscalYear,
     status: p.status,
     contractSites: p.contractSites,
+    contract: {
+      p8On: p.p8ReceivedOn,
+      number: p.contractNo,
+      date: p.contractDate,
+      duration: p.contractDuration,
+      term: p.paymentTerm,
+      pics: { legal: p.picLegalNip, scm: p.picScmNip, pm: p.picPmNip, ops: p.picOpsNip, hrd: p.picHrdNip, finance: p.picFinanceNip },
+    },
     rfs: { on: p.rfsOn, proposedOn: p.rfsProposedOn, proposedBy: p.rfsProposedBy },
     bast: { on: p.bastOn, proposedOn: p.bastProposedOn, proposedBy: p.bastProposedBy, number: p.bastNumber },
     telkomScheme: p.telkomScheme,

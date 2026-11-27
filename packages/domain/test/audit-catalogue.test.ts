@@ -9,7 +9,7 @@ const APP_ACTIONS = [
   "line.submit", "line.consolidate", "line.approve", "line.finalize", "line.lock", "line.return", "line.send_back", "line.clarify",
   "cycle.deadline", "cycle.open", "cycle.revise", "version.headcount",
   "pipeline.create", "pipeline.update", "pipeline.delete", "pipeline.recovery_plan",
-  "project.open", "project.assign", "project.baseline", "project.contract_sites", "project.status", "project.drop", "project.close", "project.rfs_declare", "project.rfs_approve",
+  "project.open", "project.contract_p8", "project.contract_record", "project.contract_pic", "project.assign", "project.baseline", "project.contract_sites", "project.status", "project.drop", "project.close", "project.rfs_declare", "project.rfs_approve",
   "project.bast_prepare", "project.bast_approve", "project.kickoff_gate", "project.telkom_scheme", "project.warranty", "project_planning.record",
   "project_site.create", "project_site.update", "project_site.delete", "project_site.bai_return", "project_site.bai_verify",
   "handover.accept_iso", "handover.checklist", "handover.package", "handover.submit", "handover.accept_mso", "handover.return",

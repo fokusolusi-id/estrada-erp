@@ -1,5 +1,6 @@
 import { boolean, date, index, integer, jsonb, pgEnum, pgTable, primaryKey, smallint, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
+import { employee } from "./master";
 import { pipelineDeal } from "./pipeline";
 
 export const projectStatusEnum = pgEnum("project_status", ["Initiation", "Pengadaan_Barang", "Implementasi", "Penagihan", "Layanan", "Garansi", "Closing", "Drop"]);
@@ -9,6 +10,8 @@ export const siteStatusEnum = pgEnum("site_status", ["Belum_Mulai", "Survei", "S
  * A delivery project, opened from a Closed Won deal: the deal carries the customer, entity, name (Kode Proyek) and
  * contract value, so none of them is copied here. A deal with a project cannot be deleted.
  */
+export const paymentTermEnum = pgEnum("payment_term", ["lumpsum", "turnkey", "termin"]);
+
 export const project = pgTable(
   "project",
   {
@@ -17,6 +20,18 @@ export const project = pgTable(
       .notNull()
       .references(() => pipelineDeal.id, { onDelete: "restrict" }),
     status: projectStatusEnum("status").notNull().default("Initiation"),
+    /** The contract record (plan C2): P8/SPPBJ received, then the signed contract; PICs are Karyawan. */
+    p8ReceivedOn: date("p8_received_on"),
+    contractNo: text("contract_no"),
+    contractDate: date("contract_date"),
+    contractDuration: text("contract_duration"),
+    paymentTerm: paymentTermEnum("payment_term"),
+    picLegalNip: text("pic_legal_nip").references(() => employee.nip),
+    picScmNip: text("pic_scm_nip").references(() => employee.nip),
+    picPmNip: text("pic_pm_nip").references(() => employee.nip),
+    picOpsNip: text("pic_ops_nip").references(() => employee.nip),
+    picHrdNip: text("pic_hrd_nip").references(() => employee.nip),
+    picFinanceNip: text("pic_finance_nip").references(() => employee.nip),
     /** jumlah_site_kontrak: the divisor of progress. */
     contractSites: integer("contract_sites").notNull(),
     /** Set when the Head PMO approves the Project Manager's declaration; until then only the proposal is filled. */

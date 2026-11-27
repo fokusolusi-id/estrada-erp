@@ -316,6 +316,13 @@
       "when": 1795781410146,
       "tag": "0044_overconfident_purple_man",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1795783463219,
+      "tag": "0045_rich_talisman",
+      "breakpoints": true
     }
   ]
 }
