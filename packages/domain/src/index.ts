@@ -59,3 +59,4 @@ export * from "./kpi-health";
 export * from "./portfolio";
 export * from "./report";
 export * from "./early-warning";
+export * from "./risk";

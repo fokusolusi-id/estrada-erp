@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, lt, notInArray } from "drizzle-orm";
+import { and, eq, inArray, lt, lte, notInArray } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import { deadlineReminderDay, obligoReminders, seatFor, type ApprovalState, type EmailTemplate, type Role } from "@estrada/domain";
 import { enqueueEmail } from "./email/outbox";
@@ -102,7 +102,7 @@ export async function runReminders(now = new Date()) {
       }
     }
   }
-  return { deadline, pending, obligo: await obligoAlerts(today), telkom: await escalate(today) };
+  return { deadline, pending, obligo: await obligoAlerts(today), telkom: await escalate(today), risks: await riskReviews(today) };
 }
 
 
@@ -124,6 +124,22 @@ async function obligoAlerts(today: string) {
         await send(`obligo_${r.kind}`, userId, "/obligo", { facility: `${facility.bankName} ${facility.name}`, date: r.date });
         sent += 1;
       }
+    }
+  }
+  return sent;
+}
+
+/** Owners of live risks whose review date has come: one email each per day, however many (P3-M3 rule 5). */
+async function riskReviews(today: string) {
+  const due = await db
+    .select({ owner: schema.risk.ownerUserId })
+    .from(schema.risk)
+    .where(and(lte(schema.risk.nextReviewOn, today), inArray(schema.risk.status, ["identified", "in_progress", "mitigated"])));
+  let sent = 0;
+  for (const [owner, list] of Map.groupBy(due, (r) => r.owner)) {
+    if (await claim(`risk:${owner}:${today}`)) {
+      await send("risk_review", owner, "/risiko", { count: String(list.length) });
+      sent += 1;
     }
   }
   return sent;

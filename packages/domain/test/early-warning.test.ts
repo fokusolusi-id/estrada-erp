@@ -55,6 +55,7 @@ describe("acknowledge and escalation (client decision: 1/2/3/7 days)", () => {
     const to = (code: string, subject = "") => ruleRecipients(code, subject, seats, org).sort();
     expect([to("EW-02"), to("EW-03"), to("EW-08", "BCD"), to("EW-07"), to("EW-15")]).toEqual([["cash", "cfo"], ["bcd", "ceo"], ["bcd", "cfo"], ["pmo"], ["cfo"]]);
   });
+  it("goes to the group Direktur when the CFO seat is empty too", () => expect(ruleRecipients("EW-01", "", seats.filter((s) => s.occupant !== "cfo"), org)).toEqual(["ceo"]));
   const alert = { status: "open" as const, assignees: ["bcd"] };
   const actor = (userId: string, role: "director" | "auditor" | "finance" | "division_owner" | "requestor", orgUnit = "BCD", entities = ["*"]) => ({ userId, role, orgUnit, entities });
   it("is seen by the owners, Finance, the CFO, the group Direktur and the Auditor", () => {

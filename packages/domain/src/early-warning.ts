@@ -141,11 +141,12 @@ function holders(owner: Owner, subject: string, seats: readonly AlertSeat[], org
   }
 }
 
-/** The people a new alert is assigned to; the CFO when none of the rule's seats is held. */
+/** The people a new alert is assigned to; the CFO when none of the rule's seats is held, else the group Direktur. */
 export function ruleRecipients(code: string, subject: string, seats: readonly AlertSeat[], org: OrgTree): string[] {
   const of = (owner: Owner) => holders(owner, subject, seats, org).flatMap((s) => (s.occupant ? [s.occupant] : []));
   const ids = (ewRule(code)?.owners ?? []).flatMap(of);
-  return [...new Set(ids.length ? ids : of("cfo"))];
+  const fallback = of("cfo");
+  return [...new Set(ids.length ? ids : fallback.length ? fallback : of("ceo"))];
 }
 
 /** Level 1 goes to the CFO, level 2 to the group Direktur. */

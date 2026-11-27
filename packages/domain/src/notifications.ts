@@ -8,6 +8,7 @@ export type EmailTemplate =
   | "kpi_decided"
   | "report_step"
   | "ew_alert"
+  | "risk_review"
   | "ew_escalated"
   | "report_returned"
   | "report_distributed"

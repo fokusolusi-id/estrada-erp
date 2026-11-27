@@ -46,6 +46,7 @@ export const NAV: readonly NavItem[] = [
   { href: "/kpi", icon: "chart", label: "Target KPI", roles: ["finance", "director", "auditor"], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Laporan" },
   { href: "/kpi/kesehatan", icon: "shield", label: "Kesehatan KPI", roles: ["finance", "director", "auditor"], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Laporan" },
   { href: "/peringatan", icon: "shield", label: "Peringatan Dini", roles: ["default_owner", "division_owner", "finance", "cash_manager", "director", "auditor"], group: "Laporan" },
+  { href: "/risiko", icon: "shield", label: "Register Risiko", roles: ["default_owner", "division_owner", "finance", "director", "auditor"], group: "Laporan" },
   { href: "/laporan", icon: "chart", label: "Laporan Berkala", roles: ["finance", "director", "auditor"], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Laporan" },
   { href: "/dashboard", icon: "chart", label: "Dashboard BOD", roles: ["director", "auditor"], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Laporan" },
   { href: "/portofolio", icon: "project", label: "Portofolio Proyek", roles: ["finance", "director", "auditor"], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Laporan" },
