@@ -35,6 +35,8 @@ export const NAV: readonly NavItem[] = [
   { href: "/pajak", icon: "recap", label: "Pajak", roles: ["finance", "director", "auditor"], alsoIn: { unit: "FRM-FIN-ATM", roles: ["requestor", "default_owner", "division_owner"] }, group: "Penagihan" },
   { href: "/pajak", icon: "recap", label: "Pajak", roles: [], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Penagihan" },
   { href: "/implementasi", icon: "project", label: "Implementasi", roles: ["finance", "director", "auditor"], alsoIn: { unit: ["BCD", "PDMS"], roles: ["requestor", "default_owner", "division_owner"] }, group: "Proyek" },
+  { href: "/closing", icon: "check", label: "Tutup Buku", roles: ["finance", "director", "auditor"], alsoIn: { unit: "FRM-FIN-ATM", roles: ["requestor", "default_owner", "division_owner"] }, group: "Laporan" },
+  { href: "/closing", icon: "check", label: "Tutup Buku", roles: [], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Laporan" },
   { href: "/summary", icon: "chart", label: "Management Summary", roles: ["division_owner", "finance", "director", "auditor"], group: "Laporan" },
   { href: "/pipeline", icon: "pipeline", label: "Pipeline", roles: ["finance", "director", "auditor"], alsoIn: { unit: "BCD", roles: ["requestor", "default_owner", "division_owner"] }, group: "Laporan" },
   { href: "/cash", icon: "wallet", label: "Arus Kas", roles: ["finance", "director", "auditor"], group: "Laporan" },
