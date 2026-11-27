@@ -45,6 +45,7 @@ export const AUDIT_EVENTS: readonly AuditEventType[] = [
   sheet("FIN.PAY.RECEIVE", "Finance", "Catat atau batalkan penerimaan", "High", 10, ["receipt.record", "receipt.reverse"]),
   sheet("FIN.CLOSE", "Finance", "Tutup periode", "Critical", 10, ["period.close"]),
   app("FIN.PERIOD", "Finance", "Penutupan dan pembukaan periode", "High", ["period.start_closing", "period.cancel_closing", "period.reopen"]),
+  app("SYS.COMPLIANCE", "Sistem", "Status kepatuhan", "Medium", ["compliance.*"]),
   app("FIN.BALANCE", "Finance", "Total neraca bulanan", "High", ["closing.*"]),
   app("FIN.TAX", "Finance", "Faktur, bukti potong dan PPh 21", "High", ["tax.*"]),
   app("FIN.CASH", "Finance", "Arus kas, pinjaman dan rekening", "High", ["cash.*", "loan.*", "bank_account.*"]),

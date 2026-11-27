@@ -37,6 +37,8 @@ export type Permission =
   | "receipt.record"
   | "cash.view"
   | "cash.record"
+  | "compliance.view"
+  | "compliance.manage"
   | "closing.view"
   | "balance.record"
   | "tax.view"
@@ -125,6 +127,11 @@ export function can(actor: Actor, permission: Permission, resource: LineResource
       return actor.role === "cash_manager";
     case "cash.view":
       return ["finance", "cash_manager", "director", "auditor"].includes(actor.role) || can(actor, "master.approve", null, org);
+    case "compliance.manage":
+      // The Head of FRM (SCR-AUD-03 names them) and the Auditor (client decision).
+      return actor.role === "auditor" || can(actor, "master.approve", null, org);
+    case "compliance.view":
+      return ["finance", "director", "admin"].includes(actor.role) || can(actor, "compliance.manage", null, org);
     case "balance.record":
       // The month-end totals are Accounting's to type (client decision 4).
       return staffOf(actor, "FRM-FIN-ATM", org);

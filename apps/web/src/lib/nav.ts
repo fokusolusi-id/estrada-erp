@@ -51,6 +51,7 @@ export const NAV: readonly NavItem[] = [
   { href: "/rka/actual", icon: "actual", label: "Realisasi", roles: ["finance"], group: "Data" },
   { href: "/rka/allocation", icon: "split", label: "Biaya Bersama", roles: ["finance"], group: "Data" },
   { href: "/coa", icon: "book", label: "COA Master", roles: ["finance"], group: "Data" },
+  { href: "/kepatuhan", icon: "shield", label: "Kepatuhan", roles: ["finance", "director", "auditor", "admin"], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Admin" },
   { href: "/audit", icon: "shield", label: "Audit Log", roles: ["director", "auditor", "admin"], group: "Admin" },
   { href: "/admin/users", icon: "users", label: "Pengguna", roles: ["admin"], group: "Admin" },
   { href: "/admin/master", icon: "layers", label: "Unit & Entitas", roles: ["admin"], group: "Admin" },
