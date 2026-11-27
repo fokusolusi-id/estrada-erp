@@ -1,6 +1,6 @@
 import { money, ZERO, type Money } from "./money";
 import type { OrgTree } from "./org";
-import { canPipeline, type DealStatus } from "./pipeline";
+import { canPipeline, type DealStatus, isWon } from "./pipeline";
 import type { Actor } from "./policy";
 import type { Role } from "./roles";
 
@@ -40,8 +40,8 @@ export const SITE_STATUS_LABEL: Record<SiteStatus, string> = {
 /** Statuses set by hand. BAI_Terbit, BAI_Terverifikasi and Selesai follow from the site's BAI, never from a dropdown. */
 export const FIELD_SITE_STATUSES = ["Belum_Mulai", "Survei", "Staging", "Dikirim", "Instalasi", "Uji", "Terkendala"] as const satisfies readonly SiteStatus[];
 
-/** A project is opened once the contract is signed: from a Closed Won deal. */
-export const canOpenProject = (deal: { status: DealStatus }): boolean => deal.status === "CW";
+/** A won deal, at Won Bidding or signed, gets a project (sheet 41_Pipeline_Projek_Sync; client decision). */
+export const canOpenProject = (deal: { status: DealStatus }): boolean => isWon(deal.status);
 
 /** A service location of the contract; dates as YYYY-MM-DD. */
 export interface SiteInput {

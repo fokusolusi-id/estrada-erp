@@ -35,3 +35,5 @@ export * from "./company";
 export * from "./cost-center";
 export * from "./period";
 export * from "./sod";
+export * from "./audit-catalogue";
+export * from "./home";

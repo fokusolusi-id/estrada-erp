@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { ArrowRight, CalendarClock, CircleCheck, Inbox } from "lucide-react";
 import { ROLE_LABEL, cycleProgress, daysLeft, entityScopeLabel, groupActivity, pendingByStage, type Role } from "@estrada/domain";
+import { HomeCards } from "@/components/erp/home-cards";
 import { ActivityList, PendingStages } from "@/components/erp/home-overview";
+import { displayUnit } from "@/lib/display-unit";
+import { loadHome } from "@/lib/home";
 import { loadScopedLines, openVersion } from "@/lib/rka";
 import { viewLines } from "@/lib/view-filter";
 import { ViewNote } from "@/components/erp/view-note";
@@ -98,6 +101,8 @@ export default async function HomePage() {
 
   const [version, scoped, org] = await Promise.all([openVersion(), loadScopedLines(user), loadOrg()]);
   const lines = await viewLines(scoped);
+  const [cards, unit] = await Promise.all([loadHome(user, org), displayUnit()]);
+  const menu = new Set(navFor(user.actor.role, (u) => org.isWithin(user.actor.orgUnit, u)).map((n) => n.href));
   const waiting = lines.filter((l) => l.actions.length).length;
   const final = lines.filter((l) => l.state === "awaiting_lock" || l.state === "locked").length;
   const left = version?.submissionDeadline ? daysLeft(version.submissionDeadline, new Date()) : null;
@@ -171,6 +176,7 @@ export default async function HomePage() {
           </CardContent>
         </Card>
       </div>
+      {cards ? <HomeCards data={cards} unit={unit} link={(href) => (menu.has(href) ? href : undefined)} /> : null}
     </div>
   );
 }

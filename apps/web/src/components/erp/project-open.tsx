@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { DEAL_STATUS_LABEL, formatIdr, money, type DealStatus } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,11 +14,14 @@ export interface AwaitingDeal {
   customer: string;
   entity: string;
   fiscalYear: number;
+  status: DealStatus;
+  /** Excluding PPN. */
+  value: string;
   /** Whether this user may open a project for the deal's entity. */
   canOpen: boolean;
 }
 
-/** Closed Won deals without a project: BCD types the contract's number of sites and opens the project. */
+/** Won deals without a project: BCD types the contract's number of sites and opens the project. */
 export function ProjectOpen({ deals, onOpen }: { deals: AwaitingDeal[]; onOpen: (dealId: string, contractSites: number) => Promise<Result> }) {
   const [sites, setSites] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<(Result & { id: string }) | null>(null);
@@ -31,6 +35,8 @@ export function ProjectOpen({ deals, onOpen }: { deals: AwaitingDeal[]; onOpen: 
           <TableHead>Customer</TableHead>
           <TableHead>Entitas</TableHead>
           <TableHead>Tahun</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead className="text-right">Nilai (excl. PPN)</TableHead>
           <TableHead className="w-72">Jumlah lokasi kontrak</TableHead>
         </TableRow>
       </TableHeader>
@@ -43,6 +49,8 @@ export function ProjectOpen({ deals, onOpen }: { deals: AwaitingDeal[]; onOpen: 
               <TableCell>{d.customer}</TableCell>
               <TableCell>{d.entity}</TableCell>
               <TableCell className="tabular">{d.fiscalYear}</TableCell>
+              <TableCell>{DEAL_STATUS_LABEL[d.status]}</TableCell>
+              <TableCell className="tabular text-right">{formatIdr(money(d.value))}</TableCell>
               <TableCell>
                 {d.canOpen ? (
                   <form

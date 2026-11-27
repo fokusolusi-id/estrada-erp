@@ -139,14 +139,16 @@ export async function deliveryPeople(): Promise<Person[]> {
   return seats.filter((s) => org.isWithin(s.unit, DELIVERY_UNIT) && !seen.has(s.id) && seen.add(s.id)).map(({ id, name, title }) => ({ id, name, title }));
 }
 
-/** Closed Won deals that have no project yet. */
+/** The control list: won deals (Won Bidding or Closed Won) that have no project yet. */
 export async function dealsAwaitingProject() {
   const [deals, opened] = await Promise.all([
-    db.select().from(schema.pipelineDeal).where(eq(schema.pipelineDeal.status, "CW")).orderBy(desc(schema.pipelineDeal.fiscalYear), asc(schema.pipelineDeal.project)),
+    db.select().from(schema.pipelineDeal).where(inArray(schema.pipelineDeal.status, ["WB", "CW"])).orderBy(desc(schema.pipelineDeal.fiscalYear), asc(schema.pipelineDeal.project)),
     db.select({ dealId: schema.project.dealId }).from(schema.project),
   ]);
   const has = new Set(opened.map((o) => o.dealId));
-  return deals.filter((d) => !has.has(d.id)).map((d) => ({ id: d.id, name: d.project, customer: d.customer, entity: d.entityCode, fiscalYear: d.fiscalYear }));
+  return deals
+    .filter((d) => !has.has(d.id))
+    .map((d) => ({ id: d.id, name: d.project, customer: d.customer, entity: d.entityCode, fiscalYear: d.fiscalYear, status: d.status, value: d.value }));
 }
 
 export interface HandoverRow {

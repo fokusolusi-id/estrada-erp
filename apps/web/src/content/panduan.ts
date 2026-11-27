@@ -259,6 +259,30 @@ Aplikasi menolak langkah yang menurut matriks SoD (sheet 05_SoD_Matrix) tidak bo
 
 Pasangan yang wajib dipisah: Head BusDev dan Sales; PM dan SCM; PM atau SCM dengan Cash Management atau AR/Tax; antara Pricing, Cash Management, AR/Tax dan Accounting; serta Audit dengan Data Steward. Contoh: orang yang sudah memeriksa pembayaran sebagai Business Finance tidak dapat menjadwalkan atau membayarnya sebagai Cash Management.
 
+## Audit Log
+
+Menu **Audit Log** dibuka Auditor, Direktur dan Admin. Setiap baris menunjukkan waktu (WIB), user dan alamat IP, kode kejadian dengan modul dan tingkatnya, objek, serta nilai sebelum dan sesudah (*Lihat*). Masuk, keluar dan percobaan masuk yang gagal ikut tercatat; kata sandi tidak pernah disimpan.
+
+- **Filter**: user, modul, kode kejadian, objek (jenis atau ID) dan rentang tanggal, lalu *Terapkan*.
+- **Unduh CSV** mengunduh hasil filter, paling banyak 10.000 baris terbaru.
+- **Katalog kode kejadian** di bawah tabel memuat tingkat dan masa simpan tiap kode (sheet 04_Audit_Log_Spec); kode bertanda *Tambahan aplikasi* tidak ada di sheet itu. Aplikasi belum menghapus baris yang melewati masa simpan.
+
+## Kartu di Beranda
+
+Di bawah antrean dan progres RKA, Beranda menampilkan kartu sesuai peran. Angka mengikuti *Entitas* dan *Satuan* di kepala halaman, dan *Rincian* membuka layar asalnya bila ada di menu Anda.
+
+| Kartu | Isi | Dilihat oleh |
+| --- | --- | --- |
+| RKA per divisi | Anggaran biaya, realisasi dan komitmen pembayaran, sisa, persen terpakai | Direktur, Auditor, Finance Reviewer, Division Owner (divisinya) |
+| Cost center | Anggaran, realisasi, run rate per unit; tanda bila run rate berbeda lebih dari 10% dari anggaran | Finance Reviewer, Default Owner dan Division Owner (unitnya) |
+| Arus kas | Proyeksi masuk, keluar, saldo per bulan, dan runway | Direktur, Auditor, Finance Reviewer, Cash Management, Division Owner FRM |
+| Obligo bank | Plafon, outstanding, sisa per fasilitas; peringatan bila satu fasilitas di atas 50% plafon | Sama dengan Arus kas |
+| Pipeline | Jumlah deal, nilai, tertimbang dan umur per status | Direktur, Auditor, orang BCD |
+| Headcount | Karyawan aktif dan rencana posisi RKA per unit, tanpa gaji | Direktur, Auditor, Division Owner (divisinya), HCM |
+| Proyek | Status dan nilai kontrak | Direktur, Auditor, orang BCD dan PDMS |
+
+Anggaran diambil dari versi RKA yang terkunci; selama belum ada, dari versi yang berjalan dan diberi tanda *belum dikunci*. Division Owner FRM bertindak sebagai CFO dan melihat angka seluruh perusahaan.
+
 ## Master Data
 
 Menu *Master Data* memuat satu tab per master. Semua peran dapat membaca Customer, Mitra dan Produk Mitra; yang mengubah hanya pengelolanya:
@@ -319,7 +343,7 @@ Probabilitas di luar rentang statusnya memunculkan peringatan, tetapi tetap bisa
 
 Proyek pelaksanaan dicatat **per lokasi (site)**, lalu diringkas ke proyek. PDMS (PMO, SCM, ISO, MSO), BCD, Finance Reviewer, Direktur dan Auditor membacanya, dalam entitas masing-masing.
 
-- **Membuka proyek**: deal berstatus Closed Won yang belum punya proyek tampil di kartu **Closed Won menunggu proyek**. BCD mengisi **jumlah lokasi kontrak** lalu *Buka proyek*. Nama project deal menjadi nama proyek. Deal yang sudah memiliki proyek tidak dapat dihapus dan statusnya tetap Closed Won.
+- **Membuka proyek**: deal Won Bidding atau Closed Won yang belum punya proyek tampil di kartu **Deal menang tanpa proyek** (Pipeline juga menyebut jumlahnya). BCD mengisi **jumlah lokasi kontrak** lalu *Buka proyek*. Nama project deal menjadi nama proyek. Deal yang sudah memiliki proyek tidak dapat dihapus dan statusnya tetap Won Bidding atau Closed Won.
 - **Tim proyek**: Head PMO (Default Owner atau Division Owner PMO, atau Head PDMS) menetapkan Project Manager, Delivery Control dan Project Admin dari orang PMO lewat *Simpan tim*. Delivery Control tidak boleh merangkap Project Manager maupun Project Admin, karena pelaksana instalasi tidak memverifikasi hasilnya sendiri dan pengumpul BAI bukan pengompilasinya.
 - **Lokasi**: Project Manager mendaftarkan lokasi dengan *Tambah lokasi* (kode, nama, alamat, wilayah, PIC pelanggan, rencana selesai) sampai jumlahnya sama dengan jumlah lokasi kontrak. Project Manager dan Project Admin memperbaruinya dengan *Ubah*. Kode lokasi unik per proyek.
 - **Status lokasi** yang dipilih manual: Belum mulai, Survei, Staging, Dikirim, Instalasi, Uji, Terkendala. Status BAI terbit, BAI terverifikasi dan Selesai mengikuti BAI lokasi dan tidak dipilih manual. Proyek berpindah dari Initiation ke Implementasi saat lokasi pertama masuk Staging atau lebih lanjut.

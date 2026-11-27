@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq, ne } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@estrada/db";
-import { DEAL_STATUSES, DEAL_TYPES, SEGMENTS, canPipeline, canRecoveryPlan, dealProblems, duplicateProject, needsRecovery, pipelineBySegment, type TerminInput } from "@estrada/domain";
+import { DEAL_STATUSES, DEAL_TYPES, SEGMENTS, canPipeline, canRecoveryPlan, dealProblems, duplicateProject, isWon, needsRecovery, pipelineBySegment, type TerminInput } from "@estrada/domain";
 import { loadPipeline, pipelineYear } from "@/lib/pipeline";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
@@ -84,8 +84,8 @@ export async function saveDeal(input: Omit<z.input<typeof Deal>, "termins"> & { 
   const [before] = id ? await db.select().from(schema.pipelineDeal).where(eq(schema.pipelineDeal.id, id)) : [];
   if (id && (!before || !canPipeline(user.actor, "edit", before.entityCode, org))) return { ok: false, message: "Anda tidak berwenang mengubah deal ini." };
   if (!picked.active && before?.customerId !== picked.id) return { ok: false, message: "Customer sudah nonaktif di Master Customer." };
-  // A deal with a project is a signed contract in delivery: it stays Closed Won.
-  if (id && deal.status !== "CW" && (await hasProject(id))) return { ok: false, message: "Deal ini sudah memiliki proyek di Implementasi; statusnya tetap Closed Won." };
+  // A deal with a project is a won one in delivery: it does not fall back below Won Bidding.
+  if (id && !isWon(deal.status) && (await hasProject(id))) return { ok: false, message: "Deal ini sudah memiliki proyek di Implementasi; statusnya tetap Won Bidding atau Closed Won." };
   await db.transaction(async (tx) => {
     let dealId = id;
     if (id) {

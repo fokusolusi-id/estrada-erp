@@ -1,11 +1,23 @@
 import "server-only";
 import { betterAuth } from "better-auth";
+import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { and, eq } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import { env } from "./env";
 import { enqueueEmail } from "./email/outbox";
+
+async function recordAuth(action: "auth.logout" | "auth.login_failed", userId: string | null, sessionId: string | null, headers: Headers | undefined, after?: { email: string }) {
+  await db.insert(schema.auditLog).values({
+    actorUserId: userId,
+    action,
+    subjectType: "session",
+    subjectId: sessionId,
+    after: after ?? null,
+    ip: headers?.get("x-forwarded-for")?.split(",")[0]?.trim() || null,
+  });
+}
 
 export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
@@ -55,6 +67,21 @@ export const auth = betterAuth({
         },
       },
     },
+  },
+  hooks: {
+    // Sign-out and refused sign-ins have no session to hook, so they are recorded around the request (AUTH.LOGIN / AUTH.LOGOUT).
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-out") return;
+      const session = await getSessionFromCtx(ctx);
+      if (session) await recordAuth("auth.logout", session.user.id, session.session.id, ctx.headers);
+    }),
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-in/email" || !(ctx.context.returned instanceof APIError)) return;
+      const email = String((ctx.body as { email?: unknown } | undefined)?.email ?? "").trim().toLowerCase().slice(0, 200);
+      const [user] = email ? await db.select({ id: schema.user.id }).from(schema.user).where(eq(schema.user.email, email)).limit(1) : [];
+      // The password is never recorded.
+      await recordAuth("auth.login_failed", user?.id ?? null, null, ctx.headers, { email });
+    }),
   },
   plugins: [nextCookies()],
 });
