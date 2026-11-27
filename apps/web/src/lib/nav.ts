@@ -44,6 +44,7 @@ export const NAV: readonly NavItem[] = [
   { href: "/closing", icon: "check", label: "Tutup Buku", roles: ["finance", "director", "auditor"], alsoIn: { unit: "FRM-FIN-ATM", roles: ["requestor", "default_owner", "division_owner"] }, group: "Laporan" },
   { href: "/closing", icon: "check", label: "Tutup Buku", roles: [], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Laporan" },
   { href: "/kpi", icon: "chart", label: "Target KPI", roles: ["finance", "director", "auditor"], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Laporan" },
+  { href: "/kpi/kesehatan", icon: "shield", label: "Kesehatan KPI", roles: ["finance", "director", "auditor"], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Laporan" },
   { href: "/summary", icon: "chart", label: "Management Summary", roles: ["division_owner", "finance", "director", "auditor"], group: "Laporan" },
   { href: "/pipeline", icon: "pipeline", label: "Pipeline", roles: ["finance", "director", "auditor"], alsoIn: { unit: "BCD", roles: ["requestor", "default_owner", "division_owner"] }, group: "Laporan" },
   { href: "/pipeline/sph", icon: "recap", label: "SPH", roles: ["finance", "bfp", "director", "auditor"], alsoIn: { unit: "BCD", roles: ["requestor", "default_owner", "division_owner"] }, group: "Laporan" },
