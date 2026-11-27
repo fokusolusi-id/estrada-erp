@@ -31,6 +31,8 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | E3 Budget vs actual as of a date (MTD/QTD/YTD; `actual_adjustment`, migration `0032`, Accounting entries on `/rka/monitor`) | Built and checked on the local DB. Cost side only; revenue after B1–B2 |
 | B1 Invoice per billing termin (`invoice`, migration `0033`, `/invoice`; draft → validated → approved → issued, number `INV/PT/YY/NNNN`) | Built and checked on the local DB. One invoice per termin (no separate lines table); voiding an issued invoice, print form and approval by amount (A10) not built |
 | B2 Cash receipts and AR aging (`cash_receipt`, migration `0034`, receipts on the invoice, `/piutang` with weekly review, aging and 12-month cash-in) | Built and checked on the local DB. One receipt pays one invoice: no unapplied credit or daily snapshots (`P1-M2`) |
+| B3 AP bills (vendor invoice, bill date, project and PPh type on `payment_request`, migration `0035`; `/hutang` aging) | Built and checked on the local DB. Not built from `P1-M3`: bill lines, approval by amount (A10), payment batches, e-Bupot |
+| B4 Weekly cashflow (`cash_entry`, migration `0036`; `/cash/mingguan`: invoice receipts, paid requests at nett, Cash Management's typed entries; per PT and consolidated; cash out per COA) | Built and checked on the local DB. Not built from `P1-M4`: bank statement import, daily projection, petty-cash accounts per bank |
 | Group E (E1–E9) | Not started; E1–E4 and E6–E8 need no new module |
 
 Overall order: **Phase A → E4, E7 → D0 → E1, E2, E3 → Phase B → E5, E6, E8 → Phase C → D1–D6 → E9**. The quick E items and D0 come early because they use data the app already has and give BOD and Finance something visible while Phase B is built. Ask the user before changing the order.
@@ -113,6 +115,8 @@ Answered by the user on 2026-11-27:
 32. **SoD seats:** director = BOD / Direktur PT; finance and bfp = Finance-Pricing; cash_manager = Finance-CashMgmt; BCD head = Head BusDev, other BCD = Sales; PMO = PM; SCM = SCM; MSO and ISO = OPS; FRM-FIN-ATM = AR/Tax and Accounting. The check runs in the two transition paths rather than inside `can()`.
 33. **E4:** a project may be opened from a Won Bidding or Closed Won deal (`41_Pipeline_Projek_Sync`); a deal with a project cannot fall below Won Bidding or be deleted.
 34. **Invoices (B1):** number `INV/PT/YY/NNNN`; Wapu shows PPN without expecting it; Accounting creates and a second Accounting person validates tax; the FRM Division Owner approves and issues; only termin of deals with a project.
+35. **AP bills (B3):** a *Pembayaran* with a Mitra is a vendor bill; PPh comes from type and rate; `/hutang` shows aging.
+36. **Weekly cashflow (B4):** W1 1–7, W2 8–14, W3 15–21, W4 22–end; cash in is Indirect when a Telkom company pays and the deal's end customer differs, else Direct; opening is the 1 January cash from Arus Kas, carried forward; consolidation is all active PTs.
 
 ## 3. What the app already has
 

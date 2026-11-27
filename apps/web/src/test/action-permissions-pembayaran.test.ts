@@ -70,7 +70,7 @@ beforeEach(() => {
 describe("savePayment: the partner must be in Master Mitra", () => {
   it("refuses an unknown partner before any write", async () => {
     sit("requester");
-    const values = { kind: "payment" as const, entity: "ESTRADA", project: "", budgetLineId: "", partnerId: "Mitra-999", description: "", payeeName: "", payeeBank: "", payeeAccount: "", dueOn: "", gross: "", ppn: "", pph: "" };
+    const values = { kind: "payment" as const, entity: "ESTRADA", project: "", budgetLineId: "", partnerId: "Mitra-999", vendorInvoiceNo: "", billDate: "", projectId: "", pphType: "none" as const, pphRate: "0", description: "", payeeName: "", payeeBank: "", payeeAccount: "", dueOn: "", gross: "", ppn: "", pph: "" };
     expect(await outcome(() => savePayment(null, values))).toEqual({ message: "Mitra tidak ada di Master Mitra." });
   });
 });
@@ -114,7 +114,7 @@ describe("runPaymentAction: each step belongs to the seat the state names", () =
 });
 
 describe("savePayment", () => {
-  const values = { kind: "payment", entity: "ESTRADA", project: "", budgetLineId: "", partnerId: "", description: "Uji", payeeName: "", payeeBank: "", payeeAccount: "", dueOn: "", gross: "1000000", ppn: "0", pph: "0" } as never;
+  const values = { kind: "payment", entity: "ESTRADA", project: "", budgetLineId: "", partnerId: "", vendorInvoiceNo: "", billDate: "", projectId: "", pphType: "none", pphRate: "0", description: "Uji", payeeName: "", payeeBank: "", payeeAccount: "", dueOn: "", gross: "1000000", ppn: "0", pph: "0" } as never;
 
   it.each(Object.keys(ACTORS).map((a) => [a]))("as %s: Admin is refused, everyone else gets past the check", async (who) => {
     sit(who);

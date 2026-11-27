@@ -1,4 +1,5 @@
-import { integer, numeric, pgEnum, pgTable, primaryKey, smallint, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { date, index, integer, numeric, pgEnum, pgTable, primaryKey, smallint, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { user } from "./auth";
 import { companyEntity } from "./master";
 
 /** The year's cash rules (Forecast CF Bulanan's ASUMSI block); the forecast itself is always computed. */
@@ -66,4 +67,31 @@ export const loanMove = pgTable(
     repayment: numeric("repayment", { precision: 20, scale: 2 }).notNull().default("0"),
   },
   (t) => [primaryKey({ columns: [t.facilityId, t.month] })],
+);
+
+export const cashEntryKindEnum = pgEnum("cash_entry_kind", ["loan_in", "other_in", "interest", "repayment", "cost", "other_out"]);
+
+/** Cash moved outside invoices and payment requests (plan B4). A mistake is reversed with a reason, never deleted. */
+export const cashEntry = pgTable(
+  "cash_entry",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    entityCode: text("entity_code")
+      .notNull()
+      .references(() => companyEntity.code),
+    onDate: date("on_date").notNull(),
+    kind: cashEntryKindEnum("kind").notNull(),
+    amount: numeric("amount", { precision: 20, scale: 2 }).notNull(),
+    /** The account of a cost. */
+    coaCode: text("coa_code"),
+    description: text("description").notNull(),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => user.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    reversedAt: timestamp("reversed_at", { withTimezone: true }),
+    reversedBy: text("reversed_by").references(() => user.id),
+    reversalReason: text("reversal_reason"),
+  },
+  (t) => [index("cash_entry_date_idx").on(t.onDate)],
 );

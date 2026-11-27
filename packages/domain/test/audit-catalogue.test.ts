@@ -19,7 +19,7 @@ const APP_ACTIONS = [
   "master.customer.create", "master.customer.update", "master.employee.create", "master.partner.update", "master.product.create", "master.costcenter.update",
   "master.request.submit", "master.request.approve", "master.request.reject", "master.request.cancel", "master.request.fail",
   "coa.create", "coa.update", "coa.confirm", "coa.remap", "coa.only_file", "entity.create", "entity.update", "entity.import", "unit.create", "unit.update", "unit.import_cost_center",
-  "bank_account.create", "bank_account.update", "cash.assumptions", "cash.carry_forward", "loan.create", "loan.update", "loan.delete",
+  "bank_account.create", "bank_account.update", "cash.assumptions", "cash.carry_forward", "cash.entry", "cash.entry_reverse", "loan.create", "loan.update", "loan.delete",
   "import.cash", "import.pipeline", "import.workbook",
 ];
 

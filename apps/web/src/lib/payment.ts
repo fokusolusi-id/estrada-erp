@@ -116,6 +116,9 @@ export async function applyPaymentTransition(actor: Actor, requestId: string, ac
         description: r.description,
         gross: money(r.gross),
         documents: docs.map((d) => d.kind).filter((k): k is DocumentKind => k !== "proof"),
+        partnerId: r.partnerId,
+        vendorInvoiceNo: r.vendorInvoiceNo,
+        billDate: r.billDate,
       });
       if (missing.length) throw new WorkflowError(`Belum lengkap: ${missing.join(", ")}.`);
     }
@@ -311,4 +314,13 @@ export async function partnerOptions(current?: string | null) {
     .from(schema.partner)
     .where(current ? or(eq(schema.partner.active, true), eq(schema.partner.id, current)) : eq(schema.partner.active, true))
     .orderBy(asc(schema.partner.name), asc(schema.partner.id));
+}
+
+/** Projects a vendor bill may be charged to, with their entity. */
+export async function billProjects() {
+  return db
+    .select({ id: schema.project.id, entity: schema.pipelineDeal.entityCode, name: schema.pipelineDeal.project })
+    .from(schema.project)
+    .innerJoin(schema.pipelineDeal, eq(schema.pipelineDeal.id, schema.project.dealId))
+    .orderBy(asc(schema.pipelineDeal.project));
 }

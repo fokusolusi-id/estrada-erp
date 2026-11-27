@@ -83,7 +83,16 @@ export interface SubmitCheck {
   description: string;
   gross: Money | null;
   documents: readonly DocumentKind[];
+  partnerId?: string | null;
+  vendorInvoiceNo?: string | null;
+  billDate?: string | null;
 }
+
+/** A payment that names a Mitra is that vendor's bill (P1-M3; client decision). */
+export const isVendorBill = (r: { kind: PaymentKind; partnerId?: string | null | undefined }): boolean => r.kind === "payment" && !!r.partnerId;
+
+/** PPh withheld on the DPP at a percent rate, to the sen. */
+export const pphOf = (dpp: Money, rate: Money): Money => dpp.times(rate).div(100).toDecimalPlaces(2);
 
 /** What is still missing before the request can go to the atasan, in the words the form shows. */
 export function readyToSubmit(r: SubmitCheck): string[] {
@@ -92,6 +101,10 @@ export function readyToSubmit(r: SubmitCheck): string[] {
   if (!r.budgetLineId) missing.push("Pilih baris RKA");
   if (!r.description.trim()) missing.push("Isi deskripsi pembayaran");
   if (!r.gross || r.gross.lte(0)) missing.push("Isi nominal");
+  if (isVendorBill(r)) {
+    if (!r.vendorInvoiceNo?.trim()) missing.push("Isi nomor invoice vendor");
+    if (!r.billDate) missing.push("Isi tanggal invoice vendor");
+  }
   if (!r.documents.length) missing.push("Lampirkan minimal satu dokumen");
   else if (r.kind === "cash_advance" && !r.documents.includes("cash_advance")) missing.push("Lampirkan Permohonan CA");
   else if (r.kind === "payment" && !r.documents.some((d) => d !== "cash_advance")) {
