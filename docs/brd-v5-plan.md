@@ -34,7 +34,8 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | C4 Telkom billing tracker (`billing_track`, `billing_stage`, `billing_escalation`, `billing_obstacle`, `billing_assurance`, migration `0047`; `/tracker-telkom`; daily escalation) | Built and checked on the local DB. Not built: yearly billing achievement (BR-PNG-005), named Telkom and Estrada PICs per tier, auto-fill from the project's BAUT/BARD/BAST fields |
 | C5 Billing trigger (a Recurring project issues no invoice before RFS; approved RFS or BAST emails Accounting the next termin) | Built and checked on the local DB. No migration |
 | D1 KPI targets (`kpi_target`, migration `0048`; `/kpi`: versioned targets per PT, submit and BOD approval with the board decision, actuals and consolidation) | Built and checked on the local DB. Pipeline coverage still uses the segment targets |
-| Phase D (D2–D6) | Not started |
+| D2 KPI health (`/kpi/kesehatan`: 10 KPIs of `08_KPI_Thresholds` with bands, three stress tests; no migration) | Built and checked on the local DB. Beranda cards do not use the bands yet |
+| Phase D (D3–D6) | Not started |
 | E4 Won deals without a project (control list on `/implementasi`, count on `/pipeline`; a project may open from Won Bidding or Closed Won) | Built and checked on the local DB |
 | E7 Audit event catalogue (`audit-catalogue.ts`; logout and failed sign-ins recorded; RKA steps now written to `audit_log`; `/audit` viewer with CSV export) | Built and checked on the local DB. Not done: `SEC.FAILEDACCESS`, role on each row, purging past retention |
 | D0 Beranda widgets that need no new module (`home.ts` in domain, `lib/home.ts`, cards on `/`) | Built and checked on the local DB. Obligo concentration is per facility until banks exist (B5); risk register is D6 |
@@ -147,6 +148,7 @@ Answered by the user on 2026-11-27:
 52. **Telkom tracker (C4):** one escalation tier per SLA period up to 5; tiers 1–3 email the stage's unit, 4 its head, 5 the Direktur; only Close WFM PSB, Close WFM Existing and BA Kesepakatan may be not applicable, with a reason.
 53. **Billing trigger (C5):** service projects are deals with business model Recurring; nothing, DP included, is issued before their RFS is approved.
 54. **KPI targets (D1):** a Direktur seat limited to a PT submits, a Direktur seat covering all PTs (BOD) approves; targets are phased by the monthly shares of `22_Assumptions`.
+55. **KPI health (D2):** cash plan = Arus Kas forecast; flow KPIs are year to date; positive EBITDA under 1% of revenue is WASPADA; capital efficiency uses annualised EBIT.
 
 ## 3. What the app already has
 
