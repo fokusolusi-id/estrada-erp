@@ -246,6 +246,20 @@
       "when": 1795770251127,
       "tag": "0034_fixed_prism",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1795770709163,
+      "tag": "0035_fine_hammerhead",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1795771163516,
+      "tag": "0036_flaky_meteorite",
+      "breakpoints": true
     }
   ]
 }

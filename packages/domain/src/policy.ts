@@ -35,6 +35,8 @@ export type Permission =
   | "invoice.approve"
   | "invoice.view"
   | "receipt.record"
+  | "cash.view"
+  | "cash.record"
   | "allocation.manage"
   | "bank.manage"
   | "payment.report"
@@ -111,6 +113,11 @@ export function can(actor: Actor, permission: Permission, resource: LineResource
     case "receipt.record":
       // Cash Management records what the bank shows (FC07_Finance step 7).
       return actor.role === "cash_manager";
+    case "cash.record":
+      // The weekly cashflow's typed movements are Cash Management's (BR-CF-001).
+      return actor.role === "cash_manager";
+    case "cash.view":
+      return ["finance", "cash_manager", "director", "auditor"].includes(actor.role) || can(actor, "master.approve", null, org);
     case "org.manage":
     case "user.manage":
       return actor.role === "admin";

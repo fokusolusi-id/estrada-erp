@@ -345,6 +345,24 @@ Menu **Invoice** menagih satu billing termin per invoice. Termin yang bisa ditag
 - **Sisa** = nilai yang diperkirakan diterima dikurangi penerimaan. Penerimaan yang salah dibatalkan dengan alasan; barisnya tetap tampil.
 - Menu **Piutang** menampilkan **Tinjauan mingguan** (lewat jatuh tempo atau jatuh tempo dalam 7 hari), **Umur piutang per customer** (belum jatuh tempo, 1–30, 31–60, 61–90, di atas 90 hari) dan **Proyeksi cash-in 12 bulan** dari invoice terbuka dan termin yang belum ditagih.
 
+## Tagihan vendor dan Hutang
+
+Permintaan jenis *Pembayaran* yang memilih **Mitra** adalah tagihan vendor: isi **Nomor invoice vendor**, **Tanggal invoice vendor** dan, bila ada, **Proyek**. Nomor dan tanggal wajib sebelum dikirim, dan nomor yang sama dari mitra yang sama ditolak.
+
+- **PPh** dihitung dari *Jenis PPh* dan *Tarif* atas Nominal (DPP): PPh 23 otomatis 2%, PPh 4(2) dan 22 diisi tarifnya. Permintaan lama yang nominal PPh-nya diketik tetap memakai angka itu.
+- Menu **Hutang** (Finance Reviewer, BFP, Cash Management, Direktur, Auditor) menampilkan tagihan mitra dari *Submitted* sampai *Scheduled*: yang jatuh tempo minggu ini dan umur hutang per mitra, nilai nett.
+
+## Kas Mingguan
+
+Menu **Laporan → Kas Mingguan** menampilkan realisasi kas per minggu: **W1** tanggal 1–7, **W2** 8–14, **W3** 15–21, **W4** 22 sampai akhir bulan. Dibaca oleh Cash Management, Finance, Division Owner FRM, Direktur dan Auditor.
+
+- Pilih **Bulan**, lalu **Tampilkan**. Filter Entitas di header memilih satu PT; tanpa filter, angka adalah konsolidasi semua PT aktif dan tabel **Per entitas** menunjukkan penyusunnya.
+- **Saldo kas awal** berasal dari saldo 1 Januari di **Arus Kas → Asumsi** ditambah semua mutasi sebelumnya. PT yang saldonya belum diisi dihitung nol dan diberi peringatan.
+- **Cash In** otomatis dari penerimaan invoice. *Indirect* bila pelanggannya perusahaan Telkom dan pelanggan akhir pada deal berbeda; selain itu *Direct*.
+- **Kas keluar** otomatis dari Permintaan Pembayaran yang sudah **dibayar**, sebesar nilai nett, pada tanggal bayar. Akunnya mengikuti baris anggaran: **Direct Cost** (COA 5100–5900), **OPEX** (COA 6100–6420), selain itu **Pengeluaran lain**.
+- **Cash Management** mencatat sisanya di **Transaksi kas lain**: pinjaman atau injeksi kas, penerimaan lain, bunga, cicilan KMK, biaya di luar Permintaan Pembayaran (wajib memilih akun COA) dan pengeluaran lain. Jangan catat ulang penerimaan invoice atau pembayaran yang sudah ada di aplikasi.
+- Tanggal transaksi harus pada periode yang belum ditutup dan tidak setelah hari ini. Transaksi yang salah **dibatalkan** dengan alasan, tidak dihapus.
+
 ## Master Data
 
 Menu *Master Data* memuat satu tab per master. Semua peran dapat membaca Customer, Mitra dan Produk Mitra; yang mengubah hanya pengelolanya:

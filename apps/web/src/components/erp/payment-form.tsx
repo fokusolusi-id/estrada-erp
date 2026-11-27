@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { formatIdr, parseIdr, PAYMENT_KIND_LABEL, type PaymentKind } from "@estrada/domain";
+import { formatIdr, money, parseIdr, pphOf, PAYMENT_KIND_LABEL, PPH_DEFAULT_RATE, PPH_LABEL, PPH_TYPES, type PaymentKind, type PphType } from "@estrada/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,13 @@ export interface PaymentFormValues {
   description: string;
   /** Master Mitra; "" when the payee is typed. */
   partnerId: string;
+  /** Vendor bill fields, used when a Mitra is picked on a Pembayaran. */
+  vendorInvoiceNo: string;
+  billDate: string;
+  projectId: string;
+  /** "" on a request saved before PPh types: its amount is typed. */
+  pphType: PphType | "";
+  pphRate: string;
   payeeName: string;
   payeeBank: string;
   payeeAccount: string;
@@ -51,6 +58,11 @@ export const EMPTY_PAYMENT: PaymentFormValues = {
   budgetLineId: "",
   description: "",
   partnerId: "",
+  vendorInvoiceNo: "",
+  billDate: "",
+  projectId: "",
+  pphType: "none",
+  pphRate: "0",
   payeeName: "",
   payeeBank: "",
   payeeAccount: "",
@@ -77,6 +89,7 @@ export function PaymentForm({
   entities,
   lines,
   partners = [],
+  projects = [],
   versionNote,
   onSave,
 }: {
@@ -85,6 +98,8 @@ export function PaymentForm({
   lines: LineOption[];
   /** Active Master Mitra records, plus the one this request already names. */
   partners?: PartnerOption[];
+  /** Projects a vendor bill may be charged to, by entity. */
+  projects?: { id: string; entity: string; name: string }[];
   /** Said beside the RKA line choice, e.g. that the RKA is not locked yet. */
   versionNote?: string;
   onSave: (v: PaymentFormValues) => Promise<Result>;
@@ -94,7 +109,7 @@ export function PaymentForm({
   const [result, setResult] = useState<Result | null>(null);
   const [pending, startTransition] = useTransition();
   const set = (k: keyof PaymentFormValues) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
-    setV((p) => ({ ...p, [k]: e.target.value, ...(k === "entity" ? { budgetLineId: "" } : {}) }));
+    setV((p) => ({ ...p, [k]: e.target.value, ...(k === "entity" ? { budgetLineId: "", projectId: "" } : {}) }));
 
   const partner = partners.find((p) => p.id === v.partnerId);
   const pickPartner = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -109,10 +124,18 @@ export function PaymentForm({
   };
 
   const entityLines = lines.filter((l) => l.entity === v.entity);
+  // With a PPh type the amount is worked out from the DPP; without one (an older request) it is typed.
+  const pph = useMemo(() => {
+    if (!v.pphType) return v.pph;
+    const gross = amount(v.gross);
+    const rate = /^\d{1,3}([.,]\d{1,2})?$/.test(v.pphRate) ? money(v.pphRate.replace(",", ".")) : null;
+    return gross && rate && !rate.isZero() ? formatIdr(pphOf(gross, rate)).replace("Rp ", "") : "";
+  }, [v.pphType, v.pphRate, v.pph, v.gross]);
   const nett = useMemo(() => {
-    const [g, n, h] = [amount(v.gross), amount(v.ppn), amount(v.pph)];
+    const [g, n, h] = [amount(v.gross), amount(v.ppn), amount(pph)];
     return g && n && h ? g.plus(n).minus(h) : null;
-  }, [v.gross, v.ppn, v.pph]);
+  }, [v.gross, v.ppn, pph]);
+  const bill = v.kind === "payment" && !!v.partnerId;
 
   return (
     <form
@@ -120,7 +143,7 @@ export function PaymentForm({
       onSubmit={(e) => {
         e.preventDefault();
         startTransition(async () => {
-          const r = await onSave(v);
+          const r = await onSave({ ...v, pph });
           setResult(r);
           if (r.ok && r.id) router.push(`/pembayaran/${r.id}`);
           else if (r.ok) router.refresh();
@@ -202,6 +225,32 @@ export function PaymentForm({
         </div>
       </div>
 
+      {bill ? (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-2">
+            <Label htmlFor="pay-vendor-no">Nomor invoice vendor</Label>
+            <Input id="pay-vendor-no" value={v.vendorInvoiceNo} onChange={set("vendorInvoiceNo")} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="pay-bill-date">Tanggal invoice vendor</Label>
+            <Input id="pay-bill-date" type="date" value={v.billDate} onChange={set("billDate")} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="pay-project-id">Proyek (opsional)</Label>
+            <select id="pay-project-id" className={SELECT} value={v.projectId} onChange={set("projectId")}>
+              <option value="">— Tidak untuk proyek —</option>
+              {projects
+                .filter((p) => p.entity === v.entity)
+                .map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+        </div>
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-4">
         <div className="grid gap-2">
           <Label htmlFor="pay-gross">Nominal (DPP)</Label>
@@ -212,8 +261,31 @@ export function PaymentForm({
           <MoneyInput id="pay-ppn" value={v.ppn} onChange={set("ppn")} placeholder="0" />
         </div>
         <div className="grid gap-2">
+          <Label htmlFor="pay-pph-type">Jenis PPh</Label>
+          <select
+            id="pay-pph-type"
+            className={SELECT}
+            value={v.pphType}
+            onChange={(e) => {
+              const pphType = e.target.value as PaymentFormValues["pphType"];
+              setV((p) => ({ ...p, pphType, ...(pphType ? { pphRate: PPH_DEFAULT_RATE[pphType], pph: "" } : {}) }));
+            }}
+          >
+            {initial.pphType === "" ? <option value="">Nominal diketik</option> : null}
+            {PPH_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {PPH_LABEL[t]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="pay-pph-rate">Tarif PPh (%)</Label>
+          <Input id="pay-pph-rate" inputMode="decimal" className="tabular text-right" disabled={!v.pphType || v.pphType === "none"} value={v.pphType ? v.pphRate : ""} onChange={set("pphRate")} />
+        </div>
+        <div className="grid gap-2">
           <Label htmlFor="pay-pph">PPh dipotong</Label>
-          <MoneyInput id="pay-pph" value={v.pph} onChange={set("pph")} placeholder="0" />
+          <MoneyInput id="pay-pph" readOnly={!!v.pphType} className={v.pphType ? "bg-muted" : undefined} value={pph} onChange={set("pph")} placeholder="0" />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="pay-due">Jatuh tempo</Label>

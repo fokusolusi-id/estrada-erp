@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@estrada/db";
-import { DOCUMENT_KINDS, documentProblem, money, parseIdr, paymentActions, type PaymentAction } from "@estrada/domain";
+import { DOCUMENT_KINDS, documentProblem, money, parseIdr, paymentActions, type PaymentAction, PPH_TYPES, isVendorBill, pphOf } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { activeYear } from "@/lib/fiscal-year";
 import { applyPaymentTransition, asLike, lineOptions, storeDocument } from "@/lib/payment";
@@ -20,6 +20,11 @@ const FormSchema = z.object({
   project: z.string().trim().max(200),
   budgetLineId: z.string(),
   partnerId: z.string().max(50),
+  vendorInvoiceNo: z.string().trim().max(100),
+  billDate: z.string().refine((s) => s === "" || DATE.test(s), "Tanggal invoice vendor tidak valid"),
+  projectId: z.union([z.literal(""), z.string().uuid()]),
+  pphType: z.union([z.literal(""), z.enum(PPH_TYPES)]),
+  pphRate: z.string().max(10),
   description: z.string().trim().max(1000),
   payeeName: z.string().trim().max(200),
   payeeBank: z.string().trim().max(60),
@@ -51,7 +56,16 @@ export async function savePayment(id: string | null, values: PaymentFormValues):
   if (!entities.includes("*") && !entities.includes(v.entity)) return { ok: false, message: "Entitas di luar cakupan posisi Anda." };
 
   try {
-    const [gross, ppn, pph] = [amountOf(v.gross, "Nominal"), amountOf(v.ppn, "PPN"), amountOf(v.pph, "PPh")];
+    const [gross, ppn] = [amountOf(v.gross, "Nominal"), amountOf(v.ppn, "PPN")];
+    // With a PPh type the server works the amount out itself; an older request keeps its typed figure.
+    let pph: string;
+    let pphRate: string | null = null;
+    if (v.pphType) {
+      const rate = /^\d{1,3}([.,]\d{1,2})?$/.test(v.pphRate) ? money(v.pphRate.replace(",", ".")) : null;
+      if (!rate || rate.gt(100) || (v.pphType === "none") !== rate.isZero()) return { ok: false, message: "Isi tarif PPh sesuai jenisnya." };
+      pph = pphOf(money(gross), rate).toFixed(2);
+      pphRate = rate.toFixed(2);
+    } else pph = amountOf(v.pph, "PPh");
     if (money(pph).gt(money(gross).plus(money(ppn)))) return { ok: false, message: "PPh melebihi tagihan." };
     if (v.budgetLineId) {
       const { lines } = await lineOptions(user.actor, await activeYear());
@@ -64,6 +78,31 @@ export async function savePayment(id: string | null, values: PaymentFormValues):
       const [held] = id ? await db.select().from(schema.paymentRequest).where(eq(schema.paymentRequest.id, id)) : [];
       if (held?.partnerId !== partner.id) return { ok: false, message: "Mitra sudah nonaktif di Master Mitra." };
     }
+    // The vendor bill fields belong to a payment that names a Mitra.
+    const bill = isVendorBill({ kind: v.kind, partnerId: partner?.id });
+    if (bill && v.projectId) {
+      const [project] = await db
+        .select({ entity: schema.pipelineDeal.entityCode })
+        .from(schema.project)
+        .innerJoin(schema.pipelineDeal, eq(schema.pipelineDeal.id, schema.project.dealId))
+        .where(eq(schema.project.id, v.projectId));
+      if (!project || project.entity !== v.entity) return { ok: false, message: "Proyek tidak ada pada entitas ini." };
+    }
+    if (bill && v.vendorInvoiceNo) {
+      const [twin] = await db
+        .select({ id: schema.paymentRequest.id, number: schema.paymentRequest.number })
+        .from(schema.paymentRequest)
+        .where(
+          and(
+            eq(schema.paymentRequest.partnerId, partner!.id),
+            eq(schema.paymentRequest.kind, "payment"),
+            sql`lower(${schema.paymentRequest.vendorInvoiceNo}) = ${v.vendorInvoiceNo.toLowerCase()}`,
+            id ? ne(schema.paymentRequest.id, id) : undefined,
+          ),
+        )
+        .limit(1);
+      if (twin) return { ok: false, message: `Invoice ${v.vendorInvoiceNo} dari mitra ini sudah dicatat${twin.number ? ` (${twin.number})` : ""}.` };
+    }
     const values = {
       kind: v.kind,
       entityCode: v.entity,
@@ -71,6 +110,11 @@ export async function savePayment(id: string | null, values: PaymentFormValues):
       budgetLineId: v.budgetLineId || null,
       description: v.description,
       partnerId: partner?.id ?? null,
+      vendorInvoiceNo: bill ? v.vendorInvoiceNo || null : null,
+      billDate: bill ? v.billDate || null : null,
+      projectId: bill ? v.projectId || null : null,
+      pphType: v.pphType || null,
+      pphRate,
       payeeName: partner?.name ?? (v.payeeName || null),
       payeeBank: v.payeeBank || null,
       payeeAccount: v.payeeAccount || null,

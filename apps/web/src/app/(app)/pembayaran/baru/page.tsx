@@ -5,7 +5,7 @@ import { asc, eq } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
 import { requireUser } from "@/lib/session";
 import { activeYear } from "@/lib/fiscal-year";
-import { lineOptions, partnerOptions } from "@/lib/payment";
+import { billProjects, lineOptions, partnerOptions } from "@/lib/payment";
 import { PageHeader } from "@/components/erp/page-header";
 import { EMPTY_PAYMENT, PaymentForm } from "@/components/erp/payment-form";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,10 +16,11 @@ export const metadata: Metadata = { title: "Buat Permintaan Pembayaran" };
 export default async function NewPaymentPage() {
   const user = await requireUser();
   if (user.actor.role === "admin") redirect("/");
-  const [entities, options, partners] = await Promise.all([
+  const [entities, options, partners, projects] = await Promise.all([
     db.select({ code: schema.companyEntity.code }).from(schema.companyEntity).where(eq(schema.companyEntity.active, true)).orderBy(asc(schema.companyEntity.code)),
     lineOptions(user.actor, await activeYear()),
     partnerOptions(),
+    billProjects(),
   ]);
   const covers = (e: string) => user.actor.entities.includes("*") || user.actor.entities.includes(e);
 
@@ -39,6 +40,7 @@ export default async function NewPaymentPage() {
             entities={entities.map((e) => e.code).filter(covers)}
             lines={options.lines}
             partners={partners}
+            projects={projects}
             versionNote={options.note}
             onSave={savePayment.bind(null, null)}
           />

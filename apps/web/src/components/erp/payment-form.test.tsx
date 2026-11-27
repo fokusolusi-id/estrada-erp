@@ -22,7 +22,7 @@ describe("PaymentForm", () => {
   });
 
   it("works out the nett as it is typed, in id-ID figures", () => {
-    render(<PaymentForm initial={EMPTY_PAYMENT} entities={["ESTRADA"]} lines={lines} onSave={vi.fn()} />);
+    render(<PaymentForm initial={{ ...EMPTY_PAYMENT, pphType: "" }} entities={["ESTRADA"]} lines={lines} onSave={vi.fn()} />);
     fireEvent.change(screen.getByLabelText("Nominal (DPP)"), { target: { value: "10.000.000" } });
     fireEvent.change(screen.getByLabelText("PPN"), { target: { value: "1.100.000" } });
     fireEvent.change(screen.getByLabelText("PPh dipotong"), { target: { value: "200.000" } });
@@ -88,5 +88,38 @@ describe("PaymentForm: Master Mitra", () => {
     pick("");
     expect(form.queryByText(/belum punya NPWP/)).toBeNull();
     expect(input("Dibayar kepada").readOnly).toBe(false);
+  });
+});
+
+// P1-M3: a payment to a Mitra is a vendor bill, with PPh worked out from the DPP.
+describe("PaymentForm: vendor bill", () => {
+  const partners = [{ id: "Mitra-001", name: "PT Lixa", npwp: "1" }];
+
+  it("asks for the vendor's invoice once a Mitra is picked", () => {
+    const { container } = render(<PaymentForm initial={EMPTY_PAYMENT} entities={["ESTRADA"]} lines={lines} partners={partners} onSave={vi.fn()} />);
+    const form = within(container);
+    expect(form.queryByLabelText("Nomor invoice vendor")).toBeNull();
+    fireEvent.change(form.getByLabelText("Mitra (Master Mitra)"), { target: { value: "Mitra-001" } });
+    expect(form.getByLabelText("Nomor invoice vendor")).toBeTruthy();
+    expect(form.getByLabelText("Tanggal invoice vendor")).toBeTruthy();
+  });
+
+  it("calculates PPh from its type and rate", async () => {
+    const onSave = vi.fn(async () => ({ ok: true, message: "Draft disimpan." }));
+    const { container } = render(<PaymentForm initial={EMPTY_PAYMENT} entities={["ESTRADA"]} lines={lines} onSave={onSave} />);
+    const form = within(container);
+    fireEvent.change(form.getByLabelText("Nominal (DPP)"), { target: { value: "500.000.000" } });
+    fireEvent.change(form.getByLabelText("Jenis PPh"), { target: { value: "pph23" } });
+    expect((form.getByLabelText("Tarif PPh (%)") as HTMLInputElement).value).toBe("2");
+    expect((form.getByLabelText("PPh dipotong") as HTMLInputElement).value).toBe("10.000.000");
+    expect((form.getByLabelText("PPh dipotong") as HTMLInputElement).readOnly).toBe(true);
+    fireEvent.click(form.getByRole("button", { name: "Simpan draft" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ pphType: "pph23", pphRate: "2", pph: "10.000.000" })));
+  });
+
+  it("keeps a typed amount on a request saved before PPh types", () => {
+    const { container } = render(<PaymentForm initial={{ ...EMPTY_PAYMENT, pphType: "", pph: "200.000" }} entities={["ESTRADA"]} lines={lines} onSave={vi.fn()} />);
+    const pph = within(container).getByLabelText("PPh dipotong") as HTMLInputElement;
+    expect([pph.value, pph.readOnly]).toEqual(["200.000", false]);
   });
 });

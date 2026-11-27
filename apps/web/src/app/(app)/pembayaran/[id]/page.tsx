@@ -16,7 +16,7 @@ import {
 } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { activeYear } from "@/lib/fiscal-year";
-import { asLike, formatDate, lineHeadroom, lineOptions, partnerOptions, todayJakarta } from "@/lib/payment";
+import { asLike, billProjects, formatDate, lineHeadroom, lineOptions, partnerOptions, todayJakarta } from "@/lib/payment";
 import { loadOrg } from "@/lib/workflow";
 import { PaymentStatusBadge, PaymentStepper } from "@/components/erp/payment-status";
 import { PaymentForm } from "@/components/erp/payment-form";
@@ -86,6 +86,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
   const lineLabel = line ? `${line.line.coaCode} · ${line.coaName}${line.line.item || line.line.basis ? ` · ${line.line.item || line.line.basis}` : ""} (${line.line.ownerUnit}, RKA ${line.year})` : null;
   const options = editable ? await lineOptions(user.actor, await activeYear()) : null;
   const partners = editable ? await partnerOptions(r.partnerId) : [];
+  const projects = editable || r.projectId ? await billProjects() : [];
   const covers = (e: string) => user.actor.entities.includes("*") || user.actor.entities.includes(e);
   const entityChoices = !editable
     ? []
@@ -166,6 +167,12 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
                 budgetLineId: r.budgetLineId ?? "",
                 description: r.description,
                 partnerId: r.partnerId ?? "",
+                vendorInvoiceNo: r.vendorInvoiceNo ?? "",
+                billDate: r.billDate ?? "",
+                projectId: r.projectId ?? "",
+                // A request with a typed PPh and no type keeps it; one without PPh starts at "Tanpa PPh".
+                pphType: r.pphType ?? (money(r.pph).isZero() ? "none" : ""),
+                pphRate: r.pphRate ? money(r.pphRate).toString().replace(".", ",") : "0",
                 payeeName: r.payeeName ?? "",
                 payeeBank: r.payeeBank ?? "",
                 payeeAccount: r.payeeAccount ?? "",
@@ -177,6 +184,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
               entities={entityChoices}
               lines={options.lines}
               partners={partners}
+              projects={projects}
               versionNote={options.note}
               onSave={savePayment.bind(null, r.id)}
             />
@@ -186,6 +194,8 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
               <Field label="Proyek / perusahaan">{r.project}</Field>
               <Field label="Baris RKA">{lineLabel}</Field>
               <Field label="Dibayar kepada">{[r.payeeName, r.payeeBank, r.payeeAccount].filter(Boolean).join(" · ")}</Field>
+              {r.vendorInvoiceNo ? <Field label="Invoice vendor">{[r.vendorInvoiceNo, r.billDate ? formatDate(r.billDate) : null].filter(Boolean).join(" · ")}</Field> : null}
+              {r.projectId ? <Field label="Proyek">{projects.find((p) => p.id === r.projectId)?.name}</Field> : null}
               <Field label="Jatuh tempo">{r.dueOn ? formatDate(r.dueOn) : null}</Field>
               <Field label="Nominal (DPP)">
                 <span className="tabular">{formatIdr(gross)}</span>

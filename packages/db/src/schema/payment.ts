@@ -1,7 +1,9 @@
+import { sql } from "drizzle-orm";
 import { boolean, date, index, integer, numeric, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { budgetLine } from "./budget";
-import { companyEntity, orgUnit, partner, position, roleEnum } from "./master";
+import { companyEntity, orgUnit, partner, position, pphTypeEnum, roleEnum } from "./master";
+import { project } from "./project";
 
 export const paymentStateEnum = pgEnum("payment_state", [
   "draft",
@@ -51,6 +53,14 @@ export const paymentRequest = pgTable(
     description: text("description").notNull().default(""),
     /** The payee in Master Mitra; null for anyone outside it, e.g. a cash advance. */
     partnerId: text("partner_id").references(() => partner.id),
+    /** Vendor bill (P1-M3): the vendor's own invoice, and the project it is charged to. */
+    vendorInvoiceNo: text("vendor_invoice_no"),
+    billDate: date("bill_date"),
+    projectId: uuid("project_id").references(() => project.id),
+    /** Null on requests saved before PPh types: their amount was typed. */
+    pphType: pphTypeEnum("pph_type"),
+    /** Percent. */
+    pphRate: numeric("pph_rate", { precision: 5, scale: 2 }),
     payeeName: text("payee_name"),
     payeeBank: text("payee_bank"),
     payeeAccount: text("payee_account"),
@@ -76,6 +86,8 @@ export const paymentRequest = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    // A vendor's invoice is paid once.
+    uniqueIndex("payment_request_vendor_invoice_unique").on(t.partnerId, sql`lower(${t.vendorInvoiceNo})`).where(sql`${t.kind} = 'payment'`),
     index("payment_request_state_idx").on(t.state),
     index("payment_request_requester_idx").on(t.requesterId),
     index("payment_request_line_idx").on(t.budgetLineId),

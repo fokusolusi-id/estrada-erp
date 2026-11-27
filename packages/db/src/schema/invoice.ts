@@ -1,13 +1,12 @@
 import { sql } from "drizzle-orm";
 import { boolean, date, index, integer, numeric, pgEnum, pgTable, smallint, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
-import { companyEntity, customer } from "./master";
+import { companyEntity, customer, pphTypeEnum } from "./master";
 import { companyBankAccount } from "./payment";
 import { pipelineDeal } from "./pipeline";
 import { project } from "./project";
 
 export const invoiceStateEnum = pgEnum("invoice_state", ["draft", "validated", "approved", "issued", "cancelled"]);
-export const pphTypeEnum = pgEnum("pph_type", ["none", "pph23", "pph42", "pph22"]);
 
 const rupiah = (name: string) => numeric(name, { precision: 20, scale: 2 }).notNull();
 

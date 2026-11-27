@@ -3,6 +3,8 @@ import { boolean, date, index, integer, jsonb, numeric, pgEnum, pgTable, primary
 import { user } from "./auth";
 
 /** RKA budgets the first five; TAX and BALANCE_SHEET complete the ledger from COA Structured RKA 2027. */
+/** PPh types, on sales invoices and vendor bills. */
+export const pphTypeEnum = pgEnum("pph_type", ["none", "pph23", "pph42", "pph22"]);
 export const categoryEnum = pgEnum("coa_category", ["Revenue", "COGS", "OPEX", "OTHERS", "CAPEX", "TAX", "BALANCE_SHEET"]);
 export const normalBalanceEnum = pgEnum("coa_normal_balance", ["debit", "credit"]);
 export const statementEnum = pgEnum("coa_statement", ["income_statement", "balance_sheet"]);
