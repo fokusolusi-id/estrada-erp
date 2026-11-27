@@ -25,7 +25,7 @@ describe("navFor", () => {
 
   it("shows Pipeline to BCD's people and to Finance, Direktur and Auditor, not to other divisions", () => {
     const bcd = (unit: string) => unit === "BCD";
-    expect(navFor("requestor", bcd).map((n) => n.href)).toEqual(["/", "/rka", "/pembayaran", "/implementasi", "/pipeline", "/master", "/panduan"]);
+    expect(navFor("requestor", bcd).map((n) => n.href)).toEqual(["/", "/rka", "/pembayaran", "/implementasi", "/pipeline", "/pipeline/sph", "/master", "/panduan"]);
     expect(navFor("division_owner", () => false).map((n) => n.href)).not.toContain("/pipeline");
     for (const role of ["finance", "director", "auditor"] as const) expect(navFor(role).map((n) => n.href)).toContain("/pipeline");
   });

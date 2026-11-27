@@ -264,6 +264,30 @@ export const COPY: Record<EmailTemplate, Copy> = {
     body: (p) => `Bank Garansi pada fasilitas ${p.facility ?? "bank"} berakhir pada ${p.date ?? ""}. Perpanjang atau lepaskan.`,
     cta: "Buka Obligo Bank",
   },
+  sph_review: {
+    subject: "SPH menunggu review Pricing",
+    heading: "Review Pricing",
+    body: (p) => `SPH ${p.number ?? ""} (${p.entity ?? ""}) menunggu review Pricing Anda.`,
+    cta: "Buka SPH",
+  },
+  sph_approval: {
+    subject: "SPH menunggu persetujuan Anda",
+    heading: "Persetujuan SPH",
+    body: (p) => `SPH ${p.number ?? ""} (${p.entity ?? ""}) sudah direview Pricing dan menunggu persetujuan Anda.`,
+    cta: "Buka SPH",
+  },
+  sph_approved: {
+    subject: "SPH disetujui",
+    heading: "SPH disetujui",
+    body: (p) => `SPH ${p.number ?? ""} (${p.entity ?? ""}) disetujui dan dapat dikirim ke customer.`,
+    cta: "Lihat SPH",
+  },
+  sph_returned: {
+    subject: "SPH dikembalikan",
+    heading: "SPH dikembalikan",
+    body: (p) => `SPH ${p.number ?? ""} dikembalikan. Catatan: "${p.comment ?? ""}"`,
+    cta: "Perbaiki SPH",
+  },
   deadline_near: {
     subject: "Batas waktu RKA mendekat",
     heading: "Batas waktu mendekat",

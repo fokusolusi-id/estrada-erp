@@ -6,15 +6,72 @@ import type { Role } from "./roles";
 /** The division that keeps the Pipeline register (plan: Revenue and pipeline belong to BCD). */
 export const PIPELINE_UNIT = "BCD";
 
-/** Status codes from the Pipeline sheet, each with its probability band in percent. */
-export const DEAL_STATUSES = ["PP", "PT", "QO", "WB", "CW"] as const;
+/**
+ * Statuses of sheet FC03_Sales_Pipeline (BR-SP-001) in order, with each one's probability band in percent. The codes of
+ * the earlier register stay: PT is Qualified and QO is SPH. CW (Closed Won) is not on the sheet: the contract is signed,
+ * so it counts in full and needs its Billing Termin (client decision to keep it).
+ */
+export const DEAL_STATUSES = ["PP", "PT", "PC", "QO", "NG", "AK", "WB", "CW", "DR", "CX"] as const;
 export type DealStatus = (typeof DEAL_STATUSES)[number];
-/** CW (Closed Won) is not on the sheet: the contract is signed, so it counts in full and needs its Billing Termin. */
-const BAND: Record<DealStatus, [number, number]> = { PP: [0, 30], PT: [30, 60], QO: [60, 70], WB: [70, 90], CW: [100, 100] };
+const BAND: Record<DealStatus, [number, number]> = { PP: [0, 30], PT: [30, 60], PC: [30, 60], QO: [60, 70], NG: [60, 70], AK: [70, 80], WB: [70, 90], CW: [100, 100], DR: [0, 0], CX: [0, 0] };
 export const statusBand = (s: DealStatus): [number, number] => BAND[s];
-export const DEAL_STATUS_LABEL: Record<DealStatus, string> = { PP: "Potential", PT: "Potential", QO: "Quotation", WB: "Won Bidding", CW: "Closed Won" };
+export const DEAL_STATUS_LABEL: Record<DealStatus, string> = {
+  PP: "Potential Prospect",
+  PT: "Qualified",
+  PC: "POC",
+  QO: "SPH",
+  NG: "Negotiation",
+  AK: "Admin Kontrak",
+  WB: "Won Bidding",
+  CW: "Closed Won",
+  DR: "Drop",
+  CX: "Cancel",
+};
 /** The "Won Bidding saja" basis of the segment report: won at bidding, signed or not. */
 export const isWon = (s: DealStatus) => s === "WB" || s === "CW";
+/** Dropped or cancelled: kept in the register, counted nowhere. */
+export const isLost = (s: DealStatus) => s === "DR" || s === "CX";
+
+const OPEN: readonly DealStatus[] = ["PP", "PT", "PC", "QO", "NG", "AK", "WB", "CW"];
+export type StatusStepProblem = "skip" | "closed" | "sph";
+export const STATUS_STEP_MESSAGE: Record<StatusStepProblem, string> = {
+  skip: "Status naik satu tahap demi satu tahap (POC boleh dilewati); deal baru paling jauh SPH; Drop atau Cancel hanya dibuka kembali ke Potential Prospect.",
+  closed: "Deal Closed Won tidak bisa di-Drop atau Cancel.",
+  sph: "Belum ada SPH yang disetujui untuk deal ini: status tidak bisa lewat dari SPH.",
+};
+
+/** Whether a deal may take a status, from none (new) or from another. Going back is always allowed. */
+export function statusStepProblem(from: DealStatus | null, to: DealStatus, sphApproved: boolean): StatusStepProblem | null {
+  if (from === to) return null;
+  const at = OPEN.indexOf(to);
+  if (from === null) return at >= 0 && at <= OPEN.indexOf("QO") ? null : "skip";
+  if (isLost(to)) return from === "CW" ? "closed" : null;
+  if (isLost(from)) return to === "PP" ? null : "skip";
+  const was = OPEN.indexOf(from);
+  if (at > was + 1 && !(from === "PT" && to === "QO")) return "skip";
+  const gate = OPEN.indexOf("NG");
+  return at >= gate && was < gate && !sphApproved ? "sph" : null;
+}
+
+export const BUSINESS_MODELS = ["project", "recurring", "trading"] as const;
+export type BusinessModel = (typeof BUSINESS_MODELS)[number];
+export const BUSINESS_MODEL_LABEL: Record<BusinessModel, string> = { project: "Project", recurring: "Recurring", trading: "Trading" };
+/** Sheet ref. */
+export const PRODUCT_CATEGORIES = ["Managed ICT", "RSP", "Smart City", "AI Solution"] as const;
+/** Companies that hold Korlantas contracts of their own (BR-SP-006). */
+export const AFFILIATES = ["Dharma Jaya", "Madina Mitra", "Berlian Sabhya", "Asahi Wiratama", "Prima Mandiri"] as const;
+
+export const LEGAL_DOC_STATUSES = ["draft", "circulating", "done"] as const;
+export type LegalDocStatus = (typeof LEGAL_DOC_STATUSES)[number];
+export const LEGAL_DOC_LABEL: Record<LegalDocStatus, string> = { draft: "Draft", circulating: "Sirkulir", done: "Done" };
+export interface LegalDocs {
+  p6Status?: LegalDocStatus | null | undefined;
+  p8Status?: LegalDocStatus | null | undefined;
+  contractStatus?: LegalDocStatus | null | undefined;
+}
+
+/** P6/BAKN, then P8/SPPBJ, then the contract: each starts only when the one before is done (BR-SP-007). */
+export const legalDocProblem = (d: LegalDocs): "order" | null => ((d.p8Status && d.p6Status !== "done") || (d.contractStatus && d.p8Status !== "done") ? "order" : null);
 
 export const DEAL_TYPES = ["new", "renewal"] as const;
 export type DealType = (typeof DEAL_TYPES)[number];
@@ -30,7 +87,15 @@ export interface TerminInput {
 }
 
 /** A deal as typed or imported; value excludes PPN, probability is a percent. Amounts as plain decimal strings. */
-export interface DealInput {
+export interface DealInput extends LegalDocs {
+  subSegment?: string | null | undefined;
+  businessModel?: BusinessModel | null | undefined;
+  productCategory?: string | null | undefined;
+  /** Karyawan NIP. */
+  picSalesNip?: string | null | undefined;
+  picPresalesNip?: string | null | undefined;
+  /** The company that holds the contract, when it is not ours (BR-SP-006). */
+  contractOwner?: string | null | undefined;
   entity: string;
   customer: string;
   /** Its Master Customer record; null until the deal is matched. */
@@ -58,8 +123,8 @@ export function weighted(deal: Pick<DealInput, "value" | "probability">): Money 
 }
 
 export interface DealProblem {
-  field: "customer" | "project" | "segment" | "coa" | "value" | "probability" | "months" | "leadTime" | "termin";
-  code: "required" | "not_positive" | "out_of_range" | "outside_band" | "unknown" | "end_before_start" | "termin_total" | "termin_over";
+  field: "customer" | "project" | "segment" | "coa" | "value" | "probability" | "months" | "leadTime" | "termin" | "legal";
+  code: "required" | "not_positive" | "out_of_range" | "outside_band" | "unknown" | "end_before_start" | "termin_total" | "termin_over" | "order";
   /** A warning the user may save past. */
   blocking: boolean;
 }
@@ -74,6 +139,7 @@ const num = (s: string) => {
 
 export function dealProblems(d: DealInput): DealProblem[] {
   const out: DealProblem[] = [];
+  if (legalDocProblem(d)) out.push({ field: "legal", code: "order", blocking: true });
   if (!d.customer.trim()) out.push({ field: "customer", code: "required", blocking: true });
   if (!d.project.trim()) out.push({ field: "project", code: "required", blocking: true });
   if (!(SEGMENTS as readonly string[]).includes(d.segment)) out.push({ field: "segment", code: "unknown", blocking: true });
@@ -144,7 +210,7 @@ export interface SegmentRow {
 export function pipelineBySegment(deals: readonly Pick<DealInput, "segment" | "value" | "probability" | "status">[], targets: ReadonlyMap<string, Money>): SegmentRow[] {
   const out = new Map<string, Omit<SegmentRow, "coverage">>();
   const row = (segment: string) => out.get(segment) ?? { segment, deals: 0, value: ZERO, weighted: ZERO, wonDeals: 0, wonValue: ZERO, target: targets.get(segment) ?? null };
-  for (const d of deals) {
+  for (const d of deals.filter((x) => !isLost(x.status))) {
     const r = row(d.segment);
     const won = isWon(d.status);
     out.set(d.segment, {
@@ -171,9 +237,9 @@ export interface CoaRow {
 }
 
 /** Pendapatan per COA as the RKA takes it from the pipeline: codes in order, deals without a COA last. */
-export function pipelineByCoa(deals: readonly Pick<DealInput, "coaCode" | "value" | "probability">[]): CoaRow[] {
+export function pipelineByCoa(deals: readonly (Pick<DealInput, "coaCode" | "value" | "probability"> & { status?: DealStatus })[]): CoaRow[] {
   const out = new Map<string | null, CoaRow>();
-  for (const d of deals) {
+  for (const d of deals.filter((x) => !x.status || !isLost(x.status))) {
     const code = d.coaCode || null;
     const r = out.get(code) ?? { coaCode: code, deals: 0, value: ZERO, weighted: ZERO };
     out.set(code, { ...r, deals: r.deals + 1, value: r.value.plus(money(d.value)), weighted: r.weighted.plus(weighted(d)) });
@@ -200,7 +266,7 @@ export function billingPlan<T extends Pick<DealInput, "value" | "status" | "term
   const rows: BillingRow<T>[] = [];
   for (const deal of deals) {
     const termins = deal.termins ?? [];
-    if (deal.status !== "CW" && !termins.length) continue;
+    if (isLost(deal.status) || (deal.status !== "CW" && !termins.length)) continue;
     let thisYear = ZERO;
     for (const t of termins) {
       if (Number(t.plannedDate.slice(0, 4)) !== fiscalYear) continue;
@@ -214,10 +280,10 @@ export function billingPlan<T extends Pick<DealInput, "value" | "status" | "term
   return { months, total: sum(months), rows };
 }
 
-export const pipelineTotals = (deals: readonly Pick<DealInput, "value" | "probability">[]) => ({
-  value: sum(deals.map((d) => money(d.value))),
-  weighted: sum(deals.map(weighted)),
-});
+export function pipelineTotals(deals: readonly (Pick<DealInput, "value" | "probability"> & { status?: DealStatus })[]) {
+  const live = deals.filter((d) => !d.status || !isLost(d.status));
+  return { value: sum(live.map((d) => money(d.value))), weighted: sum(live.map(weighted)) };
+}
 
 const EDITORS: readonly Role[] = ["requestor", "default_owner", "division_owner"];
 const READERS: readonly Role[] = ["finance", "director", "auditor"];

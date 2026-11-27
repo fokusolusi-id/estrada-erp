@@ -39,7 +39,7 @@ const deal = {
 };
 const REFUSAL = "Anda tidak berwenang mengubah pipeline untuk entitas ini.";
 // What the fake database returns for the COA lookup, the customers, the other deals and the deal being edited, all in one.
-const REVENUE_COA = { id: "Cust-001", category: "Revenue", active: true, entityCode: "MATRIK", project: "Proyek Lain", nickname: "PT Lain", legalName: "PT Lain" };
+const REVENUE_COA = { id: "Cust-001", category: "Revenue", active: true, entityCode: "MATRIK", project: "Proyek Lain", nickname: "PT Lain", legalName: "PT Lain", status: "WB" };
 
 beforeEach(() => {
   rows.current = [REVENUE_COA];
@@ -84,6 +84,12 @@ describe("saveDeal: BCD alone, within its entities", () => {
     const edit = (status: "QO" | "WB") => outcome(() => saveDeal({ ...deal, id: ID, entity: "MATRIK", status, probability: status === "WB" ? "80" : "65" }));
     expect(await edit("QO")).toEqual({ message: "Deal ini sudah memiliki proyek di Implementasi; statusnya tetap Won Bidding atau Closed Won." });
     expect(await edit("WB")).toHaveProperty("pastGate");
+  });
+
+  it("BR-SP-001: starts a new deal no later than SPH", async () => {
+    signInAs("requestor", { orgUnit: "BCD", entities: ["ESTRADA"] });
+    const out = await outcome(() => saveDeal({ ...deal, status: "NG", probability: "65" }));
+    expect((out as { message: string }).message).toContain("satu tahap demi satu tahap");
   });
 
   it("refuses a deal that is incomplete or not a revenue COA before any write", async () => {

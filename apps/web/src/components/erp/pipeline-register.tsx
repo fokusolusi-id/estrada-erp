@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { useState, useTransition } from "react";
+import { Fragment, useState, useTransition } from "react";
 import {
   DEAL_STATUSES,
   DEAL_STATUS_LABEL,
@@ -15,6 +15,12 @@ import {
   pipelineTotals,
   statusBand,
   terminTotal,
+  AFFILIATES,
+  BUSINESS_MODELS,
+  BUSINESS_MODEL_LABEL,
+  LEGAL_DOC_LABEL,
+  LEGAL_DOC_STATUSES,
+  PRODUCT_CATEGORIES,
   defaultTermins,
   weighted,
   type DealInput,
@@ -33,6 +39,8 @@ export interface RegisterDeal extends DealInput {
 export type DealSave = DealInput & { id: string | null };
 type Result = { ok: boolean; message: string };
 interface Options {
+  /** Active Karyawan, for the PIC fields. */
+  employees?: readonly { nip: string; name: string }[];
   entities: readonly string[];
   coa: readonly { code: string; name: string }[];
   /** Active Master Customer records. */
@@ -49,6 +57,7 @@ const FIELD_LABEL: Record<string, string> = {
   value: "Nilai harus lebih dari 0",
   months: "Bulan selesai tidak boleh sebelum bulan mulai",
   leadTime: "Lead time harus 0–24 bulan",
+  legal: "Dokumen legal berurutan: P8/SPPBJ setelah P6/BAKN Done, Kontrak setelah P8 Done",
 };
 const TERMIN_LABEL: Record<string, string> = {
   out_of_range: "Setiap termin perlu nilai lebih dari 0 dan tanggal rencana",
@@ -406,6 +415,79 @@ function DealForm({
       )}
       {field("Lead time (bulan)", <Input aria-label="Lead time (bulan)" inputMode="numeric" className="tabular text-right" value={d.leadTime} onChange={(e) => set({ leadTime: e.target.value })} />)}
       {field("Catatan", <Input aria-label="Catatan" value={d.notes ?? ""} onChange={(e) => set({ notes: e.target.value })} />)}
+      {field("Sub segmen / direktorat", <Input aria-label="Sub segmen / direktorat" value={d.subSegment ?? ""} onChange={(e) => set({ subSegment: e.target.value })} />)}
+      {field(
+        "Model bisnis",
+        <select aria-label="Model bisnis" className={SELECT} value={d.businessModel ?? ""} onChange={(e) => set({ businessModel: (e.target.value || null) as DealSave["businessModel"] })}>
+          <option value="">—</option>
+          {BUSINESS_MODELS.map((m) => (
+            <option key={m} value={m}>
+              {BUSINESS_MODEL_LABEL[m]}
+            </option>
+          ))}
+        </select>,
+      )}
+      {field(
+        "Kategori produk",
+        <select aria-label="Kategori produk" className={SELECT} value={d.productCategory ?? ""} onChange={(e) => set({ productCategory: e.target.value || null })}>
+          <option value="">—</option>
+          {[...new Set([...PRODUCT_CATEGORIES, ...(d.productCategory ? [d.productCategory] : [])])].map((c) => (
+            <option key={c}>{c}</option>
+          ))}
+        </select>,
+      )}
+      {field(
+        "Pemilik kontrak (bila PT afiliasi)",
+        <>
+          <Input aria-label="Pemilik kontrak" list="affiliates" value={d.contractOwner ?? ""} onChange={(e) => set({ contractOwner: e.target.value })} />
+          <datalist id="affiliates">
+            {AFFILIATES.map((a) => (
+              <option key={a} value={a} />
+            ))}
+          </datalist>
+        </>,
+      )}
+      {(
+        [
+          ["picSalesNip", "PIC Sales"],
+          ["picPresalesNip", "PIC Presales"],
+        ] as const
+      ).map(([key, label]) => (
+        <Fragment key={key}>
+          {field(
+            label,
+            <select aria-label={label} className={SELECT} value={d[key] ?? ""} onChange={(e) => set({ [key]: e.target.value || null })}>
+              <option value="">—</option>
+              {options.employees?.map((p) => (
+                <option key={p.nip} value={p.nip}>
+                  {p.name}
+                </option>
+              ))}
+            </select>,
+          )}
+        </Fragment>
+      ))}
+      {(
+        [
+          ["p6Status", "Dokumen P6/BAKN"],
+          ["p8Status", "Dokumen P8/SPPBJ"],
+          ["contractStatus", "Dokumen Kontrak"],
+        ] as const
+      ).map(([key, label]) => (
+        <Fragment key={key}>
+          {field(
+            label,
+            <select aria-label={label} className={SELECT} value={d[key] ?? ""} onChange={(e) => set({ [key]: (e.target.value || null) as DealSave["p6Status"] })}>
+              <option value="">Belum ada</option>
+              {LEGAL_DOC_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {LEGAL_DOC_LABEL[s]}
+                </option>
+              ))}
+            </select>,
+          )}
+        </Fragment>
+      ))}
       <fieldset className="grid gap-2 sm:col-span-4" aria-label="Billing Termin">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <legend className="text-sm font-medium">
@@ -446,7 +528,7 @@ function DealForm({
       <div className="grid gap-1 text-xs sm:col-span-4">
         {problems
           // A field left blank only disables saving; it says nothing until something is typed.
-          .filter((p) => (p.field === "coa" ? false : p.field === "months" || p.field === "segment" || p.field === "leadTime" || p.field === "termin" || String(d[p.field]).trim() !== ""))
+          .filter((p) => (p.field === "coa" ? false : p.field === "months" || p.field === "segment" || p.field === "leadTime" || p.field === "termin" || p.field === "legal" || String(d[p.field]).trim() !== ""))
           .map((p) =>
             p.code === "outside_band" ? (
               <p key={p.field + p.code} className="text-warning-foreground">

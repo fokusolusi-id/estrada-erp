@@ -459,6 +459,7 @@ export default async function PipelinePage() {
             options={{
               entities: editableEntities,
               coa,
+              employees: await db.select({ nip: schema.employee.nip, name: schema.employee.name }).from(schema.employee).where(eq(schema.employee.active, true)).orderBy(asc(schema.employee.name)),
               // Active customers, and retired ones a listed deal still names.
               customers: customers.filter((c) => c.active || deals.some((d) => d.customerId === c.id)),
             }}
