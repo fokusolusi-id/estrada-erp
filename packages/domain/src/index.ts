@@ -43,3 +43,4 @@ export * from "./invoice";
 export * from "./receivable";
 export * from "./cash-week";
 export * from "./obligo";
+export * from "./tax";

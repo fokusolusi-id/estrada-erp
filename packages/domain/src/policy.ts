@@ -37,6 +37,8 @@ export type Permission =
   | "receipt.record"
   | "cash.view"
   | "cash.record"
+  | "tax.view"
+  | "tax.record"
   | "obligo.view"
   | "obligo.request"
   | "obligo.manage"
@@ -121,6 +123,11 @@ export function can(actor: Actor, permission: Permission, resource: LineResource
       return actor.role === "cash_manager";
     case "cash.view":
       return ["finance", "cash_manager", "director", "auditor"].includes(actor.role) || can(actor, "master.approve", null, org);
+    case "tax.record":
+      // AR/Tax raises invoices and keeps their tax (sheet 05_SoD_Matrix).
+      return staffOf(actor, "FRM-FIN-ATM", org);
+    case "tax.view":
+      return ["finance", "director", "auditor"].includes(actor.role) || can(actor, "master.approve", null, org);
     case "obligo.request":
       // A project asks for a guarantee or a drawdown: PM or Finance (FC08_Obligo_Bank).
       return actor.role === "finance" || staffOf(actor, "PMO", org);

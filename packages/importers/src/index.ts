@@ -14,3 +14,4 @@ export * from "./partners";
 export * from "./companies";
 export * from "./cost-centers";
 export * from "./obligo";
+export * from "./tax-export";

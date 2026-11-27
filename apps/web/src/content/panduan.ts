@@ -36,14 +36,14 @@ Setiap pengguna memegang posisi: peran, unit organisasi, dan entitas yang boleh 
 | Requestor | Beranda, RKA Saya, Permintaan Pembayaran, Master Data, Panduan | Baris unitnya selama Draft | Kirim ke Default Owner |
 | Default Owner | Beranda, RKA Saya, Antrean Konsolidasi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Master Data, Panduan | Baris dalam cakupannya selama Konsolidasi | Kirim ke Division Owner, Kembalikan (catatan wajib) |
 | Division Owner | Beranda, RKA Divisi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Management Summary, Master Data, Panduan | Tidak | Setujui & kirim ke Finance, Kembalikan ke Default Owner (catatan wajib) |
-| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Implementasi, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Realisasi, Biaya Bersama, COA Master, Panduan | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
+| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Realisasi, Biaya Bersama, COA Master, Panduan | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
 | Business Finance (BFP) | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Master Data, Panduan | Tidak | Memeriksa Permintaan Pembayaran (lihat bagian Permintaan Pembayaran) |
 | Cash Management | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Rekening Bank, Invoice, Piutang, Kas Mingguan, Obligo Bank, Master Data, Panduan | Tidak | Menjadwalkan dan membayar Permintaan Pembayaran |
-| Direktur | Beranda, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Implementasi, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Audit Log, Panduan | Tidak | Tidak ada, hanya membaca |
-| Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Implementasi, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
+| Direktur | Beranda, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Audit Log, Panduan | Tidak | Tidak ada, hanya membaca |
+| Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Implementasi, Management Summary, Pipeline, Arus Kas, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
 | Admin | Beranda, Rekening Bank, Master Data, Persetujuan Master, Audit Log, Pengguna, Unit & Entitas, Struktur Organisasi, Panduan | Tidak | Tidak ada; tidak melihat angka anggaran |
 
-Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner) juga melihat Pipeline; orang BCD dan PDMS (PMO, SCM, ISO, MSO) dengan peran yang sama juga melihat Implementasi. Unit Accounting & Tax Management (FRM-FIN-ATM) dengan peran yang sama melihat Invoice dan Piutang, dan Requestor-nya juga Monitor Anggaran. Orang PMO dengan peran Requestor, Default Owner atau Division Owner juga melihat Obligo Bank. Division Owner FRM juga melihat Invoice, Piutang, Kas Mingguan, Obligo Bank dan Persetujuan Master. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
+Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner) juga melihat Pipeline; orang BCD dan PDMS (PMO, SCM, ISO, MSO) dengan peran yang sama juga melihat Implementasi. Unit Accounting & Tax Management (FRM-FIN-ATM) dengan peran yang sama melihat Invoice, Piutang dan Pajak, dan Requestor-nya juga Monitor Anggaran. Orang PMO dengan peran Requestor, Default Owner atau Division Owner juga melihat Obligo Bank. Division Owner FRM juga melihat Invoice, Piutang, Pajak, Kas Mingguan, Obligo Bank dan Persetujuan Master. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
 
 ## Memulai
 
@@ -378,6 +378,17 @@ Menu **Laporan → Obligo Bank** memuat fasilitas bank yang dipakai: plafon, out
 - **Pengingat email** ke Cash Management: 30 hari sebelum plafon atau BG expired, dan 7 hari sebelum tanggal bunga.
 - Data awal berasal dari sheet 14_Obligo_Status_Apr2026 (per 14 April 2026, ditandai *Saldo awal*, tidak masuk Kas Mingguan). Tanggal expired plafon diisi Cash Management.
 - Pinjaman di **Arus Kas** adalah rencana tahunan dan terpisah dari daftar ini.
+
+## Pajak
+
+Menu **Penagihan → Pajak** merangkum PPN dan PPh per masa (bulan). Accounting & Tax (FRM-FIN-ATM) mencatat; Finance, Division Owner FRM, Direktur dan Auditor membaca.
+
+- Daftarnya otomatis: **Faktur Pajak Keluaran** dari invoice terbit ber-PPN; **Faktur Pajak Masukan** dari Permintaan Pembayaran ber-PPN yang sudah dikirim; **Bukti Potong PPh** dari permintaan yang memotong PPh.
+- Accounting menekan *Catat* pada barisnya: nomor, tanggal dan status (Dicatat, Diunggah, Disetujui DJP, Ditolak DJP). Dokumen masuk ke masa menurut tanggal dokumen pajaknya; yang belum dicatat menurut tanggal invoice, tagihan atau bayarnya.
+- **Perlu tindakan:** lewat 7 hari, faktur keluaran dan bukti potong yang belum diunggah, serta faktur masukan yang belum dicatat. Hanya peringatan; penerbitan invoice dan pembayaran tidak diblokir.
+- **Ringkasan masa:** PPN kurang bayar = PPN keluaran dikurangi PPN masukan yang fakturnya sudah dicatat. PPN Wapu dipungut pembeli dan ditampilkan terpisah. PPh harus disetor = potongan atas vendor ditambah PPh 21.
+- **PPh 21** diketik Accounting per perusahaan per bulan (aplikasi belum memuat penggajian), pada periode yang belum ditutup.
+- **Unduh Excel** memberi tiga lembar (PPN Keluaran, PPN Masukan, Bukti Potong). Ini bukan format unggah DJP; format Coretax menyusul setelah templat resminya tersedia.
 
 ## Master Data
 
