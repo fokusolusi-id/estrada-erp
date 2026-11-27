@@ -1,7 +1,7 @@
 import "server-only";
 import { and, asc, eq, inArray, like, ne, sql } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
-import { INVOICE_STATE_LABEL, can, invoiceNumber, invoiceStep, type InvoiceAction, type InvoiceStepProblem } from "@estrada/domain";
+import { INVOICE_STATE_LABEL, can, invoiceNumber, invoiceStep, nextTermin, waitsForRfs, type InvoiceAction, type InvoiceStepProblem } from "@estrada/domain";
 import { enqueueEmail } from "./email/outbox";
 import { env } from "./env";
 import { assertOpenPeriod } from "./period";
@@ -23,7 +23,7 @@ export const covers = (user: CurrentUser, entity: string) => user.actor.entities
 export async function billableTermins() {
   const [rows, taken] = await Promise.all([
     db
-      .select({ termin: schema.billingTermin, deal: schema.pipelineDeal, projectId: schema.project.id })
+      .select({ termin: schema.billingTermin, deal: schema.pipelineDeal, projectId: schema.project.id, rfsOn: schema.project.rfsOn })
       .from(schema.billingTermin)
       .innerJoin(schema.pipelineDeal, eq(schema.pipelineDeal.id, schema.billingTermin.dealId))
       .innerJoin(schema.project, eq(schema.project.dealId, schema.pipelineDeal.id))
@@ -44,6 +44,8 @@ export async function billableTermins() {
       entity: r.deal.entityCode,
       customerId: r.deal.customerId,
       customer: r.deal.customer,
+      /** A service project: the draft may be prepared, but not issued, before RFS. */
+      waitingRfs: waitsForRfs({ businessModel: r.deal.businessModel, rfsOn: r.rfsOn }),
     }));
 }
 
@@ -106,6 +108,12 @@ export async function applyInvoiceStep(user: CurrentUser, id: string, action: In
     let warning: string | null = null;
     if (action === "issue") {
       if (!r.bankAccountId) throw new WorkflowError("Pilih rekening bank pada invoice sebelum menerbitkan.");
+      const [delivery] = await tx
+        .select({ businessModel: schema.pipelineDeal.businessModel, rfsOn: schema.project.rfsOn })
+        .from(schema.project)
+        .innerJoin(schema.pipelineDeal, eq(schema.pipelineDeal.id, schema.project.dealId))
+        .where(eq(schema.project.id, r.projectId));
+      if (delivery && waitsForRfs(delivery)) throw new WorkflowError("Proyek layanan (Recurring): invoice baru bisa diterbitkan setelah RFS disahkan.");
       warning = await assertOpenPeriod(tx, r.entityCode, r.invoicedOn);
       const prefix = invoiceNumber(r.entityCode, r.invoicedOn, 0).slice(0, -4);
       // Held to the end of the transaction, so two invoices cannot take the same number.
@@ -130,6 +138,21 @@ export async function applyInvoiceStep(user: CurrentUser, id: string, action: In
   const template = action === "validate" ? "invoice_validated" : action === "issue" ? "invoice_issued" : action === "return" ? "invoice_returned" : null;
   if (template) await tellInvoice(result.invoice, template, user.id);
   return { state: INVOICE_STATE_LABEL[result.invoice.state], number: result.invoice.number, warning: result.warning };
+}
+
+/** After an approved RFS or BAST, tells Accounting which termin can now be billed (nothing when all are). */
+export async function tellTerminReady(projectId: string, event: "RFS" | "BAST", actorId: string) {
+  // The billable list already leaves out invoiced termin.
+  const open = (await billableTermins()).filter((t) => t.projectId === projectId && !t.waitingRfs);
+  const next = nextTermin(open.map((t) => t.no), []);
+  const termin = open.find((t) => t.no === next);
+  const ids = await seatUsers("FRM-FIN-ATM", ["requestor", "default_owner", "division_owner"], actorId);
+  if (!termin || !ids.length) return;
+  const link = `/invoice/baru?deal=${termin.dealId}&termin=${termin.no}`;
+  for (const u of await db.select().from(schema.user).where(inArray(schema.user.id, ids))) {
+    await enqueueEmail({ template: "invoice_termin_ready", to: { userId: u.id, email: u.email, name: u.name }, payload: { url: `${env.APP_URL}${link}`, entity: termin.entity, project: termin.project, termin: String(termin.no), event } });
+    await db.insert(schema.notification).values({ userId: u.id, template: "invoice_termin_ready", link });
+  }
 }
 
 /** Revenue accounts an invoice may be booked to. */

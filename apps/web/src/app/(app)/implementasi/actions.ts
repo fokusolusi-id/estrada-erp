@@ -29,6 +29,7 @@ import {
 } from "@estrada/domain";
 import { deliveryPeople, loadProjects } from "@/lib/implementasi";
 import { notifyProject } from "@/lib/project-notify";
+import { tellTerminReady } from "@/lib/invoice";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
 
@@ -315,6 +316,8 @@ export async function approveSignoff(projectId: string, kind: "rfs" | "bast"): P
   });
   done(projectId);
   if (kind === "bast") await notifyProject("bast_approved", project, user.id);
+  // Delivery opens billing: Accounting hears which termin comes next (BR-IMP-002).
+  await tellTerminReady(projectId, kind === "rfs" ? "RFS" : "BAST", user.id);
   return { ok: true, message: kind === "rfs" ? "RFS disahkan." : "BAST disahkan; proyek masuk tahap Penagihan." };
 }
 

@@ -330,6 +330,12 @@ export const COPY: Record<EmailTemplate, Copy> = {
     body: (p) => `Proyek ${p.project ?? ""}: tahap ${p.stage ?? ""} melewati SLA (eskalasi tier ${p.tier ?? ""}).`,
     cta: "Buka tracker",
   },
+  invoice_termin_ready: {
+    subject: "Termin proyek siap ditagih",
+    heading: "Termin siap ditagih",
+    body: (p) => `${p.event ?? "Serah terima"} proyek ${p.project ?? ""} (${p.entity ?? ""}) disahkan. Termin ${p.termin ?? ""} dapat dibuatkan invoice.`,
+    cta: "Buka Invoice",
+  },
   deadline_near: {
     subject: "Batas waktu RKA mendekat",
     heading: "Batas waktu mendekat",

@@ -347,6 +347,11 @@ Menu **Invoice** menagih satu billing termin per invoice. Termin yang bisa ditag
 - **Termin yang sudah ditagih** tidak dapat dihapus atau diubah nilainya di Pipeline.
 - Finance Reviewer, BFP, Cash Management, Direktur dan Auditor dapat membaca.
 
+### Pemicu penagihan (RFS dan BAST)
+
+- Proyek **layanan** (model bisnis deal **Recurring**) tidak bisa menerbitkan invoice apa pun, termasuk DP, sebelum **RFS** disahkan. Draft boleh disiapkan; daftar termin menandai *Menunggu RFS*. Model Project, Trading atau yang belum diisi tidak ditahan.
+- Saat Head PMO mengesahkan **RFS** atau **BAST**, Accounting mendapat email berisi termin berikutnya yang siap dibuatkan invoice.
+
 ## Penerimaan dan Piutang
 
 - **Catat penerimaan** (Cash Management) di halaman invoice yang sudah terbit: tanggal terima (antara tanggal invoice dan hari ini, di bulan yang terbuka), nilai bayar, rekening penerima dan referensi mutasi bank. Total penerimaan tidak boleh melebihi nilai invoice. Penerima tidak boleh pembuat, validator atau penyetuju invoice itu.

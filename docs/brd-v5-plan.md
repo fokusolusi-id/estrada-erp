@@ -32,7 +32,7 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | C2 Project contract (auto-open at Won Bidding; P8 date, contract number/date/duration/term and PICs on `project`, migration `0045`; closing needs the number) | Built and checked on the local DB. Not built from `FC04`: contract file attachment, term of payment driving the termin, status sequence of `BR-PRJ-002` (the app keeps its project statuses) |
 | C3 Purchase request → PO → receipt (`purchase_request`, `purchase_order`, `goods_receipt`, `payment_request.purchase_order_id`, migration `0046`; `/pengadaan`; three-way match at BFP check; open POs as commitment) | Built and checked on the local DB. Not built from `FC05`: attachments on PO and BAST, sending the PO to the Mitra, NPWP override approval, spend report by Mitra category |
 | C4 Telkom billing tracker (`billing_track`, `billing_stage`, `billing_escalation`, `billing_obstacle`, `billing_assurance`, migration `0047`; `/tracker-telkom`; daily escalation) | Built and checked on the local DB. Not built: yearly billing achievement (BR-PNG-005), named Telkom and Estrada PICs per tier, auto-fill from the project's BAUT/BARD/BAST fields |
-| Phase C (C5) | Not started |
+| C5 Billing trigger (a Recurring project issues no invoice before RFS; approved RFS or BAST emails Accounting the next termin) | Built and checked on the local DB. No migration |
 | Phase D (D0–D6) | Not started; D0 can start after Phase A |
 | E4 Won deals without a project (control list on `/implementasi`, count on `/pipeline`; a project may open from Won Bidding or Closed Won) | Built and checked on the local DB |
 | E7 Audit event catalogue (`audit-catalogue.ts`; logout and failed sign-ins recorded; RKA steps now written to `audit_log`; `/audit` viewer with CSV export) | Built and checked on the local DB. Not done: `SEC.FAILEDACCESS`, role on each row, purging past retention |
@@ -144,6 +144,7 @@ Answered by the user on 2026-11-27:
 50. **Project contract (C2):** the deal asks the number of sites when it becomes won and opens the project; BCD records the P8 date, FRM-LCM the contract, the Head PMO the PICs.
 51. **Procurement (C3):** Head of SCM approves a PO, plus the FRM head and Direktur above the requesting unit's limit; approved POs are commitment only, Realisasi books when paid; a bill linked to a PO passes BFP only up to the received value, bills without a PO stay allowed.
 52. **Telkom tracker (C4):** one escalation tier per SLA period up to 5; tiers 1–3 email the stage's unit, 4 its head, 5 the Direktur; only Close WFM PSB, Close WFM Existing and BA Kesepakatan may be not applicable, with a reason.
+53. **Billing trigger (C5):** service projects are deals with business model Recurring; nothing, DP included, is issued before their RFS is approved.
 
 ## 3. What the app already has
 

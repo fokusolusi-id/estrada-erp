@@ -111,6 +111,7 @@ export default async function InvoicePage() {
                     <TableCell>
                       {t.no}
                       {t.description ? ` · ${t.description}` : ""}
+                      {t.waitingRfs ? <span className="text-warning-foreground block text-xs">Menunggu RFS: belum bisa diterbitkan</span> : null}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">{formatDate(t.plannedOn)}</TableCell>
                     <TableCell className="tabular text-right whitespace-nowrap">{formatIdr(money(t.amount))}</TableCell>
