@@ -63,6 +63,20 @@ describe("PipelineRegister", () => {
   });
 
   // Kontrol RKA temuan 3: Closed Won needs Billing Termin for 100% of the contract value.
+  it("fills the standard termin from the SPPBJ date", async () => {
+    const onSave = ok();
+    render(<PipelineRegister deals={deals} options={options} canAdd onSave={onSave} onDelete={ok()} />);
+    fireEvent.click(screen.getByRole("button", { name: /^Ubah Sewa CPE/ }));
+    const form = within(screen.getByRole("form", { name: "Deal" }));
+    const apply = form.getByRole("button", { name: "Isi jadwal default" }) as HTMLButtonElement;
+    expect(apply.disabled).toBe(true);
+    fireEvent.change(form.getByLabelText("Tanggal SPPBJ"), { target: { value: "2027-01-02" } });
+    fireEvent.click(apply);
+    expect((form.getByLabelText("Tanggal rencana termin 3") as HTMLInputElement).value).toBe("2027-10-02");
+    expect((form.getByLabelText("Keterangan termin 1") as HTMLInputElement).value).toBe("DP 15%");
+    expect(form.getByTestId("termin-total").textContent).toContain("(100,0%)");
+  });
+
   it("blocks Closed Won until the Billing Termin add up to the contract value", async () => {
     const onSave = ok();
     render(<PipelineRegister deals={deals} options={options} canAdd onSave={onSave} onDelete={ok()} />);

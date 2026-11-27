@@ -42,6 +42,7 @@ export const NAV: readonly NavItem[] = [
   { href: "/summary", icon: "chart", label: "Management Summary", roles: ["division_owner", "finance", "director", "auditor"], group: "Laporan" },
   { href: "/pipeline", icon: "pipeline", label: "Pipeline", roles: ["finance", "director", "auditor"], alsoIn: { unit: "BCD", roles: ["requestor", "default_owner", "division_owner"] }, group: "Laporan" },
   { href: "/cash", icon: "wallet", label: "Arus Kas", roles: ["finance", "director", "auditor"], group: "Laporan" },
+  { href: "/cash/skenario", icon: "chart", label: "Skenario", roles: ["finance", "director", "auditor"], group: "Laporan" },
   { href: "/cash/mingguan", icon: "wallet", label: "Kas Mingguan", roles: ["finance", "cash_manager", "director", "auditor"], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Laporan" },
   { href: "/obligo", icon: "bank", label: "Obligo Bank", roles: ["finance", "cash_manager", "director", "auditor"], alsoIn: { unit: "PMO", roles: ["requestor", "default_owner", "division_owner"] }, group: "Laporan" },
   { href: "/obligo", icon: "bank", label: "Obligo Bank", roles: [], alsoIn: { unit: "FRM", roles: ["division_owner"] }, group: "Laporan" },

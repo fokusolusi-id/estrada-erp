@@ -1,4 +1,4 @@
-import { date, index, integer, numeric, pgEnum, pgTable, primaryKey, smallint, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { date, index, integer, jsonb, numeric, pgEnum, pgTable, primaryKey, smallint, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { companyEntity } from "./master";
 
@@ -95,3 +95,13 @@ export const cashEntry = pgTable(
   },
   (t) => [index("cash_entry_date_idx").on(t.onDate)],
 );
+
+/** The year's scenario drivers (plan E6), typed by Finance; the projections are always computed. */
+export const scenarioSetting = pgTable("scenario_setting", {
+  fiscalYear: integer("fiscal_year").primaryKey(),
+  /** Per scenario; amounts and percentages as strings, never JSON numbers. */
+  scenarios: jsonb("scenarios").$type<Record<"conservative" | "normal" | "aggressive", { revenue: string; cogsPct: string; opexPct: string; taxPct: string; dso: number; dpo: number; capex: string }>>().notNull(),
+  seasonality: text("seasonality").array().notNull(),
+  updatedBy: text("updated_by").references(() => user.id),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
