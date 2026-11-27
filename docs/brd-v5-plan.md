@@ -35,7 +35,8 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | C5 Billing trigger (a Recurring project issues no invoice before RFS; approved RFS or BAST emails Accounting the next termin) | Built and checked on the local DB. No migration |
 | D1 KPI targets (`kpi_target`, migration `0048`; `/kpi`: versioned targets per PT, submit and BOD approval with the board decision, actuals and consolidation) | Built and checked on the local DB. Pipeline coverage still uses the segment targets |
 | D2 KPI health (`/kpi/kesehatan`: 10 KPIs of `08_KPI_Thresholds` with bands, three stress tests; no migration) | Built and checked on the local DB. Beranda cards do not use the bands yet |
-| Phase D (D3–D6) | Not started |
+| D3 BOD dashboard and portfolio (`/dashboard`, `/portofolio`; monthly highlights, view log; migration 0049) | Built and checked on the local DB. Export is browser print; no PPT; the health check is a table, not a radar |
+| Phase D (D4–D6) | Not started |
 | E4 Won deals without a project (control list on `/implementasi`, count on `/pipeline`; a project may open from Won Bidding or Closed Won) | Built and checked on the local DB |
 | E7 Audit event catalogue (`audit-catalogue.ts`; logout and failed sign-ins recorded; RKA steps now written to `audit_log`; `/audit` viewer with CSV export) | Built and checked on the local DB. Not done: `SEC.FAILEDACCESS`, role on each row, purging past retention |
 | D0 Beranda widgets that need no new module (`home.ts` in domain, `lib/home.ts`, cards on `/`) | Built and checked on the local DB. Obligo concentration is per facility until banks exist (B5); risk register is D6 |
@@ -149,6 +150,7 @@ Answered by the user on 2026-11-27:
 53. **Billing trigger (C5):** service projects are deals with business model Recurring; nothing, DP included, is issued before their RFS is approved.
 54. **KPI targets (D1):** a Direktur seat limited to a PT submits, a Direktur seat covering all PTs (BOD) approves; targets are phased by the monthly shares of `22_Assumptions`.
 55. **KPI health (D2):** cash plan = Arus Kas forecast; flow KPIs are year to date; positive EBITDA under 1% of revenue is WASPADA; capital efficiency uses annualised EBIT.
+56. **Portfolio (D3):** revenue = issued invoice DPP; COGS = paid payment requests on COGS accounts; At-risk = a blocked site or an unmet RFS target within 14 days. Dashboard: Direktur, Auditor, Head of FRM; portfolio also Finance.
 
 ## 3. What the app already has
 

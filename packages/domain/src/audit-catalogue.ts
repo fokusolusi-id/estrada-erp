@@ -32,6 +32,7 @@ export const AUDIT_EVENTS: readonly AuditEventType[] = [
   app("SCM.PROCUREMENT", "Pengadaan", "PR, PO dan penerimaan", "High", ["procurement.*"]),
   app("FIN.TELKOM", "Projek", "Tahapan penagihan Telkom", "Medium", ["telkom.*"]),
   app("KPI.TARGET", "KPI", "Target KPI", "Critical", ["kpi.*"]),
+  app("BOD.VIEW", "Dashboard", "Dashboard BOD dan highlight", "Info", ["bod.*"]),
   app("SP.SPH", "Sales Pipeline", "SPH", "High", ["sph.*"]),
   app("SP.RECOVERY", "Sales Pipeline", "Rencana pemulihan", "Medium", ["pipeline.recovery_plan"]),
   sheet("PRJ.CREATE", "Projek", "Buka proyek", "Medium", 10, ["project.open"]),

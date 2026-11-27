@@ -6,20 +6,21 @@ import {
 } from "@estrada/domain";
 import { CONSOLIDATED, loadCash } from "./cash";
 import { loadCashYear } from "./cash-week";
+import { companyWide } from "./home";
 import { loadActualPnl, loadBudgetPnl } from "./pnl";
 import type { CurrentUser } from "./session";
 
 const addDays = (date: string, days: number) => new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
 
 /** The inputs of the ten KPIs and the stress tests for a month, over the chosen companies. */
-export async function loadHealth(user: CurrentUser, entities: string[], year: number, month: number, today: string, consolidated: boolean) {
+export async function loadHealth(user: CurrentUser, entities: string[], year: number, month: number, today: string, consolidated: boolean, drop?: number) {
   const months = Array.from({ length: month }, (_, i) => i + 1);
   const [sheets, pnl, budget, cashYear, forecastView, receivableInvoices, drawings, repaid, bills] = await Promise.all([
     db.select().from(schema.balanceSheet).where(and(eq(schema.balanceSheet.year, year), lte(schema.balanceSheet.month, month))),
     loadActualPnl(entities, year, months),
     loadBudgetPnl(entities, year, months),
     loadCashYear(year),
-    loadCash(user, year),
+    loadCash(companyWide(user), year),
     db
       .select({ entity: schema.invoice.entityCode, customer: schema.customer.nickname, dpp: schema.invoice.dpp, on: schema.invoice.invoicedOn })
       .from(schema.invoice)
@@ -93,8 +94,9 @@ export async function loadHealth(user: CurrentUser, entities: string[], year: nu
     kpis,
     missingSheets,
     hasForecast: !!forecast,
+    forecast: forecast ?? null,
     stress: {
-      cashIn: forecast ? stressCashIn({ closing: forecast.rows.closing, receipts: forecast.rows.receipts }) : null,
+      cashIn: forecast ? stressCashIn({ closing: forecast.rows.closing, receipts: forecast.rows.receipts }, drop) : null,
       liabilities: balance ? concentration(dueDebt.plus(dueBills), balance.totalLiabilities, 40) : null,
       customer: top ? { name: top.customer, ...concentration(top.total, sum(byCustomer.map((c) => c.total)), 50)! } : null,
     },
