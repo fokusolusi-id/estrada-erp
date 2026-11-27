@@ -19,7 +19,7 @@ const APP_ACTIONS = [
   "master.customer.create", "master.customer.update", "master.employee.create", "master.partner.update", "master.product.create", "master.costcenter.update",
   "master.request.submit", "master.request.approve", "master.request.reject", "master.request.cancel", "master.request.fail",
   "coa.create", "coa.update", "coa.confirm", "coa.remap", "coa.only_file", "entity.create", "entity.update", "entity.import", "unit.create", "unit.update", "unit.import_cost_center",
-  "bank_account.create", "bank_account.update", "cash.assumptions", "cash.carry_forward", "cash.entry", "cash.entry_reverse", "tax.document", "tax.pph21", "loan.facility", "loan.drawing_request", "loan.drawing_issue", "loan.drawing_reject", "loan.release_confirm", "loan.release", "loan.payment", "loan.payment_reverse", "loan.create", "loan.update", "loan.delete",
+  "bank_account.create", "bank_account.update", "cash.assumptions", "cash.carry_forward", "cash.entry", "cash.entry_reverse", "tax.document", "closing.balance", "tax.pph21", "loan.facility", "loan.drawing_request", "loan.drawing_issue", "loan.drawing_reject", "loan.release_confirm", "loan.release", "loan.payment", "loan.payment_reverse", "loan.create", "loan.update", "loan.delete",
   "import.cash", "import.pipeline", "import.workbook",
 ];
 

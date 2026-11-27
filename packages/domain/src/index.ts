@@ -44,3 +44,4 @@ export * from "./receivable";
 export * from "./cash-week";
 export * from "./obligo";
 export * from "./tax";
+export * from "./closing";

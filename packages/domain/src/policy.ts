@@ -37,6 +37,8 @@ export type Permission =
   | "receipt.record"
   | "cash.view"
   | "cash.record"
+  | "closing.view"
+  | "balance.record"
   | "tax.view"
   | "tax.record"
   | "obligo.view"
@@ -123,6 +125,11 @@ export function can(actor: Actor, permission: Permission, resource: LineResource
       return actor.role === "cash_manager";
     case "cash.view":
       return ["finance", "cash_manager", "director", "auditor"].includes(actor.role) || can(actor, "master.approve", null, org);
+    case "balance.record":
+      // The month-end totals are Accounting's to type (client decision 4).
+      return staffOf(actor, "FRM-FIN-ATM", org);
+    case "closing.view":
+      return (actor.role !== "admin" && can(actor, "period.view", null, org)) || can(actor, "balance.record", null, org);
     case "tax.record":
       // AR/Tax raises invoices and keeps their tax (sheet 05_SoD_Matrix).
       return staffOf(actor, "FRM-FIN-ATM", org);

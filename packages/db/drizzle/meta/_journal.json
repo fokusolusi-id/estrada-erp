@@ -281,6 +281,13 @@
       "when": 1795776859253,
       "tag": "0039_aberrant_veda",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1795777713943,
+      "tag": "0040_giant_felicia_hardy",
+      "breakpoints": true
     }
   ]
 }

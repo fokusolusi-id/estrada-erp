@@ -22,6 +22,7 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | A10 Approval above the cost center limit (payment states `frm_approval`, `director_approval`, migration `0037`; limit = nearest unit with `approval_limit`, compared with DPP) and the self-payment warning | Built and checked on the local DB. Payment requests only; no `approval_threshold` table (limits live on `org_unit`) |
 | B5 Bank facilities, drawings and guarantees (`bank_facility`, `facility_drawing`, `facility_payment`, migration `0038`; `/obligo`; reminders; concentration alert; `pnpm db:master` loads `14_Obligo_Status_Apr2026`; loans, principal and interest feed `/cash/mingguan`) | Built and checked on the local DB. Not built from `P1-M5`: covenants, daily interest accrual, 80% utilisation warning, bank master table, W1–W4 cash-in estimate (BR-OBG-008). `loan_facility` stays the yearly forecast |
 | B6 Tax (`tax_document`, `tax_pph21`, migration `0039`; `/pajak`: faktur out and in, bukti potong, monthly summary, 7-day alert, Excel export) | Built and checked on the local DB. Not built from `P1-M11`: Coretax/e-Bupot upload files (waiting for the official template), SPT filing; payroll PPh 21 is typed |
+| B7 Monthly closing (`balance_sheet`, immutable `pnl_snapshot`, migration `0040`; `/closing`; closing a period requires balanced totals and takes the snapshot) | Built and checked on the local DB. Not built from `FC07`/`FC09`: cashflow snapshot, report review and approval steps, PDF with watermark, distribution |
 | Phase B (B1–B8) | Not started |
 | Phase C (C1–C5) | Not started |
 | Phase D (D0–D6) | Not started; D0 can start after Phase A |
@@ -126,6 +127,7 @@ Answered by the user on 2026-11-27:
 41. **Self-payment:** paying a request you raised yourself only warns, it is not blocked.
 42. **Obligo (B5):** PMO or Finance request, Cash Management issues (`FC08_Obligo_Bank`); drawdowns, principal and interest enter the weekly cashflow automatically and are no longer typed there; the project's PM (PMO head if none) confirms a guarantee's release; opening data from `14_Obligo_Status_Apr2026`.
 43. **Tax (B6):** export is a plain Excel workbook until Finance sends the Coretax template; PPh 21 is typed per PT per month; missing faktur or bukti potong numbers only alert, nothing is blocked.
+44. **Closing (B7):** a cost counts in the month it is paid (as Realisasi), plus accruals; a month closes only with typed, balanced balance sheet totals; each closing adds an immutable snapshot version.
 
 ## 3. What the app already has
 
