@@ -9,6 +9,8 @@ const TONE: Record<PaymentState, string> = {
   returned: "bg-destructive/10 [--dot:var(--destructive)]",
   under_review: "bg-state-finance/15 [--dot:var(--state-finance)]",
   pending_approval: "bg-state-division/12 [--dot:var(--state-division)]",
+  frm_approval: "bg-state-division/12 [--dot:var(--state-division)]",
+  director_approval: "bg-state-division/12 [--dot:var(--state-division)]",
   approved: "bg-state-awaiting/12 [--dot:var(--state-awaiting)]",
   scheduled: "bg-info/12 [--dot:var(--info)]",
   paid: "bg-success/12 [--dot:var(--success)]",
@@ -24,25 +26,27 @@ export function PaymentStatusBadge({ state }: { state: PaymentState }) {
 }
 
 /** The flow as the team drew it, with who acts at each step. Returned is shown beside the step it came back from. */
-const STEPS: { state: PaymentState; who: string }[] = [
+const APPROVER: Partial<Record<PaymentState, string>> = { pending_approval: "Head Divisi", frm_approval: "Head FRM", director_approval: "Direktur" };
+const stepsFor = (approvals: readonly PaymentState[]): { state: PaymentState; who: string }[] => [
   { state: "submitted", who: "Atasan" },
   { state: "under_review", who: "BFP" },
-  { state: "pending_approval", who: "Head Divisi" },
+  ...approvals.map((state) => ({ state, who: APPROVER[state] ?? "" })),
   { state: "approved", who: "Cash Management" },
   { state: "scheduled", who: "Cash Management" },
   { state: "paid", who: "Selesai" },
 ];
-const ORDER: PaymentState[] = ["draft", ...STEPS.map((s) => s.state)];
 
 /**
  * Where the request is. `returnedFrom` is the step that sent a Returned request back, so the stepper can show how far it got.
  */
-export function PaymentStepper({ state, returnedFrom }: { state: PaymentState; returnedFrom?: PaymentState | null }) {
+export function PaymentStepper({ state, returnedFrom, approvals = ["pending_approval"] }: { state: PaymentState; returnedFrom?: PaymentState | null; approvals?: readonly PaymentState[] }) {
+  const steps = stepsFor(approvals);
+  const order: PaymentState[] = ["draft", ...steps.map((s) => s.state)];
   const at = state === "returned" ? (returnedFrom ?? "submitted") : state;
-  const current = ORDER.indexOf(at);
+  const current = order.indexOf(at);
   return (
-    <ol data-testid="payment-stepper" className="grid gap-3 sm:grid-cols-6 sm:gap-2" aria-label="Alur Permintaan Pembayaran">
-      {STEPS.map((s, i) => {
+    <ol data-testid="payment-stepper" className="grid gap-3 sm:auto-cols-fr sm:grid-flow-col sm:gap-2" aria-label="Alur Permintaan Pembayaran">
+      {steps.map((s, i) => {
         const idx = i + 1;
         const done = idx < current || (state === "paid" && idx === current);
         const here = idx === current && state !== "paid";

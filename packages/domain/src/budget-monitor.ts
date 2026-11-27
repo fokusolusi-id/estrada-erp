@@ -10,7 +10,7 @@ export const SPENDING_STATUS_LABEL: Record<SpendingStatus, string> = { safe: "Am
 export const spendingStatus = (utilisation: Money | null): SpendingStatus => (!utilisation || utilisation.lt(80) ? "safe" : utilisation.lte(95) ? "warning" : "over");
 
 /** Plan E1: a request counts as committed from submission until it is paid; drafts and returned ones do not. */
-const COMMITTED: readonly PaymentState[] = ["submitted", "under_review", "pending_approval", "approved", "scheduled"];
+const COMMITTED: readonly PaymentState[] = ["submitted", "under_review", "pending_approval", "frm_approval", "director_approval", "approved", "scheduled"];
 
 const DAY = 86_400_000;
 

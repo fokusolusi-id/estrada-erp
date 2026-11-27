@@ -19,7 +19,7 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | A8 Org unit as cost center (`approval_limit`, `function_group`; `position.level`, `function_codes`; migration `0028`; `/master/cost-center`; loads `33_Master_CostCenter`, `M Organisasi`) | Built and checked on the local DB. CC-008 has no unit. Data Karyawan codes run F0–F12, not the F0–F6 of `07_Org_Chart` |
 | A9 Period master (`fiscal_period`, migration `0029`, `/master/periode`; `assertOpenPeriod` guards payment schedule and paid dates) | Built and checked on the local DB. Phase B postings must call `assertOpenPeriod` |
 | A11 SoD check (`sod.ts` encodes the 13 X pairs of `05_SoD_Matrix`; enforced in `applyTransition` and `applyPaymentTransition`; `actor_unit` on both event tables, migration `0030`) | Built; tests for every X pair |
-| Phase A (A10) | Not started; waits for the approval amounts |
+| A10 Approval above the cost center limit (payment states `frm_approval`, `director_approval`, migration `0037`; limit = nearest unit with `approval_limit`, compared with DPP) and the self-payment warning | Built and checked on the local DB. Payment requests only; no `approval_threshold` table (limits live on `org_unit`) |
 | Phase B (B1–B8) | Not started |
 | Phase C (C1–C5) | Not started |
 | Phase D (D0–D6) | Not started; D0 can start after Phase A |
@@ -91,7 +91,7 @@ Then read only the sheets a step names (`grep`, `head`), not the whole set: toge
 Answered by the user on 2026-11-27:
 
 10. **Finance Controller (A6)** = the FRM Division Owner.
-11. **Approval amounts (A10)** are shown and typed in the display unit chosen in the header (Satuan). Which amounts apply is still open (section 7).
+11. **Approval amounts (A10)** are shown and typed in the display unit chosen in the header (Satuan). The amounts follow decision 37.
 12. **Mitra without NPWP:** warn only.
 13. **Customer** on a deal must come from Master Customer. Payment payees may still be typed.
 14. **Masters:** Admin may edit them too; every role reads Customer, Mitra and Produk Mitra.
@@ -117,6 +117,11 @@ Answered by the user on 2026-11-27:
 34. **Invoices (B1):** number `INV/PT/YY/NNNN`; Wapu shows PPN without expecting it; Accounting creates and a second Accounting person validates tax; the FRM Division Owner approves and issues; only termin of deals with a project.
 35. **AP bills (B3):** a *Pembayaran* with a Mitra is a vendor bill; PPh comes from type and rate; `/hutang` shows aging.
 36. **Weekly cashflow (B4):** W1 1–7, W2 8–14, W3 15–21, W4 22–end; cash in is Indirect when a Telkom company pays and the deal's end customer differs, else Direct; opening is the 1 January cash from Arus Kas, carried forward; consolidation is all active PTs.
+37. **Approval amounts (A10)** follow `33_Master_CostCenter`: one limit per cost center. A request above the limit also needs the FRM head, then the Direktur.
+38. **Function codes:** F0–F12 as in `Data Karyawan Estrada Group`, over the F0–F6 of `07_Org_Chart`.
+39. **Placeholder NPWP and NIB** values are acceptable for now.
+40. **Kepala Finance & Risk Management Div.** is held by Kamal Abdillah (Head of FRM in `Data Karyawan`).
+41. **Self-payment:** paying a request you raised yourself only warns, it is not blocked.
 
 ## 3. What the app already has
 
@@ -290,4 +295,5 @@ On the user's instruction (2026-11-27) the workbook copies in `fixtures/` were p
 
 ## 7. Open points to confirm with the user when the step comes up
 
-- Which approval amounts A10 follows. The sheets disagree: `21_Process_Flow_Design` D-05 (PO: Dir PT <= 500 juta, BOD above, Komisaris above 2 miliar), `P1_Module_Spec` (bill above 100 juta Finance Head, above 1 miliar + CFO, above 10 miliar + BOD), `BRD_Redesign_v2` (above 100 juta two approvers), `33_Master_CostCenter` (a limit per cost center), `P0_Module_Spec` MOD-F7 (the engine, no amounts).
+
+None open.

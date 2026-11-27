@@ -32,7 +32,7 @@ export default async function PayablePage() {
         and(
           eq(schema.paymentRequest.kind, "payment"),
           isNotNull(schema.paymentRequest.partnerId),
-          inArray(schema.paymentRequest.state, ["submitted", "under_review", "pending_approval", "approved", "scheduled"]),
+          inArray(schema.paymentRequest.state, ["submitted", "under_review", "pending_approval", "frm_approval", "director_approval", "approved", "scheduled"]),
         ),
       ),
   ]);

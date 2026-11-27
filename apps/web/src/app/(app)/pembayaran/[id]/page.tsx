@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { asc, eq } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
-import {
+import { approvalSteps,
   canViewPayment,
   formatIdr,
   money,
@@ -16,7 +16,7 @@ import {
 } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { activeYear } from "@/lib/fiscal-year";
-import { asLike, billProjects, formatDate, lineHeadroom, lineOptions, partnerOptions, todayJakarta } from "@/lib/payment";
+import { asLike, billProjects, formatDate, isOverLimit, lineHeadroom, lineOptions, partnerOptions, todayJakarta } from "@/lib/payment";
 import { loadOrg } from "@/lib/workflow";
 import { PaymentStatusBadge, PaymentStepper } from "@/components/erp/payment-status";
 import { PaymentForm } from "@/components/erp/payment-form";
@@ -76,6 +76,10 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
   ]);
 
   const actions = paymentActions(user.actor, asLike(r), org);
+  const overLimit = await isOverLimit(db, r, org);
+  // A request already waiting above the limit keeps its steps even if the limit has since changed.
+  const extra = overLimit || r.state === "frm_approval" || r.state === "director_approval" || events.some((e) => e.event.fromState === "director_approval");
+  const approvals = approvalSteps({ ...asLike(r), overLimit: extra }, org);
   const editable = r.requesterId === user.id && (r.state === "draft" || r.state === "returned");
   const gross = money(r.gross);
   const nett = gross.plus(money(r.ppn)).minus(money(r.pph));
@@ -121,7 +125,8 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
 
       <Card>
         <CardContent>
-          <PaymentStepper state={r.state} returnedFrom={lastReturn?.event.fromState ?? null} />
+          <PaymentStepper state={r.state} returnedFrom={lastReturn?.event.fromState ?? null} approvals={approvals} />
+          {extra ? <p className="text-muted-foreground mt-3 text-sm">Nominal di atas limit cost center unit pemohon: sesudah Head Divisi, disetujui Head FRM lalu Direktur.</p> : null}
         </CardContent>
       </Card>
 

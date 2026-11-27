@@ -11,6 +11,8 @@ export const paymentStateEnum = pgEnum("payment_state", [
   "returned",
   "under_review",
   "pending_approval",
+  "frm_approval",
+  "director_approval",
   "approved",
   "scheduled",
   "paid",
