@@ -1,17 +1,4 @@
-import {
-  boolean,
-  index,
-  integer,
-  jsonb,
-  numeric,
-  pgEnum,
-  pgTable,
-  primaryKey,
-  smallint,
-  text,
-  timestamp,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, numeric, pgEnum, pgTable, primaryKey, smallint, text, timestamp, uuid, date } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { coaAccount, companyEntity, orgUnit, roleEnum } from "./master";
 
@@ -210,3 +197,46 @@ export const reminderLog = pgTable("reminder_log", {
   key: text("key").primaryKey(),
   sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/** A cost center owner's root cause for a variance (plan E2). Added to, never edited: the history stays. */
+export const varianceNote = pgTable(
+  "variance_note",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    versionId: uuid("version_id")
+      .notNull()
+      .references(() => budgetVersion.id, { onDelete: "cascade" }),
+    unitCode: text("unit_code").notNull(),
+    /** Null for a note on the whole cost center. */
+    coaCode: text("coa_code"),
+    note: text("note").notNull(),
+    authorId: text("author_id")
+      .notNull()
+      .references(() => user.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("variance_note_version_idx").on(t.versionId, t.unitCode)],
+);
+
+export const adjustmentKindEnum = pgEnum("adjustment_kind", ["accrual", "correction"]);
+
+/** Accounting's accrual or correction beside the automatic feed (plan E3). Added to, never edited: reverse with an opposite entry. */
+export const actualAdjustment = pgTable(
+  "actual_adjustment",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    entityCode: text("entity_code").notNull(),
+    unitCode: text("unit_code").notNull(),
+    coaCode: text("coa_code").notNull(),
+    datedOn: date("dated_on").notNull(),
+    kind: adjustmentKindEnum("kind").notNull(),
+    /** Negative lowers the actual. */
+    amount: numeric("amount", { precision: 20, scale: 2 }).notNull(),
+    reason: text("reason").notNull(),
+    authorId: text("author_id")
+      .notNull()
+      .references(() => user.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("actual_adjustment_date_idx").on(t.datedOn)],
+);

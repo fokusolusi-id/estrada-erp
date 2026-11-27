@@ -30,6 +30,7 @@ export type Permission =
   | "audit.view"
   | "cycle.manage"
   | "actual.edit"
+  | "actual.adjust"
   | "allocation.manage"
   | "bank.manage"
   | "payment.report"
@@ -93,6 +94,9 @@ export function can(actor: Actor, permission: Permission, resource: LineResource
       return actor.role === "admin" || can(actor, "master.approve", null, org);
     case "period.view":
       return ["finance", "director", "auditor", "admin"].includes(actor.role) || can(actor, "master.approve", null, org);
+    case "actual.adjust":
+      // Accruals and corrections beside the automatic feed are Accounting's (sheet 27a_Daily_Actuals).
+      return staffOf(actor, "FRM-FIN-ATM", org);
     case "org.manage":
     case "user.manage":
       return actor.role === "admin";

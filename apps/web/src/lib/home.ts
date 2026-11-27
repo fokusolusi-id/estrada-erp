@@ -28,7 +28,10 @@ import { activeView, viewLines } from "./view-filter";
  * The reader for company-wide summaries. Cash Management and the CFO see these cards (plan, Beranda per role) while
  * their line scope is FRM alone, so the totals are read as the Direktur would, within their own entities.
  */
-const companyWide = (user: CurrentUser): CurrentUser => ({ ...user, actor: { ...user.actor, role: "director" } });
+export const companyWide = (user: CurrentUser): CurrentUser => ({ ...user, actor: { ...user.actor, role: "director" } });
+
+/** The approved budget is the locked version; until one exists, the version being worked on, and the screen says so. */
+export const approvedBudget = <V extends { status: string }>(versions: readonly V[]) => versions.find((v) => v.status === "locked") ?? versions[0];
 
 export async function loadHome(user: CurrentUser, org: OrgTree) {
   const widgets = homeWidgets(user.actor, org);
@@ -36,8 +39,7 @@ export async function loadHome(user: CurrentUser, org: OrgTree) {
   if (!widgets.length) return null;
   const today = todayJakarta();
   const [versions, view] = await Promise.all([reportVersions(), activeView()]);
-  // The approved budget is the locked version; until one exists, the version being worked on, and the card says so.
-  const version = versions.find((v) => v.status === "locked") ?? versions[0];
+  const version = approvedBudget(versions);
   const covers = (entity: string) => (user.actor.entities.includes("*") || user.actor.entities.includes(entity)) && (!view.entity || view.entity === entity);
   const months = version ? monthsElapsed(version.fiscalYear, today) : 0;
   const budgetNote = version

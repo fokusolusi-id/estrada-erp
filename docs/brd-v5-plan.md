@@ -26,6 +26,9 @@ Written 2026-11-26. Read the whole document before starting a phase; the rules i
 | E4 Won deals without a project (control list on `/implementasi`, count on `/pipeline`; a project may open from Won Bidding or Closed Won) | Built and checked on the local DB |
 | E7 Audit event catalogue (`audit-catalogue.ts`; logout and failed sign-ins recorded; RKA steps now written to `audit_log`; `/audit` viewer with CSV export) | Built and checked on the local DB. Not done: `SEC.FAILEDACCESS`, role on each row, purging past retention |
 | D0 Beranda widgets that need no new module (`home.ts` in domain, `lib/home.ts`, cards on `/`) | Built and checked on the local DB. Obligo concentration is per facility until banks exist (B5); risk register is D6 |
+| E1 Spending monitor (`budget-monitor.ts`, `/rka/monitor`: per cost center and COA with CFO summary) | Built and checked on the local DB. POs join "committed" after C3 |
+| E2 Variance commentary (`variance.ts`, `variance_note`, migration `0031`, `/rka/variance`) | Built and checked on the local DB. "Required at Escalate" is shown and counted, not enforced by another step |
+| E3 Budget vs actual as of a date (MTD/QTD/YTD; `actual_adjustment`, migration `0032`, Accounting entries on `/rka/monitor`) | Built and checked on the local DB. Cost side only; revenue after B1–B2 |
 | Group E (E1–E9) | Not started; E1–E4 and E6–E8 need no new module |
 
 Overall order: **Phase A → E4, E7 → D0 → E1, E2, E3 → Phase B → E5, E6, E8 → Phase C → D1–D6 → E9**. The quick E items and D0 come early because they use data the app already has and give BOD and Finance something visible while Phase B is built. Ask the user before changing the order.
