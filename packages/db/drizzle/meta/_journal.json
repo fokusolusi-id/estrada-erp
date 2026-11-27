@@ -344,6 +344,13 @@
       "when": 1795790302505,
       "tag": "0048_remarkable_impossible_man",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1795791608932,
+      "tag": "0049_strong_colonel_america",
+      "breakpoints": true
     }
   ]
 }

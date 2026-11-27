@@ -56,3 +56,4 @@ export * from "./telkom";
 export * from "./billing-trigger";
 export * from "./kpi";
 export * from "./kpi-health";
+export * from "./portfolio";

@@ -162,3 +162,23 @@ export function Sparkline({ values, tone = "var(--primary)", className = "h-8 w-
     </div>
   );
 }
+
+/** Cash in, out, ending balance and EBITDA by month, as recorded (plan D3; W-11, W-12). */
+export function TrendChart({ data, series, label, decimals, unitLabel }: { data: Record<string, string | number>[]; series: { key: string; name: string; tone: string; bar?: boolean }[]; label: string; decimals: number; unitLabel: string }) {
+  const fmt = figureFormatter(0);
+  return (
+    <div className="h-64 w-full" role="img" aria-label={label}>
+      <ResponsiveContainer>
+        <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
+          {GRID}
+          <XAxis dataKey="month" {...AXIS} />
+          <YAxis {...AXIS} width={64} tickFormatter={(v) => fmt(Number(v))} />
+          <ChartTooltip decimals={decimals} unitLabel={unitLabel} />
+          <Legend formatter={legendText} />
+          <ReferenceLine y={0} stroke="var(--border)" />
+          {series.map((s) => (s.bar ? <Bar key={s.key} dataKey={s.key} name={s.name} fill={s.tone} /> : <Line key={s.key} dataKey={s.key} name={s.name} stroke={s.tone} strokeWidth={2} dot={{ r: 2 }} />))}
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}

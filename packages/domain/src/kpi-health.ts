@@ -87,11 +87,11 @@ export function healthValues({ month, balance: b, pnl, budgetCost, cash }: Healt
 
 export const STRESS_CASH_IN_DROP = 20;
 
-/** The forecast's closing balances with 20% less coming in, and where they are lowest. */
-export function stressCashIn(forecast: { closing: readonly Money[]; receipts: readonly Money[] }) {
+/** The forecast's closing balances with less coming in (20% unless asked), and where they are lowest. */
+export function stressCashIn(forecast: { closing: readonly Money[]; receipts: readonly Money[] }, drop: number = STRESS_CASH_IN_DROP) {
   let lost = ZERO;
   const closing = forecast.closing.map((c, i) => {
-    lost = lost.plus(forecast.receipts[i]!.times(STRESS_CASH_IN_DROP).div(100));
+    lost = lost.plus(forecast.receipts[i]!.times(drop).div(100));
     return c.minus(lost);
   });
   const lowest = closing.reduce((a, b) => (b.lt(a) ? b : a), closing[0] ?? ZERO);

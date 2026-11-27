@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { asc, eq } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
-import { BAND_LABEL, HEALTH_ACTION, HEALTH_INFO, STRESS_CASH_IN_DROP, can, formatAmount, unitLabel, type Band, type HealthKey, type Money } from "@estrada/domain";
+import { BAND_LABEL, HEALTH_ACTION, HEALTH_INFO, STRESS_CASH_IN_DROP, can, formatAmount, unitLabel, type Money } from "@estrada/domain";
 import { displayUnit } from "@/lib/display-unit";
 import { loadHealth } from "@/lib/kpi-health";
 import { MONTH_NAMES } from "@/lib/period";
@@ -11,6 +11,7 @@ import { reportVersions } from "@/lib/rka";
 import { requireUser } from "@/lib/session";
 import { activeView } from "@/lib/view-filter";
 import { loadOrg } from "@/lib/workflow";
+import { BAND_TONE, BandBadge, healthFigure } from "@/components/erp/health-badge";
 import { PageHeader } from "@/components/erp/page-header";
 import { ViewNote } from "@/components/erp/view-note";
 import { Badge } from "@/components/ui/badge";
@@ -19,8 +20,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 
 export const metadata: Metadata = { title: "Kesehatan KPI" };
-
-const TONE: Record<Band, string> = { healthy: "bg-success text-white", watch: "bg-state-finance/80 text-black", critical: "bg-destructive text-white" };
 
 export default async function KpiHealthPage({ searchParams }: { searchParams: Promise<{ bulan?: string }> }) {
   const user = await requireUser();
@@ -40,11 +39,6 @@ export default async function KpiHealthPage({ searchParams }: { searchParams: Pr
   const chosen = view.entity && mine.includes(view.entity) ? [view.entity] : mine;
   const data = await loadHealth(user, chosen, year, month, today, chosen.length > 1);
   const rupiah = (v: Money) => formatAmount(v, unit);
-  const show = (key: HealthKey, v: Money) => {
-    const kind = HEALTH_INFO[key].unit;
-    const n = v.toString().replace(".", ",");
-    return kind === "rupiah" ? rupiah(v) : kind === "percent" ? `${n}%` : kind === "months" ? `${n} bulan` : `${n}x`;
-  };
   const counts = (["healthy", "watch", "critical"] as const).map((b) => `${data.kpis.filter((k) => k.band === b).length} ${BAND_LABEL[b]}`).join(" · ");
   const stress: [string, string, boolean | null, string][] = [
     [
@@ -92,8 +86,8 @@ export default async function KpiHealthPage({ searchParams }: { searchParams: Pr
               <CardDescription className="font-medium">{HEALTH_INFO[k.key].name}</CardDescription>
             </CardHeader>
             <CardContent className="grid justify-items-start gap-1 px-4">
-              <span className="tabular text-xl font-semibold">{k.value ? show(k.key, k.value) : "–"}</span>
-              {k.band ? <Badge className={`border-transparent ${TONE[k.band]}`}>{BAND_LABEL[k.band]}</Badge> : <Badge variant="outline">Belum ada data</Badge>}
+              <span className="tabular text-xl font-semibold">{k.value ? healthFigure(k.key, k.value, unit) : "–"}</span>
+              <BandBadge band={k.band} />
               <span className="text-muted-foreground text-xs">{HEALTH_INFO[k.key].formula}</span>
               <span className="text-muted-foreground text-xs">Sehat: {HEALTH_INFO[k.key].healthy}</span>
               {k.band && k.band !== "healthy" ? <span className="text-xs">{HEALTH_ACTION[k.key]}</span> : null}
@@ -111,7 +105,7 @@ export default async function KpiHealthPage({ searchParams }: { searchParams: Pr
             <div key={name} className="grid gap-1 border-b pb-3 text-sm">
               <span className="flex flex-wrap items-center gap-2 font-medium">
                 {name}
-                {triggered === null ? <Badge variant="outline">Belum ada data</Badge> : <Badge className={`border-transparent ${TONE[triggered ? "critical" : "healthy"]}`}>{triggered ? "Terpicu" : "Aman"}</Badge>}
+                {triggered === null ? <Badge variant="outline">Belum ada data</Badge> : <Badge className={`border-transparent ${BAND_TONE[triggered ? "critical" : "healthy"]}`}>{triggered ? "Terpicu" : "Aman"}</Badge>}
               </span>
               <span>{result}</span>
               {triggered ? <span className="text-muted-foreground text-xs">{action}</span> : null}

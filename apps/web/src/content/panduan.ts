@@ -36,14 +36,14 @@ Setiap pengguna memegang posisi: peran, unit organisasi, dan entitas yang boleh 
 | Requestor | Beranda, RKA Saya, Permintaan Pembayaran, Master Data, Panduan | Baris unitnya selama Draft | Kirim ke Default Owner |
 | Default Owner | Beranda, RKA Saya, Antrean Konsolidasi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Master Data, Panduan | Baris dalam cakupannya selama Konsolidasi | Kirim ke Division Owner, Kembalikan (catatan wajib) |
 | Division Owner | Beranda, RKA Divisi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Management Summary, Master Data, Panduan | Tidak | Setujui & kirim ke Finance, Kembalikan ke Default Owner (catatan wajib) |
-| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Tracker Telkom, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Target KPI, Kesehatan KPI, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Realisasi, Biaya Bersama, COA Master, Kepatuhan, Panduan | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
+| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Tracker Telkom, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Target KPI, Kesehatan KPI, Portofolio Proyek, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Realisasi, Biaya Bersama, COA Master, Kepatuhan, Panduan | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
 | Business Finance (BFP) | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pengadaan, SPH, Master Data, Panduan | Tidak | Memeriksa Permintaan Pembayaran (lihat bagian Permintaan Pembayaran) |
 | Cash Management | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Rekening Bank, Invoice, Piutang, Tracker Telkom, Kas Mingguan, Obligo Bank, Master Data, Panduan | Tidak | Menjadwalkan dan membayar Permintaan Pembayaran |
-| Direktur | Beranda, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Tracker Telkom, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Target KPI, Kesehatan KPI, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, hanya membaca |
-| Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Tracker Telkom, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Target KPI, Kesehatan KPI, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
+| Direktur | Beranda, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Tracker Telkom, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Target KPI, Kesehatan KPI, Dashboard BOD, Portofolio Proyek, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, hanya membaca |
+| Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Tracker Telkom, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Target KPI, Kesehatan KPI, Dashboard BOD, Portofolio Proyek, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
 | Admin | Beranda, Rekening Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Pengguna, Unit & Entitas, Struktur Organisasi, Panduan | Tidak | Tidak ada; tidak melihat angka anggaran |
 
-Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner) juga melihat Pipeline dan SPH; orang BCD, PDMS (PMO, SCM, ISO, MSO) dan Legal & Contract Management (FRM-LCM) dengan peran yang sama juga melihat Implementasi; orang PDMS juga Pengadaan. Orang BCD, PDMS, FRM-LCM, FRM-FIN-ATM dan Division Owner FRM melihat Tracker Telkom. Unit Accounting & Tax Management (FRM-FIN-ATM) dengan peran yang sama melihat Invoice, Piutang, Pajak, Laba Rugi dan Tutup Buku, dan Requestor-nya juga Monitor Anggaran. Orang PMO dengan peran Requestor, Default Owner atau Division Owner juga melihat Obligo Bank. Division Owner FRM juga melihat Target KPI, Kesehatan KPI, Pengadaan, Invoice, Piutang, Pajak, Laba Rugi, Tutup Buku, Kas Mingguan, Obligo Bank, Persetujuan Master dan Kepatuhan. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
+Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner) juga melihat Pipeline dan SPH; orang BCD, PDMS (PMO, SCM, ISO, MSO) dan Legal & Contract Management (FRM-LCM) dengan peran yang sama juga melihat Implementasi; orang PDMS juga Pengadaan. Orang BCD, PDMS, FRM-LCM, FRM-FIN-ATM dan Division Owner FRM melihat Tracker Telkom. Unit Accounting & Tax Management (FRM-FIN-ATM) dengan peran yang sama melihat Invoice, Piutang, Pajak, Laba Rugi dan Tutup Buku, dan Requestor-nya juga Monitor Anggaran. Orang PMO dengan peran Requestor, Default Owner atau Division Owner juga melihat Obligo Bank. Division Owner FRM juga melihat Target KPI, Kesehatan KPI, Dashboard BOD, Portofolio Proyek, Pengadaan, Invoice, Piutang, Pajak, Laba Rugi, Tutup Buku, Kas Mingguan, Obligo Bank, Persetujuan Master dan Kepatuhan. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
 
 ## Memulai
 
@@ -473,6 +473,25 @@ Menu **Laporan → Kesehatan KPI** menilai 10 KPI sheet 08_KPI_Thresholds untuk 
 - Capital Efficiency memakai EBIT yang disetahunkan. EBITDA positif di bawah 1% pendapatan dinilai WASPADA.
 - KPI tanpa data ditandai *Belum ada data*.
 - **Stress test:** kas masuk rencana turun 20% (saldo terendah proyeksi); liabilitas jatuh tempo 3 bulan di atas 40% total liabilitas (pinjaman bank dan tagihan vendor); satu customer di atas 50% pendapatan.
+
+## Dashboard BOD
+
+Menu **Laporan → Dashboard BOD** (Direktur, Auditor, Head FRM) mengikuti sheet 18_Dashboard_Spec_BOD. Pilih bulan; entitas mengikuti filter tampilan. Angka dihitung saat halaman dibuka.
+
+- 8 kartu KPI dengan status; **Rincian** berisi rumus, saran dan tautan ke layar sumber.
+- Revenue won bidding dan cash-in terhadap target KPI yang disetujui; tren kas dan EBITDA; proyeksi kas 12 bulan.
+- Pipeline, obligo per bank (porsi di atas 50% ditandai), umur piutang, assurance JPMB, Business Health Check dan 10 proyek terbesar.
+- **Stress test:** geser persentase penurunan kas masuk, tekan **Hitung**.
+- **Highlight bulanan** ditulis Direktur atau Head FRM untuk perusahaan yang ditampilkan; Auditor hanya membaca.
+- **Cetak / PDF** mencetak tampilan saat ini. Setiap kunjungan dicatat di audit.
+
+## Portofolio Proyek
+
+Menu **Laporan → Portofolio Proyek** (Finance, Direktur, Auditor, Head FRM): per proyek nilai kontrak, revenue (invoice terbit, DPP), COGS (pembayaran lunas akun COGS), gross profit dan GP %, kas masuk, piutang dan BG aktif.
+
+- Status: **Won** (Initiation), **Active**, **Closed**, **Drop**.
+- **Delayed** bila target RFS atau tanggal rencana site terlewat; **At-risk** bila ada site terkendala atau target RFS tinggal 14 hari; selain itu **On-track**.
+- Klik nama proyek untuk melihat invoice, pembayaran dan BG; klik lagi untuk membuka transaksinya.
 
 ## Master Data
 
