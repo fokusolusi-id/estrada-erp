@@ -47,6 +47,25 @@ describe("healthValues", () => {
   });
 });
 
+describe("nothing recorded yet", () => {
+  const base: HealthInput = {
+    month: 6,
+    balance: null,
+    pnl: { revenue: money("0"), ebitda: money("0"), ebit: money("0"), cost: money("0") },
+    budgetCost: money("1000"),
+    cash: { ending: money("300"), burn: money("0"), inActual: money("0"), inPlan: money("100"), outActual: money("0"), outPlan: money("50"), safety: money("0") },
+  };
+  it("rates no cash realisation without a movement, and no budget use without a cost", () => {
+    const v = healthValues(base);
+    expect([v.cash_in, v.cash_out, v.budget_use]).toEqual([null, null, null]);
+    expect(v.ending_cash?.toString()).toBe("300");
+  });
+  it("rates both once any cash has moved", () => {
+    const v = healthValues({ ...base, cash: { ...base.cash!, outActual: money("10") } });
+    expect([v.cash_in?.toString(), v.cash_out?.toString()]).toEqual(["0", "20"]);
+  });
+});
+
 describe("stress tests (BR-KPI-005)", () => {
   it("lowers planned cash in by 20% and finds the lowest month", () => {
     const s = stressCashIn({ closing: [money("100"), money("80")], receipts: [money("50"), money("50")] });

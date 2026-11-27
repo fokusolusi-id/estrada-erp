@@ -71,16 +71,18 @@ export interface HealthInput {
 const over = (a: Money, b: Money, scale = 1, places = 2): Money | null => (b.gt(0) ? a.times(scale).div(b).toDecimalPlaces(places) : null);
 
 export function healthValues({ month, balance: b, pnl, budgetCost, cash }: HealthInput): Record<HealthKey, Money | null> {
+  // 0% of a plan nothing has been recorded against is not a result.
+  const moved = cash && !(cash.inActual.isZero() && cash.outActual.isZero()) ? cash : null;
   return {
     liquidity: b ? over(b.currentAssets, b.currentLiabilities) : null,
     solvency: b ? over(b.totalLiabilities, b.totalAssets) : null,
     ebitda_margin: over(pnl.ebitda, pnl.revenue, 100),
     runway: cash ? over(cash.ending, cash.burn, 1, 1) : null,
-    cash_in: cash ? over(cash.inActual, cash.inPlan, 100, 1) : null,
-    cash_out: cash ? over(cash.outActual, cash.outPlan, 100, 1) : null,
+    cash_in: moved ? over(moved.inActual, moved.inPlan, 100, 1) : null,
+    cash_out: moved ? over(moved.outActual, moved.outPlan, 100, 1) : null,
     ending_cash: cash ? cash.ending : null,
     ebitda: pnl.revenue.isZero() && pnl.cost.isZero() ? null : pnl.ebitda,
-    budget_use: over(pnl.cost, budgetCost, 100, 1),
+    budget_use: pnl.cost.isZero() ? null : over(pnl.cost, budgetCost, 100, 1),
     capital_efficiency: b ? over(pnl.ebit.times(12).div(month), b.totalAssets.minus(b.currentLiabilities), 100, 1) : null,
   };
 }
