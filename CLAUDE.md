@@ -1,6 +1,7 @@
 # ERP Estrada: working rules
 
 Budget-first ERP replacing the RKA 2027 workbook. Plan: https://claude.ai/artifact/AfNF8LLs3Dy4DBFBy7XJVV
+Next: the client BRD v5 rollout (masters, finance core, ops flow, BOD dashboard) follows `docs/brd-v5-plan.md`; its decisions are settled, do not re-ask them.
 
 ## Layout
 - `packages/domain`: pure TypeScript business rules (money, budget lines, approval state machine, RBAC policy, notifications). No framework or DB imports. Tests in `test/`.
