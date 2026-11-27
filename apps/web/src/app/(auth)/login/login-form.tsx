@@ -31,11 +31,7 @@ export function LoginForm({ next, error }: { next: string; error?: string }) {
         password: String(form.get("password")),
       });
       if (error) {
-        setMessage(
-          error.status === 429
-            ? "Terlalu banyak percobaan. Coba lagi dalam beberapa menit."
-            : "Email atau kata sandi salah.",
-        );
+        setMessage("Email atau kata sandi salah.");
         return;
       }
       router.replace(next);
