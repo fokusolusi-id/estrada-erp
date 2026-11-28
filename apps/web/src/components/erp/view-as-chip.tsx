@@ -12,11 +12,11 @@ export function ViewAsChip({ label }: { label: string }) {
   const [pending, startTransition] = useTransition();
   useProgressWhile(pending);
   return (
-    <div role="status" className="border-warning bg-warning/15 flex h-8 min-w-0 items-center gap-1.5 rounded-md border pl-2 text-sm">
+    <div role="status" className="border-warning bg-warning/15 flex h-8 min-w-0 items-center gap-1.5 rounded-md border pl-2 text-sm max-md:flex-1">
       <Eye aria-hidden className="size-4 shrink-0" />
       {/* The account button already names the seat on a wide screen; a screen reader hears it here too. */}
-      <span className="whitespace-nowrap max-md:sr-only">
-        Melihat sebagai<span className="sr-only"> {label}</span>
+      <span className="truncate whitespace-nowrap max-md:flex-1">
+        Melihat sebagai<span className="md:sr-only"> {label}</span>
       </span>
       <button
         type="button"

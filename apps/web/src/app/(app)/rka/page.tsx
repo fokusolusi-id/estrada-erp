@@ -165,7 +165,7 @@ export default async function RkaPage({ searchParams }: { searchParams: Promise<
           {visible.length ? (
             <form action="/rka" className="mb-4 flex flex-wrap items-end gap-3">
               {divisi ? <input type="hidden" name="divisi" value={divisi} /> : null}
-              <div className="grid min-w-0 flex-1 gap-1.5 sm:max-w-sm">
+              <div className="grid min-w-0 flex-1 basis-full gap-1.5 sm:max-w-sm sm:basis-0">
                 <Label htmlFor="rka-q">Cari baris</Label>
                 <Input key={q ?? ""} id="rka-q" name="q" type="search" defaultValue={q ?? ""} placeholder="Kode COA, nama COA atau uraian" />
               </div>
