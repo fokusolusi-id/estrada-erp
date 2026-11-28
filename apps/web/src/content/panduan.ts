@@ -209,6 +209,7 @@ Admin mengelola orang dan data master, tidak pernah isi anggaran; baris anggaran
 
 Ringkasan RKA untuk Division Owner, Finance Reviewer, Direktur dan Auditor.
 
+- **Belum ada data**: bila RKA belum memuat baris pendapatan, kartu Pendapatan menulis *Belum ada data* dan Laba Sebelum Pajak hanya berisi biaya. Di ponsel, tabel tampil lebih dulu daripada grafik.
 - **Filter**: Entitas, Divisi dan Satuan dari Tampilan di kepala halaman di kepala halaman; Versi dan Status di bilah atas layar ini. *Unduh Excel* di kanan atas mengunduh versi itu sebagai workbook dengan susunan RKA Data, Rekap, Kontribusi Divisi dan Per Entitas.
 - **Peringatan belum final**: bila angka memuat baris yang belum difinalisasi, jumlahnya disebut di atas kartu.
 - **Empat kartu**: Pendapatan, Total Biaya, Laba Sebelum Pajak dan CAPEX, masing-masing dengan garis tren 12 bulan. Lencana perubahan terhadap tahun lalu muncul bila cukup baris punya angka RKA tahun lalu, dan dibandingkan atas baris yang sama. Di bawah kartu, satu kalimat menunjukkan hitungannya: Laba Sebelum Pajak = Pendapatan − (Total Biaya − CAPEX).
@@ -425,6 +426,7 @@ Menu **Laporan → Tutup Buku** menyiapkan dan menyimpan angka akhir bulan per P
 
 Menu **Laporan → Laba Rugi** menyusun realisasi dari Pendapatan sampai Laba Bersih dan membandingkannya dengan RKA. Dibaca Accounting, Finance, Division Owner FRM, Direktur dan Auditor.
 
+- Bila periode itu belum punya realisasi, kartu di atas menulis *Belum ada data*, bukan nol.
 - Pilih **Bulan** dan **Periode** (bulan berjalan, kuartal berjalan atau tahun berjalan sampai bulan itu). Bulan yang sudah ditutup memakai snapshot **Tutup Buku**; bulan yang belum ditutup dihitung dari pembukuan saat ini.
 - Urutan: Pendapatan, Beban Pokok, Laba Kotor, Beban Operasional, EBITDA, Penyusutan dan amortisasi (COA 58xx dan 629x), EBIT, pendapatan lain (71xx), beban bunga (722x–723x), beban lain, Laba sebelum pajak, Pajak, Laba bersih. Rincian per akun dibuka pada barisnya.
 - Kolom **RKA** memakai versi terkunci tahun itu (atau versi berjalan) untuk bulan dan PT yang sama; CAPEX tidak masuk laba rugi.
@@ -481,6 +483,7 @@ Menu **Laporan → Kesehatan KPI** menilai 10 KPI sheet 08_KPI_Thresholds untuk 
 Menu **Laporan → Peringatan Dini** menjalankan aturan EW-01 sampai EW-15 sheet P3_Module_Spec (P3-M4) untuk seluruh grup, atau per divisi/unit untuk EW-08 dan EW-09. Diperiksa setiap hari; Finance atau Head FRM bisa menekan **Periksa sekarang**.
 
 - Peringatan ditugaskan ke pemilik aturan (Head FRM, Direktur, Cash Management, kepala BCD/PMO/HCM atau divisi); bila kursinya kosong, ke Head FRM, lalu Direktur grup. Aturan ber-email mengirim satu email ringkas per orang.
+- Kolom **Data** pada daftar aturan menandai aturan yang *Belum ada data*; tidak adanya peringatan untuk aturan itu bukan berarti aman. EW-01 memakai kas yang sudah dicatat, bukan proyeksi Arus Kas.
 - Pemilik menekan **Terima**, lalu **Selesaikan** atau **Salah alarm** dengan catatan.
 - Belum diterima dalam 1/2/3/7 hari (Critical/High/Medium/Low) naik ke Head FRM; dua kali lipatnya naik ke Direktur.
 - Kondisi yang pulih ditutup otomatis. Peringatan yang ditutup pemilik baru muncul lagi setelah 7 hari bila kondisinya masih ada.
