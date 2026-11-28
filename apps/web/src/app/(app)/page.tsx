@@ -117,7 +117,10 @@ export default async function HomePage() {
         <Card>
           <CardHeader>
             <CardTitle>Belum final</CardTitle>
-            <CardDescription>Baris dalam cakupan Anda yang belum difinalisasi, menurut siapa yang memegangnya.</CardDescription>
+            <CardDescription>
+              Baris dalam cakupan Anda yang belum difinalisasi, menurut siapa yang memegangnya.
+              {left !== null && left >= 0 && final < lines.length ? ` Batas pengajuan ${left ? `${left} hari lagi` : "hari ini"}.` : ""}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <PendingStages pending={pendingByStage(lines, (u) => org.divisionOf(u))} {...(hasList ? { hrefFor: (state, divisi) => `/rka?${new URLSearchParams({ status: state, ...(divisi ? { divisi } : {}) })}` } : {})} />

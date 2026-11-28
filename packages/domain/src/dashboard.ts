@@ -112,21 +112,34 @@ export interface PendingStage {
   /** The seat that moves lines on from this state. */
   role: Role;
   count: number;
+  /** Days since the longest-waiting of them last moved; null when none has moved yet. */
+  idleDays?: number | null;
   /** The divisions holding them, most lines first. */
-  divisions: { division: string; count: number }[];
+  divisions: { division: string; count: number; idleDays?: number | null }[];
 }
 
 const HOLDER = { draft: "requestor", consolidation: "default_owner", division_approval: "division_owner", finance_review: "finance" } as const satisfies Partial<Record<ApprovalState, Role>>;
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+type Held = { state: ApprovalState; ownerUnit: string; history?: readonly { at: string }[] | undefined };
+
+function longestWait(lines: readonly Held[], now: Date): number | null {
+  const waits = lines.flatMap((l) => (l.history?.length ? [Math.floor((now.getTime() - Math.max(...l.history.map((e) => Date.parse(e.at)))) / DAY_MS)] : []));
+  return waits.length ? Math.max(...waits) : null;
+}
+
 /** Where the unfinished lines are waiting, in cycle order. */
-export function pendingByStage(lines: readonly { state: ApprovalState; ownerUnit: string }[], divisionOf: (unit: string) => string): PendingStage[] {
+export function pendingByStage(lines: readonly Held[], divisionOf: (unit: string) => string, now: Date = new Date()): PendingStage[] {
   return (Object.keys(HOLDER) as (keyof typeof HOLDER)[]).flatMap((state) => {
     const held = lines.filter((l) => l.state === state);
     if (!held.length) return [];
-    const by = new Map<string, number>();
-    for (const l of held) by.set(divisionOf(l.ownerUnit), (by.get(divisionOf(l.ownerUnit)) ?? 0) + 1);
-    const divisions = [...by].map(([division, count]) => ({ division, count })).sort((a, b) => b.count - a.count || a.division.localeCompare(b.division));
-    return [{ state, role: HOLDER[state], count: held.length, divisions }];
+    const by = new Map<string, Held[]>();
+    for (const l of held) by.set(divisionOf(l.ownerUnit), [...(by.get(divisionOf(l.ownerUnit)) ?? []), l]);
+    const divisions = [...by]
+      .map(([division, own]) => ({ division, count: own.length, idleDays: longestWait(own, now) }))
+      .sort((a, b) => b.count - a.count || a.division.localeCompare(b.division));
+    return [{ state, role: HOLDER[state], count: held.length, idleDays: longestWait(held, now), divisions }];
   });
 }
 

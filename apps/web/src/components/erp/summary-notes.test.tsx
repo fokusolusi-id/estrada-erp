@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { money, pnl } from "@estrada/domain";
-import { DraftNotice, ProfitReconciliation } from "./summary-notes";
+import { DraftNotice, NoRevenueNotice, ProfitReconciliation } from "./summary-notes";
 
 const flat = (a: string) => Array.from({ length: 12 }, () => money(a));
 const line = (category: "Revenue" | "OPEX" | "CAPEX", a: string) => ({ category, ownerUnit: "SCM", entity: "ESTRADA", months: flat(a) });
@@ -22,5 +22,18 @@ describe("DraftNotice", () => {
   it("says nothing when every line is final", () => {
     render(<DraftNotice pending={0} total={193} />);
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+});
+
+describe("without revenue", () => {
+  it("does not print a revenue of zero in the profit formula", () => {
+    const { container } = render(<ProfitReconciliation rows={pnl([line("OPEX", "2")])} unit="rp" noRevenue />);
+    expect(container.textContent).toContain("Pendapatan (belum ada data)");
+    expect(container.textContent).not.toContain("Pendapatan Rp");
+  });
+
+  it("warns that a cash projection holds costs only", () => {
+    const { container } = render(<NoRevenueNotice />);
+    expect(container.textContent).toBe("Proyeksi ini belum memuat pendapatan dari RKA, jadi saldo hanya mencerminkan biaya, saldo awal dan pinjaman.");
   });
 });

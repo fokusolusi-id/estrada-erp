@@ -100,10 +100,10 @@ export default async function SummaryPage({
         <KpiCard label="Pendapatan" value={total("Revenue")} unit={unit} note="Rencana invoice" missing={noRevenue ? "Belum ada baris pendapatan di RKA ini." : undefined} change={change("Revenue", true)} trend={trend("Revenue")} />
         <KpiCard label="Total Biaya" value={total("TotalCost")} unit={unit} note="COGS + OPEX + OTHERS + CAPEX" change={change("TotalCost", false)} trend={trend("TotalCost")} />
         <KpiCard label="Laba Sebelum Pajak" value={total("ProfitBeforeTax")} unit={unit} signal note={noRevenue ? "Belum termasuk pendapatan: hanya biaya" : undefined} change={change("ProfitBeforeTax", true)} trend={trend("ProfitBeforeTax")} />
-        <KpiCard label="CAPEX" value={total("CAPEX")} unit={unit} change={change("CAPEX", false)} trend={trend("CAPEX")} />
+        <KpiCard label="CAPEX" value={total("CAPEX")} unit={unit} missing={reportLines.some((l) => l.category === "CAPEX") ? undefined : "Belum ada baris CAPEX di RKA ini."} change={change("CAPEX", false)} trend={trend("CAPEX")} />
       </KpiStrip>
       <div className="-mt-3">
-        <ProfitReconciliation rows={rows} unit={unit} />
+        <ProfitReconciliation rows={rows} unit={unit} noRevenue={noRevenue} />
       </div>
       {pipeline ? (
         <p className="text-muted-foreground -mt-3 text-sm" data-testid="summary-pipeline">

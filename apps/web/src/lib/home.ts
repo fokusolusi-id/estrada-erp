@@ -61,7 +61,7 @@ export async function loadHome(user: CurrentUser, org: OrgTree) {
     const forecast = loaded?.forecasts.get(view.entity ?? CONSOLIDATED);
     cash = {
       note: loaded ? `${loaded.versionName} · ${view.entity ?? "konsolidasi"}, proyeksi` : "Belum ada RKA",
-      flow: forecast ? cashSummary(forecast.rows) : null,
+      flow: forecast ? { ...cashSummary(forecast.rows), noRevenue: forecast.pnl.revenue.total.isZero() } : null,
       obligo: obligoSummary((loaded?.facilities ?? []).filter((f) => covers(f.entity)), loaded ? monthsElapsed(loaded.year, today) : 0),
     };
   }

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FigureCell } from "./money-cell";
+import { NoRevenueNotice } from "./summary-notes";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 const percent = (v: Money | null) => (v ? `${v.toFixed(1).replace(".", ",")}%` : "—");
@@ -78,14 +79,21 @@ export function SpendingCard({ title, description, rows, unit, href, runRate = f
   );
 }
 
-export function CashCard({ description, cash, unit, href }: { description: string; cash: { in: Money[]; out: Money[]; closing: Money[]; ending: Money; runwayMonths: Money | null } | null; unit: Unit; href?: string | undefined }) {
+export function CashCard({ description, cash, unit, href }: { description: string; cash: { in: Money[]; out: Money[]; closing: Money[]; ending: Money; runwayMonths: Money | null; noRevenue?: boolean } | null; unit: Unit; href?: string | undefined }) {
   return (
     <WidgetCard title="Arus kas" description={`${description} (${unitLabel(unit)})`} href={href}>
       {cash ? (
         <>
+          {cash.noRevenue ? <NoRevenueNotice /> : null}
           <p className="text-sm">
-            Saldo akhir tahun <strong className="tabular">{formatAmount(cash.ending, unit)}</strong> · runway{" "}
-            <strong className="tabular">{cash.runwayMonths ? `${cash.runwayMonths.toString().replace(".", ",")} bulan` : "—"}</strong>
+            Saldo akhir tahun <strong className="tabular">{formatAmount(cash.ending, unit)}</strong>
+            {/* Months covered mean nothing while no money is projected to come in. */}
+            {cash.noRevenue ? null : (
+              <>
+                {" "}
+                · runway <strong className="tabular">{cash.runwayMonths ? `${cash.runwayMonths.toString().replace(".", ",")} bulan` : "—"}</strong>
+              </>
+            )}
           </p>
           <Grid heads={["Bulan", "Masuk", "Keluar", "Saldo"]}>
             {MONTHS.map((m, i) => (

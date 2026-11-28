@@ -50,6 +50,7 @@ export default async function RkaPage({ searchParams }: { searchParams: Promise<
   const visible = await viewLines(lines.filter((l) => !drafts.includes(l)));
   // A status board count links here with the division and state it counted.
   const state = APPROVAL_STATES.find((s) => s === status);
+  const divisions = [...new Set(visible.map((l) => org.divisionOf(l.ownerUnit)))].sort();
   const others = searchLines(filterByBoard(visible, { division: divisi, state }, (u) => org.divisionOf(u)), q);
   const query: Record<string, string> = { ...(divisi ? { divisi } : {}), ...(state ? { status: state } : {}), ...(q?.trim() ? { q: q.trim() } : {}) };
   const narrowed = [divisi ? `Divisi ${divisi}` : null, state ? STATE_LABEL[state] : null, q?.trim() ? `pencarian “${q.trim()}”` : null].filter(Boolean).join(" · ");
@@ -164,11 +165,23 @@ export default async function RkaPage({ searchParams }: { searchParams: Promise<
         <CardContent>
           {visible.length ? (
             <form action="/rka" className="mb-4 flex flex-wrap items-end gap-3">
-              {divisi ? <input type="hidden" name="divisi" value={divisi} /> : null}
               <div className="grid min-w-0 flex-1 basis-full gap-1.5 sm:max-w-sm sm:basis-0">
                 <Label htmlFor="rka-q">Cari baris</Label>
                 <Input key={q ?? ""} id="rka-q" name="q" type="search" defaultValue={q ?? ""} placeholder="Kode COA, nama COA atau uraian" />
               </div>
+              {divisions.length > 1 || divisi ? (
+                <div className="grid gap-1.5">
+                  <Label htmlFor="rka-divisi">Divisi</Label>
+                  <select key={divisi ?? ""} id="rka-divisi" name="divisi" defaultValue={divisi ?? ""} className="border-input h-9 rounded-md border bg-transparent px-3 text-sm">
+                    <option value="">Semua divisi</option>
+                    {divisions.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
               <div className="grid gap-1.5">
                 <Label htmlFor="rka-status">Tahap</Label>
                 <select key={state ?? ""} id="rka-status" name="status" defaultValue={state ?? ""} className="border-input h-9 rounded-md border bg-transparent px-3 text-sm">
