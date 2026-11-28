@@ -61,7 +61,7 @@ export function CoaTree({ accounts }: { accounts: CoaTreeAccount[] }) {
           </Button>
         </div>
       </div>
-      <Table role="treegrid" aria-label="Pohon COA">
+      <Table scroll role="treegrid" aria-label="Pohon COA">
         <TableHeader>
           <TableRow>
             <TableHead className="min-w-64">Kode & nama</TableHead>

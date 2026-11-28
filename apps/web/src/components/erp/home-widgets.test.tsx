@@ -23,6 +23,6 @@ describe("Beranda cards", () => {
     expect(screen.queryByRole("link")).toBeNull();
     cleanup();
     render(<WidgetCard title="Pipeline" description="x" href="/pipeline">isi</WidgetCard>);
-    expect(screen.getByRole("link", { name: /Rincian/ }).getAttribute("href")).toBe("/pipeline");
+    expect(screen.getByRole("link", { name: "Rincian Pipeline" }).getAttribute("href")).toBe("/pipeline");
   });
 });

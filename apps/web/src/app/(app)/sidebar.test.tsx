@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { NavItem } from "@/lib/nav";
 import { Sidebar } from "./sidebar";
 
@@ -32,5 +32,32 @@ describe("Sidebar", () => {
     layout(120, 150);
     render(<Sidebar items={items} defaultCollapsed={false} />);
     expect(screen.getByRole("navigation", { name: "Menu utama" }).scrollTop).toBe(0);
+  });
+});
+
+describe("Sidebar groups", () => {
+  const grouped = [
+    { href: "/", label: "Beranda", icon: "home" },
+    { href: "/rka", label: "RKA Saya", icon: "file", group: "Anggaran" },
+    { href: "/panduan", label: "Panduan", icon: "help", group: "Bantuan" },
+  ] as unknown as NavItem[];
+
+  it("opens only the group of the current page, and the others on request", () => {
+    render(<Sidebar items={grouped} defaultCollapsed={false} />);
+    expect(screen.getByRole("link", { name: "Beranda" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Panduan" })).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "RKA Saya" })).toBeNull();
+    const toggle = screen.getByRole("button", { name: "Anggaran" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(toggle);
+    expect(screen.getByRole("link", { name: "RKA Saya" })).toBeTruthy();
+    fireEvent.click(toggle);
+    expect(screen.queryByRole("link", { name: "RKA Saya" })).toBeNull();
+  });
+
+  it("shows every screen when the sidebar is reduced to icons", () => {
+    render(<Sidebar items={grouped} defaultCollapsed />);
+    expect(screen.getByRole("link", { name: "RKA Saya" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Anggaran" })).toBeNull();
   });
 });

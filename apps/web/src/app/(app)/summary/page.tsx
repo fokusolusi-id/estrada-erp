@@ -13,6 +13,7 @@ import { EntityAllocationTable } from "@/components/erp/entity-allocation-table"
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { KpiCard, KpiStrip } from "@/components/erp/kpi-card";
 import { PageHeader } from "@/components/erp/page-header";
+import { SectionTabs } from "@/components/erp/section-tabs";
 import { PnlTable } from "@/components/erp/pnl-table";
 import { DraftNotice, ProfitReconciliation } from "@/components/erp/summary-notes";
 import { ScopeBar } from "@/components/erp/scope-bar";
@@ -135,52 +136,72 @@ export default async function SummaryPage({
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Ringkasan per bulan</CardTitle>
-          <CardDescription>Semua angka dihitung dari baris RKA yang sama, jadi Rekap dan Kontribusi Divisi selalu sama.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <PnlTable rows={rows} unit={unit} />
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Kontribusi Divisi</CardTitle>
-            <CardDescription>Per divisi pengusul, seperti sheet Kontribusi Divisi dan Rekap.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ContributionTable rows={byDivision} unit={unit} label="Divisi pengusul" />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Per entitas</CardTitle>
-            <CardDescription>
-              {sharedLines
-                ? `Setelah alokasi ${sharedLines} baris biaya bersama ke ESTRADA, MATRIK, DJALU dan PAS. Baris RKA tidak berubah.`
-                : "Belum ada biaya bersama. Finance menandainya di menu Biaya Bersama."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            {allocationProblems.length ? (
-              <Alert>
-                <AlertDescription>
-                  {allocationProblems.length} baris biaya bersama belum dapat dialokasikan dan tetap di entitas asalnya:{" "}
-                  {[...new Set(allocationProblems.map((p) => ALLOCATION_PROBLEM_LABEL[p.problem]))].join("; ")}.
-                </AlertDescription>
-              </Alert>
-            ) : null}
-            {sharedLines ? (
-              <EntityAllocationTable rows={entityRows} unit={unit} />
-            ) : (
-              <ContributionTable rows={contribution(lines, (l) => l.entity)} unit={unit} label="Entitas" />
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <SectionTabs
+        label="Rincian laporan"
+        tabs={[
+          {
+            key: "bulan",
+            label: "Per bulan",
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Ringkasan per bulan</CardTitle>
+                  <CardDescription>Semua angka dihitung dari baris RKA yang sama, jadi Rekap dan Kontribusi Divisi selalu sama.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PnlTable rows={rows} unit={unit} />
+                </CardContent>
+              </Card>
+            ),
+          },
+          {
+            key: "divisi",
+            label: "Per divisi",
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Kontribusi Divisi</CardTitle>
+                  <CardDescription>Per divisi pengusul, seperti sheet Kontribusi Divisi dan Rekap.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ContributionTable rows={byDivision} unit={unit} label="Divisi pengusul" />
+                </CardContent>
+              </Card>
+            ),
+          },
+          {
+            key: "entitas",
+            label: "Per entitas",
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Per entitas</CardTitle>
+                  <CardDescription>
+                    {sharedLines
+                      ? `Setelah alokasi ${sharedLines} baris biaya bersama ke ESTRADA, MATRIK, DJALU dan PAS. Baris RKA tidak berubah.`
+                      : "Belum ada biaya bersama. Finance menandainya di menu Biaya Bersama."}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4">
+                  {allocationProblems.length ? (
+                    <Alert>
+                      <AlertDescription>
+                        {allocationProblems.length} baris biaya bersama belum dapat dialokasikan dan tetap di entitas asalnya:{" "}
+                        {[...new Set(allocationProblems.map((p) => ALLOCATION_PROBLEM_LABEL[p.problem]))].join("; ")}.
+                      </AlertDescription>
+                    </Alert>
+                  ) : null}
+                  {sharedLines ? (
+                    <EntityAllocationTable rows={entityRows} unit={unit} />
+                  ) : (
+                    <ContributionTable rows={contribution(lines, (l) => l.entity)} unit={unit} label="Entitas" />
+                  )}
+                </CardContent>
+              </Card>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 }

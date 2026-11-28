@@ -316,7 +316,7 @@ export default async function PipelinePage() {
                   </TableRow>
                 </TableBody>
               </Table>
-              <Table>
+              <Table scroll>
                 <TableHeader>
                   <TableRow>
                     <TableHead>
@@ -414,7 +414,7 @@ export default async function PipelinePage() {
             </TableBody>
           </Table>
           {followUp.length ? (
-            <Table>
+            <Table scroll>
               <TableHeader>
                 <TableRow>
                   <TableHead>Proyek · termin</TableHead>

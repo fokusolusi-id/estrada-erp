@@ -105,7 +105,7 @@ export function ActualEntry({
           </Button>
         </div>
       </div>
-      <Table>
+      <Table scroll>
         <TableHeader>
           <TableRow>
             <TableHead>COA</TableHead>

@@ -40,12 +40,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
       <EmptyState
         icon={ReceiptText}
         title="Belum ada permintaan"
-        description="Buat Permintaan Pembayaran untuk tagihan vendor atau Cash Advance, lengkap dengan dokumennya."
-        action={
-          <Button asChild>
-            <Link href="/pembayaran/baru">Buat permintaan</Link>
-          </Button>
-        }
+        description="Buat Permintaan Pembayaran untuk tagihan vendor atau Cash Advance lewat tombol di kanan atas, lengkap dengan dokumennya."
       />
     );
 

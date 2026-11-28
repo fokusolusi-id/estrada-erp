@@ -31,9 +31,9 @@ export interface GridLine extends BudgetLine {
  * Read-only; drafts are edited in BudgetEditor. Last year's actual and the change sit beside each line, as in the division sheets.
  */
 /** Link to a line's page with its discussion and history. */
-export function DiscussionLink({ id, count = 0 }: { id: string; count?: number | undefined }) {
+export function DiscussionLink({ id, count = 0, about }: { id: string; count?: number | undefined; about: string }) {
   return (
-    <Link href={`/rka/line/${id}`} className="text-primary mr-1 text-xs underline-offset-2 hover:underline">
+    <Link aria-label={`Diskusi ${about}${count ? ` (${count})` : ""}`} href={`/rka/line/${id}`} className="text-primary mr-1 text-xs underline-offset-2 hover:underline">
       Diskusi{count ? ` (${count})` : ""}
     </Link>
   );
@@ -84,7 +84,7 @@ export function BudgetGrid({
                 {l.coaCode} · <span>{l.item || l.coaName}</span>
               </div>
               <div className="text-muted-foreground flex items-center gap-2 text-xs">
-                {discussion ? <DiscussionLink id={l.id} count={l.commentCount} /> : null}
+                {discussion ? <DiscussionLink id={l.id} count={l.commentCount} about={`${l.coaCode} · ${l.item || l.coaName}`} /> : null}
                 {l.flags?.length ? (
                   <span title={l.flags.join("; ")} className="bg-warning/15 text-foreground rounded px-1 font-medium">
                     Perlu review

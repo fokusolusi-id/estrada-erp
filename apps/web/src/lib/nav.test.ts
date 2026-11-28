@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { navFor } from "./nav";
+import { navFor, whereAmI } from "./nav";
 
 describe("navFor", () => {
   it("shows a requestor their own RKA and payment requests", () => {
@@ -53,5 +53,31 @@ describe("navFor", () => {
     expect(live("finance")).toContain("/rka/cycle");
     expect(live("director")).toContain("/rka/cycle");
     expect(live("requestor")).not.toContain("/rka/cycle");
+  });
+});
+
+describe("menu entries", () => {
+  it("lists each screen once, even when two rules both let a position in", () => {
+    for (const role of ["requestor", "default_owner", "division_owner", "finance", "director", "auditor", "admin", "bfp", "cash_manager"] as const) {
+      const hrefs = navFor(role, () => true).map((n) => n.href);
+      expect(hrefs).toEqual([...new Set(hrefs)]);
+    }
+  });
+});
+
+describe("whereAmI", () => {
+  const items = navFor("finance");
+
+  it("names the menu group and screen for the page, taking the longest match", () => {
+    expect(whereAmI("/rka/review", items)).toEqual({ group: "Anggaran", label: "Status Board Finance", href: "/rka/review", deeper: false });
+    expect(whereAmI("/", items)?.label).toBe("Beranda");
+  });
+
+  it("says when the page sits below a menu screen", () => {
+    expect(whereAmI("/rka/line/abc", items)).toEqual({ group: "Anggaran", label: "Daftar Baris RKA", href: "/rka", deeper: true });
+  });
+
+  it("is silent for a page outside the menu", () => {
+    expect(whereAmI("/tidak-ada", items)).toBeNull();
   });
 });

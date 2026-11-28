@@ -2,9 +2,13 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-function Table({ className, containerClassName, ...props }: React.ComponentProps<"table"> & { containerClassName?: string }) {
+/** A long table stays in its own box, its header in view, so the page does not run for screens. */
+const SCROLL =
+  "max-h-[70vh] overflow-auto rounded-md border [&_thead]:sticky [&_thead]:top-0 [&_thead]:z-20 [&_thead]:bg-card [&_thead]:shadow-[inset_0_-1px_0_var(--border)]";
+
+function Table({ className, containerClassName, scroll = false, ...props }: React.ComponentProps<"table"> & { containerClassName?: string; scroll?: boolean }) {
   return (
-    <div data-slot="table-container" className={cn("relative w-full overflow-x-auto", containerClassName)}>
+    <div data-slot="table-container" className={cn("relative w-full overflow-x-auto", scroll && SCROLL, containerClassName)}>
       <table data-slot="table" className={cn("w-full caption-bottom text-sm", className)} {...props} />
     </div>
   );

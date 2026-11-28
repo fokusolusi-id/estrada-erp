@@ -1,23 +1,15 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { NavItem } from "@/lib/nav";
 import { keepInView } from "@/lib/keep-in-view";
 import { cn } from "@/lib/utils";
-import { NavIcon } from "./nav-icon";
+import { NavSections } from "./nav-sections";
 
 export const SIDEBAR_COOKIE = "estrada_sidebar";
-
-function active(pathname: string, href: string, items: readonly NavItem[]) {
-  if (href === "/") return pathname === "/";
-  if (!(pathname === href || pathname.startsWith(href + "/"))) return false;
-  // The longest matching href wins, so /rka does not light up on /rka/queue.
-  return !items.some((i) => i.href !== href && i.href.length > href.length && (pathname === i.href || pathname.startsWith(i.href + "/")));
-}
 
 /** Desktop sidebar: icons always, labels when expanded. The choice is kept in a cookie so the server renders it without a flash. */
 export function Sidebar({ items, defaultCollapsed }: { items: readonly NavItem[]; defaultCollapsed: boolean }) {
@@ -61,40 +53,7 @@ export function Sidebar({ items, defaultCollapsed }: { items: readonly NavItem[]
         </button>
       </div>
       <nav ref={menu} aria-label="Menu utama" className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-2">
-        {items.map((item, i) => {
-          const on = active(pathname, item.href, items);
-          const section = item.group && item.group !== items[i - 1]?.group ? item.group : null;
-          return (
-            <Fragment key={item.href}>
-              {section ? (
-                collapsed ? (
-                  <hr className="border-sidebar-border mx-2 my-2" />
-                ) : (
-                  <div className="text-muted-foreground px-3 pt-4 pb-1 text-xs font-semibold">{section}</div>
-                )
-              ) : null}
-            <Link
-              href={item.href}
-              title={collapsed ? item.label : undefined}
-              aria-label={collapsed ? item.label : undefined}
-              aria-current={on ? "page" : undefined}
-              className={cn(
-                "hover:bg-sidebar-accent flex items-center gap-3 rounded-md px-3 py-2 text-sm",
-                on && "bg-sidebar-accent text-primary font-medium shadow-[inset_3px_0_0_var(--primary)]",
-                collapsed && "justify-center px-0",
-              )}
-            >
-              <NavIcon name={item.icon} />
-              {collapsed ? null : (
-                <>
-                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                  {item.phase ? <span className="text-muted-foreground text-xs">Fase {item.phase}</span> : null}
-                </>
-              )}
-            </Link>
-            </Fragment>
-          );
-        })}
+        <NavSections items={items} pathname={pathname} collapsed={collapsed} />
       </nav>
     </aside>
   );

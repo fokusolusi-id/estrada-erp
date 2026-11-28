@@ -53,6 +53,7 @@ describe("BudgetGrid", () => {
   it("links each line to its discussion, with the comment count", () => {
     render(<BudgetGrid priorYear={2026} lines={[{ ...lines[0]!, commentCount: 2 }, lines[1]!]} unit="rp" />);
     const links = screen.getAllByRole("link");
+    expect(links[0]!.getAttribute("aria-label")).toBe("Diskusi 6241 · Langganan fiber kantor (2)");
     expect(links.map((a) => [a.textContent, a.getAttribute("href")])).toEqual([
       ["Diskusi (2)", `/rka/line/${lines[0]!.id}`],
       ["Diskusi", `/rka/line/${lines[1]!.id}`],
