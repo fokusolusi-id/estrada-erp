@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { REPORT_PERIODS, REPORT_PERIOD_LABEL, STATEMENT_LABEL, STATEMENT_RESULTS, STATEMENT_ROWS, can, statement, unitLabel, type Money } from "@estrada/domain";
 import { displayUnit } from "@/lib/display-unit";
+import { activeYear } from "@/lib/fiscal-year";
 import { MONTH_NAMES } from "@/lib/period";
 import { loadPnlReport } from "@/lib/pnl-report";
 import { requireUser } from "@/lib/session";
@@ -24,7 +25,7 @@ export default async function PnlPage({ searchParams }: { searchParams: Promise<
   const user = await requireUser();
   if (!can(user.actor, "closing.view", null, await loadOrg())) redirect("/");
   const asked = await searchParams;
-  const [view, unit] = await Promise.all([activeView(), displayUnit()]);
+  const [view, unit, budgetYear] = await Promise.all([activeView(), displayUnit(), activeYear()]);
   const r = await loadPnlReport(user.actor, asked, view.entity);
   const range = r.months.length > 1 ? `${MONTH_NAMES[r.months[0]! - 1]}–${MONTH_NAMES[r.months.at(-1)! - 1]} ${r.year}` : `${MONTH_NAMES[r.months[0]! - 1]} ${r.year}`;
   const of = (key: (typeof STATEMENT_ROWS)[number]) => r.rows.find((x) => x.key === key)!;
@@ -75,125 +76,137 @@ export default async function PnlPage({ searchParams }: { searchParams: Promise<
           <a href={`/pnl/export?${query}`}>Unduh Excel</a>
         </Button>
       </div>
+      {budgetYear !== null && budgetYear !== r.year ? (
+        <p className="text-muted-foreground text-sm">
+          Layar ini mengikuti bulan yang dipilih ({r.year}), bukan tahun RKA {budgetYear} di kepala halaman.
+        </p>
+      ) : null}
       {r.budgetFound ? null : <p className="text-destructive text-sm">Belum ada RKA {r.year}: kolom RKA kosong.</p>}
       <KpiStrip>
         {(["revenue", "gross", "ebitda", "net"] as const).map((key) => (
           <KpiCard key={key} missing={recorded ? undefined : "Belum ada realisasi untuk periode ini."} label={STATEMENT_LABEL[key]} value={of(key).actual} unit={unit} signal={key !== "revenue"} note={of(key).achieved ? `${of(key).achieved!.toFixed(1)}% dari RKA` : "Tanpa pembanding RKA"} />
         ))}
       </KpiStrip>
-      <Card>
-        <CardHeader>
-          <CardTitle>Realisasi terhadap RKA</CardTitle>
-          <CardDescription>Selisih = realisasi dikurangi RKA. Buka sebuah baris untuk rincian akunnya.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Pos</TableHead>
-                <TableHead className="text-right">Realisasi</TableHead>
-                <TableHead className="text-right">RKA</TableHead>
-                <TableHead className="text-right">Selisih</TableHead>
-                <TableHead className="text-right">Capaian</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {r.rows.map((row) => (
-                <TableRow key={row.key} data-testid={`pnl-${row.key}`} className={STATEMENT_RESULTS.includes(row.key) ? "bg-muted/40 font-medium" : ""}>
-                  <TableCell className="min-w-64 align-top whitespace-normal">
-                    {row.accounts.length ? (
-                      <details>
-                        <summary className="cursor-pointer">{STATEMENT_LABEL[row.key]}</summary>
-                        <ul className="mt-2 grid gap-1 text-xs font-normal">
-                          {row.accounts.map((a) => (
-                            <li key={a.coaCode} className="flex flex-wrap justify-between gap-x-4">
-                              <span>
-                                {a.coaCode ? `${a.coaCode} · ` : ""}
-                                {a.name}
-                              </span>
-                              <span className="tabular text-muted-foreground flex gap-1">
-                                <FigureCell value={a.actual} unit={unit} /> / <FigureCell value={a.budget} unit={unit} />
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </details>
-                    ) : (
-                      STATEMENT_LABEL[row.key]
-                    )}
-                  </TableCell>
-                  {figure(row.actual, "actual")}
-                  {figure(row.budget, "budget")}
-                  {figure(row.variance, "variance")}
-                  {percent(row.achieved)}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-      {consolidated ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Per entitas</CardTitle>
-            <CardDescription>Realisasi tiap perusahaan sebelum eliminasi.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Pos</TableHead>
-                  {perEntity.map((e) => (
-                    <TableHead key={e.entity} className="text-right">
-                      {e.entity}
-                    </TableHead>
+      {/* Tables of dashes say less than one sentence. */}
+      {!recorded && !r.budgetFound ? (
+        <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">Belum ada realisasi maupun RKA untuk periode ini. Pilih bulan lain di atas.</p>
+      ) : (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Realisasi terhadap RKA</CardTitle>
+              <CardDescription>Selisih = realisasi dikurangi RKA. Buka sebuah baris untuk rincian akunnya.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Pos</TableHead>
+                    <TableHead className="text-right">Realisasi</TableHead>
+                    <TableHead className="text-right">RKA</TableHead>
+                    <TableHead className="text-right">Selisih</TableHead>
+                    <TableHead className="text-right">Capaian</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {r.rows.map((row) => (
+                    <TableRow key={row.key} data-testid={`pnl-${row.key}`} className={STATEMENT_RESULTS.includes(row.key) ? "bg-muted/40 font-medium" : ""}>
+                      <TableCell className="min-w-64 align-top whitespace-normal">
+                        {row.accounts.length ? (
+                          <details>
+                            <summary className="cursor-pointer">{STATEMENT_LABEL[row.key]}</summary>
+                            <ul className="mt-2 grid gap-1 text-xs font-normal">
+                              {row.accounts.map((a) => (
+                                <li key={a.coaCode} className="flex flex-wrap justify-between gap-x-4">
+                                  <span>
+                                    {a.coaCode ? `${a.coaCode} · ` : ""}
+                                    {a.name}
+                                  </span>
+                                  <span className="tabular text-muted-foreground flex gap-1">
+                                    <FigureCell value={a.actual} unit={unit} /> / <FigureCell value={a.budget} unit={unit} />
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </details>
+                        ) : (
+                          STATEMENT_LABEL[row.key]
+                        )}
+                      </TableCell>
+                      {figure(row.actual, "actual")}
+                      {figure(row.budget, "budget")}
+                      {figure(row.variance, "variance")}
+                      {percent(row.achieved)}
+                    </TableRow>
                   ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {STATEMENT_ROWS.map((key) => (
-                  <TableRow key={key} className={STATEMENT_RESULTS.includes(key) ? "bg-muted/40 font-medium" : ""}>
-                    <TableCell>{STATEMENT_LABEL[key]}</TableCell>
-                    {perEntity.map((e) => figure(e.s[key], e.entity))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      ) : null}
-      {consolidated && r.pairs.length ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Antar perusahaan</CardTitle>
-            <CardDescription>Penjualan satu perusahaan grup kepada yang lain, dan biaya yang dicatat pembelinya. Selisih perlu diperiksa.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Penjual → pembeli</TableHead>
-                  <TableHead className="text-right">Pendapatan penjual</TableHead>
-                  <TableHead className="text-right">Biaya pembeli</TableHead>
-                  <TableHead className="text-right">Selisih</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {r.pairs.map((p) => (
-                  <TableRow key={`${p.seller}-${p.buyer}`}>
-                    <TableCell className="font-medium">
-                      {p.seller} → {p.buyer}
-                    </TableCell>
-                    {figure(p.revenue, "revenue")}
-                    {figure(p.cost, "cost")}
-                    {figure(p.revenue.minus(p.cost), "gap")}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      ) : null}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+          {consolidated ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Per entitas</CardTitle>
+                <CardDescription>Realisasi tiap perusahaan sebelum eliminasi.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Pos</TableHead>
+                      {perEntity.map((e) => (
+                        <TableHead key={e.entity} className="text-right">
+                          {e.entity}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {STATEMENT_ROWS.map((key) => (
+                      <TableRow key={key} className={STATEMENT_RESULTS.includes(key) ? "bg-muted/40 font-medium" : ""}>
+                        <TableCell>{STATEMENT_LABEL[key]}</TableCell>
+                        {perEntity.map((e) => figure(e.s[key], e.entity))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          ) : null}
+          {consolidated && r.pairs.length ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Antar perusahaan</CardTitle>
+                <CardDescription>Penjualan satu perusahaan grup kepada yang lain, dan biaya yang dicatat pembelinya. Selisih perlu diperiksa.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Penjual → pembeli</TableHead>
+                      <TableHead className="text-right">Pendapatan penjual</TableHead>
+                      <TableHead className="text-right">Biaya pembeli</TableHead>
+                      <TableHead className="text-right">Selisih</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {r.pairs.map((p) => (
+                      <TableRow key={`${p.seller}-${p.buyer}`}>
+                        <TableCell className="font-medium">
+                          {p.seller} → {p.buyer}
+                        </TableCell>
+                        {figure(p.revenue, "revenue")}
+                        {figure(p.cost, "cost")}
+                        {figure(p.revenue.minus(p.cost), "gap")}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          ) : null}
+        </>
+      )}
     </div>
   );
 }

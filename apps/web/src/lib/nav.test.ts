@@ -81,3 +81,14 @@ describe("whereAmI", () => {
     expect(whereAmI("/tidak-ada", items)).toBeNull();
   });
 });
+
+describe("report groups", () => {
+  it("splits the long report menu, keeping each group together and no longer than seven", () => {
+    const items = navFor("finance");
+    const groups = items.map((i) => i.group).filter((g, i, all) => g !== all[i - 1]);
+    expect(groups).toEqual([...new Set(groups)]);
+    expect(groups).toEqual(expect.arrayContaining(["Kinerja", "Penjualan", "Kas", "Kontrol"]));
+    for (const g of ["Kinerja", "Penjualan", "Kas", "Kontrol"]) expect(navFor("director").filter((i) => i.group === g).length).toBeLessThanOrEqual(7);
+    expect(items.some((i) => (i.group as string) === "Laporan")).toBe(false);
+  });
+});

@@ -35,12 +35,12 @@ Setiap pengguna memegang posisi: peran, unit organisasi, dan entitas yang boleh 
 | --- | --- | --- | --- |
 | Requestor | Beranda, RKA Saya, Permintaan Pembayaran, Master Data, Panduan | Baris unitnya selama Draft | Kirim ke Default Owner |
 | Default Owner | Beranda, RKA Saya, Antrean Konsolidasi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Peringatan Dini, Register Risiko, Master Data, Panduan | Baris dalam cakupannya selama Konsolidasi | Kirim ke Division Owner, Kembalikan (catatan wajib) |
-| Division Owner | Beranda, RKA Divisi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Peringatan Dini, Register Risiko, Management Summary, Master Data, Panduan | Tidak | Setujui & kirim ke Finance, Kembalikan ke Default Owner (catatan wajib) |
-| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Tracker Telkom, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Target KPI, Kesehatan KPI, Peringatan Dini, Register Risiko, Laporan Berkala, Portofolio Proyek, Profitabilitas Proyek, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Realisasi, Biaya Bersama, COA Master, Kepatuhan, Panduan | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
+| Division Owner | Beranda, RKA Divisi, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Management Summary, Peringatan Dini, Register Risiko, Master Data, Panduan | Tidak | Setujui & kirim ke Finance, Kembalikan ke Default Owner (catatan wajib) |
+| Finance Reviewer | Beranda, Status Board Finance, Daftar Baris RKA, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Tracker Telkom, Implementasi, Pengadaan, Management Summary, Laba Rugi, Tutup Buku, Target KPI, Kesehatan KPI, Laporan Berkala, Pipeline, SPH, Portofolio Proyek, Profitabilitas Proyek, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Peringatan Dini, Register Risiko, Master Data, Persetujuan Master, Realisasi, Biaya Bersama, COA Master, Kepatuhan, Panduan | Baris di Review Finance | Minta klarifikasi (catatan wajib), Finalisasi, Kunci versi |
 | Business Finance (BFP) | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pengadaan, SPH, Master Data, Panduan | Tidak | Memeriksa Permintaan Pembayaran (lihat bagian Permintaan Pembayaran) |
-| Cash Management | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Rekening Bank, Invoice, Piutang, Tracker Telkom, Peringatan Dini, Kas Mingguan, Obligo Bank, Master Data, Panduan | Tidak | Menjadwalkan dan membayar Permintaan Pembayaran |
-| Direktur | Beranda, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Tracker Telkom, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Target KPI, Kesehatan KPI, Peringatan Dini, Register Risiko, Laporan Berkala, Dashboard BOD, Portofolio Proyek, Profitabilitas Proyek, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, hanya membaca |
-| Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Tracker Telkom, Implementasi, Pengadaan, Laba Rugi, Tutup Buku, Target KPI, Kesehatan KPI, Peringatan Dini, Register Risiko, Laporan Berkala, Dashboard BOD, Portofolio Proyek, Profitabilitas Proyek, Management Summary, Pipeline, SPH, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
+| Cash Management | Beranda, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Rekening Bank, Invoice, Piutang, Tracker Telkom, Kas Mingguan, Obligo Bank, Peringatan Dini, Master Data, Panduan | Tidak | Menjadwalkan dan membayar Permintaan Pembayaran |
+| Direktur | Beranda, Kunci RKA, Siklus RKA, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Tracker Telkom, Implementasi, Pengadaan, Dashboard BOD, Management Summary, Laba Rugi, Tutup Buku, Target KPI, Kesehatan KPI, Laporan Berkala, Pipeline, SPH, Portofolio Proyek, Profitabilitas Proyek, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Peringatan Dini, Register Risiko, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, hanya membaca |
+| Auditor | Beranda, Monitor Anggaran, Analisis Varians, Permintaan Pembayaran, Rekap Pembayaran, Hutang, Invoice, Piutang, Pajak, Tracker Telkom, Implementasi, Pengadaan, Dashboard BOD, Management Summary, Laba Rugi, Tutup Buku, Target KPI, Kesehatan KPI, Laporan Berkala, Pipeline, SPH, Portofolio Proyek, Profitabilitas Proyek, Arus Kas, Skenario, Kas Mingguan, Obligo Bank, Peringatan Dini, Register Risiko, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Panduan | Tidak | Tidak ada, membaca semua termasuk jejak audit |
 | Admin | Beranda, Rekening Bank, Master Data, Persetujuan Master, Kepatuhan, Audit Log, Pengguna, Unit & Entitas, Struktur Organisasi, Panduan | Tidak | Tidak ada; tidak melihat angka anggaran |
 
 Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner) juga melihat Pipeline dan SPH; orang BCD, PDMS (PMO, SCM, ISO, MSO) dan Legal & Contract Management (FRM-LCM) dengan peran yang sama juga melihat Implementasi; orang PDMS juga Pengadaan. Orang BCD, PDMS, FRM-LCM, FRM-FIN-ATM dan Division Owner FRM melihat Tracker Telkom. Unit Accounting & Tax Management (FRM-FIN-ATM) dengan peran yang sama melihat Invoice, Piutang, Pajak, Laba Rugi dan Tutup Buku, dan Requestor-nya juga Monitor Anggaran. Orang PMO dengan peran Requestor, Default Owner atau Division Owner juga melihat Obligo Bank. Division Owner FRM juga melihat Target KPI, Kesehatan KPI, Laporan Berkala, Dashboard BOD, Portofolio Proyek, Profitabilitas Proyek, Pengadaan, Invoice, Piutang, Pajak, Laba Rugi, Tutup Buku, Kas Mingguan, Obligo Bank, Persetujuan Master dan Kepatuhan. Setiap halaman dan tindakan diperiksa di server sesuai aturan ini, jadi menu yang tersembunyi bukan satu-satunya pengaman. Semua peran melihat menu Panduan.
@@ -49,7 +49,11 @@ Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner)
 
 - **Masuk**: gunakan email kantor dan kata sandi. Akun dibuat oleh Admin lewat undangan email; tidak ada pendaftaran mandiri. *Lupa kata sandi?* mengirim tautan untuk membuat kata sandi baru.
 - **Beranda**: ringkasan untuk peran Anda. Tiga kartu di atas menunjukkan *Menunggu tindakan Anda* (baris di antrean Anda), *Batas pengajuan* (sisa hari) dan *Sudah final* (porsi baris yang sudah difinalisasi atau dikunci). Di bawahnya ada tombol ke layar kerja Anda, daftar *Belum final* (jumlah baris per tahap, peran yang memegangnya dan divisinya; daftar ini naik ke atas tombol bila tidak ada yang menunggu Anda; Requestor, Default Owner dan Finance dapat mengkliknya untuk membuka baris itu), *Posisi RKA*, serta *Aktivitas terbaru* (baris yang dipindahkan sekaligus diringkas menjadi satu entri). *Posisi RKA* berupa tabel: satu baris per divisi, satu kolom per tahap (Draft sampai Terkunci) berisi jumlah baris, lalu total baris dan porsi yang sudah final.
-- **Menu**: dikelompokkan menjadi Anggaran, Laporan, Data dan Admin. Tombol panah di samping logo melipat menu menjadi ikon; pilihan ini diingat. Hanya kelompok halaman yang sedang dibuka yang terbuka; klik judul kelompok untuk membuka atau menutup yang lain.
+- **Menu**: dikelompokkan menjadi Anggaran, Pembayaran, Penagihan, Proyek, Kinerja, Penjualan, Kas, Kontrol, Data dan Admin (hanya yang berisi layar Anda). Tombol panah di samping logo melipat menu menjadi ikon; pilihan ini diingat. Hanya kelompok halaman yang sedang dibuka yang terbuka; klik judul kelompok untuk membuka atau menutup yang lain.
+- **Lewati ke isi**: tekan Tab sekali setelah halaman terbuka untuk melompati menu. Tabel yang lebih lebar dari layar dapat dipilih dengan Tab lalu digeser dengan tombol panah.
+- **Belum final** (Beranda): menunjukkan berapa hari baris terlama diam di tiap tahap dan divisi, serta sisa hari batas pengajuan.
+- **Daftar baris**: tiap baris menyebut unit pemilik (dan peminta bila berbeda); saring dengan **Divisi**. Total, Actual dan Perubahan tampil sebelum kolom bulan.
+- **Tanpa pendapatan**: bila RKA belum memuat pendapatan, Arus Kas dan kartu Arus kas di Beranda memberi peringatan bahwa saldo hanya mencerminkan biaya.
 - **Lokasi**: di layar lebar, baris di atas judul halaman menulis kelompok menu dan nama layar; pada halaman rincian, nama layar menjadi tautan kembali.
 - **Tabel panjang** (COA Master, Realisasi, Biaya Bersama, Pipeline) digulir di dalam kotaknya sendiri dengan judul kolom tetap terlihat; gunakan kotak cari di atasnya.
 - **Posisi aktif**: pengguna yang memegang lebih dari satu posisi, atau menjadi pjs, berganti posisi lewat menu akun (pojok kanan atas), bagian *Posisi aktif*. Menu, cakupan dan antrean mengikuti posisi yang aktif.
@@ -370,7 +374,7 @@ Permintaan jenis *Pembayaran* yang memilih **Mitra** adalah tagihan vendor: isi 
 
 ## Skenario
 
-Menu **Laporan → Skenario** memproyeksikan tahun berjalan dalam tiga skenario: **Conservative**, **Normal** dan **Aggressive**. Finance Reviewer mengisi; Direktur dan Auditor membaca.
+Menu **Kas → Skenario** memproyeksikan tahun berjalan dalam tiga skenario: **Conservative**, **Normal** dan **Aggressive**. Finance Reviewer mengisi; Direktur dan Auditor membaca.
 
 - Asumsi per skenario: target pendapatan, COGS % dan OpEx % dari pendapatan, tarif pajak, DSO, DPO dan CapEx; satu **persentase pendapatan per bulan** (jumlah 100). Nilai awal dari sheet 22_Assumptions sampai disimpan. *Isi Normal dari RKA* mengambil total dan rasio RKA, bila RKA punya pendapatan.
 - Proyeksi kas memakai aturan **Arus Kas**: DSO dan DPO dibulatkan ke bulan sebagai jeda penagihan dan pembayaran; saldo awal, pinjaman dan saldo minimum dari Arus Kas; penyusutan CapEx/12 mengurangi laba, bukan kas.
@@ -379,7 +383,7 @@ Menu **Laporan → Skenario** memproyeksikan tahun berjalan dalam tiga skenario:
 
 ## Kas Mingguan
 
-Menu **Laporan → Kas Mingguan** menampilkan realisasi kas per minggu: **W1** tanggal 1–7, **W2** 8–14, **W3** 15–21, **W4** 22 sampai akhir bulan. Dibaca oleh Cash Management, Finance, Division Owner FRM, Direktur dan Auditor.
+Menu **Kas → Kas Mingguan** menampilkan realisasi kas per minggu: **W1** tanggal 1–7, **W2** 8–14, **W3** 15–21, **W4** 22 sampai akhir bulan. Dibaca oleh Cash Management, Finance, Division Owner FRM, Direktur dan Auditor.
 
 - Pilih **Bulan**, lalu **Tampilkan**. Filter Entitas di header memilih satu PT; tanpa filter, angka adalah konsolidasi semua PT aktif dan tabel **Per entitas** menunjukkan penyusunnya.
 - **Saldo kas awal** berasal dari saldo 1 Januari di **Arus Kas → Asumsi** ditambah semua mutasi sebelumnya. PT yang saldonya belum diisi dihitung nol dan diberi peringatan.
@@ -391,7 +395,7 @@ Menu **Laporan → Kas Mingguan** menampilkan realisasi kas per minggu: **W1** t
 
 ## Obligo Bank
 
-Menu **Laporan → Obligo Bank** memuat fasilitas bank yang dipakai: plafon, outstanding dan kelonggaran. Dibaca Cash Management, Finance, Division Owner FRM, Direktur, Auditor dan orang PMO. Peringatan muncul bila satu bank memegang lebih dari 50% seluruh plafon.
+Menu **Kas → Obligo Bank** memuat fasilitas bank yang dipakai: plafon, outstanding dan kelonggaran. Dibaca Cash Management, Finance, Division Owner FRM, Direktur, Auditor dan orang PMO. Peringatan muncul bila satu bank memegang lebih dari 50% seluruh plafon.
 
 - **Fasilitas** dikelola Cash Management (*Kelola fasilitas*): bank, nama, jenis (Bank Garansi, KMK, Kredit Investasi, Trade Line), perusahaan, plafon, expired, tanggal bunga dan rekening escrow. Plafon tidak boleh di bawah outstanding.
 - **Permintaan** penarikan kredit atau Bank Garansi diajukan orang PMO atau Finance: pilih fasilitas, nilai, underlying (kontrak atau KL) dan lampirkan dokumennya. Bank Garansi wajib terkait proyek dan memilih tipe (Penawaran, Pelaksanaan, Pemeliharaan, Uang Muka). Melebihi kelonggaran, atau fasilitas expired, ditolak.
@@ -415,7 +419,7 @@ Menu **Penagihan → Pajak** merangkum PPN dan PPh per masa (bulan). Accounting 
 
 ## Tutup Buku
 
-Menu **Laporan → Tutup Buku** menyiapkan dan menyimpan angka akhir bulan per PT. Dibaca Accounting, Finance, Division Owner FRM, Direktur dan Auditor.
+Menu **Kinerja → Tutup Buku** menyiapkan dan menyimpan angka akhir bulan per PT. Dibaca Accounting, Finance, Division Owner FRM, Direktur dan Auditor.
 
 1. **Accounting & Tax** mengisi total neraca bulan itu: aset lancar, total aset, liabilitas jangka pendek, total liabilitas dan ekuitas (boleh negatif).
 2. Periksa **laba rugi** berjalan: pendapatan dari invoice terbit (DPP) pada bulan itu; biaya dari Permintaan Pembayaran yang **dibayar** pada bulan itu, akrual dan koreksi, biaya di Kas Mingguan; serta bunga pinjaman. Belanja modal (CAPEX) dan akun neraca tidak masuk.
@@ -424,7 +428,7 @@ Menu **Laporan → Tutup Buku** menyiapkan dan menyimpan angka akhir bulan per P
 
 ## Laba Rugi
 
-Menu **Laporan → Laba Rugi** menyusun realisasi dari Pendapatan sampai Laba Bersih dan membandingkannya dengan RKA. Dibaca Accounting, Finance, Division Owner FRM, Direktur dan Auditor.
+Menu **Kinerja → Laba Rugi** menyusun realisasi dari Pendapatan sampai Laba Bersih dan membandingkannya dengan RKA. Dibaca Accounting, Finance, Division Owner FRM, Direktur dan Auditor.
 
 - Bila periode itu belum punya realisasi, kartu di atas menulis *Belum ada data*, bukan nol.
 - Pilih **Bulan** dan **Periode** (bulan berjalan, kuartal berjalan atau tahun berjalan sampai bulan itu). Bulan yang sudah ditutup memakai snapshot **Tutup Buku**; bulan yang belum ditutup dihitung dari pembukuan saat ini.
@@ -460,7 +464,7 @@ Menu **Penagihan → Tracker Telkom** mengikuti proyek **skema TELKOM** (ditanda
 
 ## Target KPI
 
-Menu **Laporan → Target KPI** memuat target tahunan per perusahaan: revenue won bidding (dan bagian *Direct*), cash-in, EBITDA % dan Net Margin %.
+Menu **Kinerja → Target KPI** memuat target tahunan per perusahaan: revenue won bidding (dan bagian *Direct*), cash-in, EBITDA % dan Net Margin %.
 
 - **Direktur PT** (kursi Direktur yang dibatasi pada perusahaannya) mengisi target, melampirkan **keputusan direksi**, lalu *Ajukan ke BOD*.
 - **BOD** (kursi Direktur untuk semua entitas) *Setujui* atau *Kembalikan* dengan catatan. Pengaju tidak bisa menyetujui, dan persetujuan butuh dokumen terlampir.
@@ -470,7 +474,7 @@ Menu **Laporan → Target KPI** memuat target tahunan per perusahaan: revenue wo
 
 ## Kesehatan KPI
 
-Menu **Laporan → Kesehatan KPI** menilai 10 KPI sheet 08_KPI_Thresholds untuk bulan yang dipilih: **SEHAT**, **WASPADA** atau **KRITIS**, dengan saran tindakan bila tidak sehat.
+Menu **Kinerja → Kesehatan KPI** menilai 10 KPI sheet 08_KPI_Thresholds untuk bulan yang dipilih: **SEHAT**, **WASPADA** atau **KRITIS**, dengan saran tindakan bila tidak sehat.
 
 - Angka arus (EBITDA, margin, cash in/out, budget) **tahun berjalan** sampai bulan itu; neraca memakai total terakhir yang diisi di Tutup Buku.
 - Rencana kas memakai proyeksi **Arus Kas**; realisasi kas dari **Kas Mingguan**; budget biaya dari RKA tanpa CAPEX.
@@ -480,7 +484,7 @@ Menu **Laporan → Kesehatan KPI** menilai 10 KPI sheet 08_KPI_Thresholds untuk 
 
 ## Peringatan Dini
 
-Menu **Laporan → Peringatan Dini** menjalankan aturan EW-01 sampai EW-15 sheet P3_Module_Spec (P3-M4) untuk seluruh grup, atau per divisi/unit untuk EW-08 dan EW-09. Diperiksa setiap hari; Finance atau Head FRM bisa menekan **Periksa sekarang**.
+Menu **Kontrol → Peringatan Dini** menjalankan aturan EW-01 sampai EW-15 sheet P3_Module_Spec (P3-M4) untuk seluruh grup, atau per divisi/unit untuk EW-08 dan EW-09. Diperiksa setiap hari; Finance atau Head FRM bisa menekan **Periksa sekarang**.
 
 - Peringatan ditugaskan ke pemilik aturan (Head FRM, Direktur, Cash Management, kepala BCD/PMO/HCM atau divisi); bila kursinya kosong, ke Head FRM, lalu Direktur grup. Aturan ber-email mengirim satu email ringkas per orang.
 - Kolom **Data** pada daftar aturan menandai aturan yang *Belum ada data*; tidak adanya peringatan untuk aturan itu bukan berarti aman. EW-01 memakai kas yang sudah dicatat, bukan proyeksi Arus Kas.
@@ -491,7 +495,7 @@ Menu **Laporan → Peringatan Dini** menjalankan aturan EW-01 sampai EW-15 sheet
 
 ## Register Risiko
 
-Menu **Laporan → Register Risiko** (sheet P3_Module_Spec P3-M3 dan EXEC_20). Skor = likelihood × impact (1–5): **Critical** 20 ke atas, **High** 15–19, **Medium** 8–14, **Low** di bawah 8. Heatmap 5×5 bisa diklik untuk menyaring.
+Menu **Kontrol → Register Risiko** (sheet P3_Module_Spec P3-M3 dan EXEC_20). Skor = likelihood × impact (1–5): **Critical** 20 ke atas, **High** 15–19, **Medium** 8–14, **Low** di bawah 8. Heatmap 5×5 bisa diklik untuk menyaring.
 
 - Finance, Head FRM dan Direktur menambah dan mengubah risiko perusahaannya (atau grup). High dan Critical wajib punya rencana aksi dan tenggat.
 - Pemilik mencatat **Tindakan**, **Review skor** (jadwal review maju satu bulan) atau **Ubah status**, dengan bukti bila ada. Auditor membaca; pemilik melihat risikonya sendiri.
@@ -501,7 +505,7 @@ Menu **Laporan → Register Risiko** (sheet P3_Module_Spec P3-M3 dan EXEC_20). S
 
 ## Laporan Berkala
 
-Menu **Laporan → Laporan Berkala** (Finance, Head FRM, Direktur, Auditor) mengikuti sheet FC09_Reporting: bulanan, triwulan, semester atau tahunan, per perusahaan atau konsolidasi. Jenis: Laba Rugi, Neraca, Arus Kas, Realisasi vs RKA, Umur Piutang, Sales, Implementasi, Obligo Bank.
+Menu **Kinerja → Laporan Berkala** (Finance, Head FRM, Direktur, Auditor) mengikuti sheet FC09_Reporting: bulanan, triwulan, semester atau tahunan, per perusahaan atau konsolidasi. Jenis: Laba Rugi, Neraca, Arus Kas, Realisasi vs RKA, Umur Piutang, Sales, Implementasi, Obligo Bank.
 
 1. Finance memilih jenis dan periode lalu **Buat draft**. Membuat ulang draft yang sama memperbarui angkanya.
 2. Pembuat menekan **Ajukan review**. Laba Rugi, Neraca, Arus Kas dan Realisasi vs RKA hanya bisa diajukan bila semua bulannya sudah ditutup, dan angkanya diambil ulang saat itu.
@@ -512,7 +516,7 @@ Laporan yang disetujui tidak bisa diubah atau dihapus; perubahan dibuat sebagai 
 
 ## Dashboard BOD
 
-Menu **Laporan → Dashboard BOD** (Direktur, Auditor, Head FRM) mengikuti sheet 18_Dashboard_Spec_BOD. Pilih bulan; entitas mengikuti filter tampilan. Angka dihitung saat halaman dibuka.
+Menu **Kinerja → Dashboard BOD** (Direktur, Auditor, Head FRM) mengikuti sheet 18_Dashboard_Spec_BOD. Pilih bulan; entitas mengikuti filter tampilan. Angka dihitung saat halaman dibuka.
 
 - 8 kartu KPI dengan status; **Rincian** berisi rumus, saran dan tautan ke layar sumber.
 - Revenue won bidding dan cash-in terhadap target KPI yang disetujui; tren kas dan EBITDA; proyeksi kas 12 bulan.
@@ -523,7 +527,7 @@ Menu **Laporan → Dashboard BOD** (Direktur, Auditor, Head FRM) mengikuti sheet
 
 ## Portofolio Proyek
 
-Menu **Laporan → Portofolio Proyek** (Finance, Direktur, Auditor, Head FRM): per proyek nilai kontrak, revenue (invoice terbit, DPP), COGS (pembayaran lunas akun COGS), gross profit dan GP %, kas masuk, piutang dan BG aktif.
+Menu **Penjualan → Portofolio Proyek** (Finance, Direktur, Auditor, Head FRM): per proyek nilai kontrak, revenue (invoice terbit, DPP), COGS (pembayaran lunas akun COGS), gross profit dan GP %, kas masuk, piutang dan BG aktif.
 
 - Status: **Won** (Initiation), **Active**, **Closed**, **Drop**.
 - **Delayed** bila target RFS atau tanggal rencana site terlewat; **At-risk** bila ada site terkendala atau target RFS tinggal 14 hari; selain itu **On-track**.
@@ -531,7 +535,7 @@ Menu **Laporan → Portofolio Proyek** (Finance, Direktur, Auditor, Head FRM): p
 
 ## Profitabilitas Proyek
 
-Menu **Laporan → Profitabilitas Proyek** (sheet 29_Project_Profitability) untuk Finance, Direktur, Auditor dan Head FRM.
+Menu **Penjualan → Profitabilitas Proyek** (sheet 29_Project_Profitability) untuk Finance, Direktur, Auditor dan Head FRM.
 
 - **Gross profit** = nilai kontrak − pembayaran lunas akun COGS. **EBITDA** = gross profit − porsi OPEX. **Net** = EBITDA setelah pajak (asumsi pajak Arus Kas, bila kosong 22%).
 - **Porsi OPEX:** OPEX RKA tahun itu per perusahaan (sesudah alokasi biaya bersama), dibagi ke proyek yang masih berjalan menurut nilai kontrak. Proyek Closed tidak mendapat porsi sehingga tidak dinilai.

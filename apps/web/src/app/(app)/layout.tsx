@@ -43,6 +43,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen">
+      <a href="#isi" className="bg-background focus:ring-ring sr-only rounded-md border px-3 py-2 text-sm font-medium focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:ring-2">
+        Lewati ke isi
+      </a>
       <Sidebar items={nav} defaultCollapsed={collapsed} />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="bg-background sticky top-0 z-40 flex min-h-14 shrink-0 flex-wrap items-center gap-x-2 border-b px-2 md:px-6">
@@ -100,7 +103,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             />
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-6">
+        <main id="isi" tabIndex={-1} className="flex-1 p-4 outline-none md:p-6">
           {/* The one column every page sits in: left aligned, same width. Pages set no outer width of their own. */}
           <div data-page className="max-w-screen-2xl">
             <Breadcrumb items={nav} />

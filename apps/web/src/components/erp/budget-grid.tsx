@@ -67,13 +67,13 @@ export function BudgetGrid({
           {hide.entity ? null : <TableHead>Entitas</TableHead>}
           <TableHead>Status</TableHead>
           <TableHead className="text-right">Total RKA</TableHead>
+          <TableHead className="text-right">Actual {priorYear}</TableHead>
+          <TableHead className="text-right">Perubahan</TableHead>
           {MONTHS.map((m) => (
             <TableHead key={m} className="text-right">
               {m}
             </TableHead>
           ))}
-          <TableHead className="text-right">Actual {priorYear}</TableHead>
-          <TableHead className="text-right">Perubahan</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -94,7 +94,10 @@ export function BudgetGrid({
                 <FigureCell value={lineTotal(l)} unit={unit} className="font-medium" />
                 <StatusBadge state={l.state} />
               </div>
-              <div className="text-muted-foreground flex items-center gap-2 text-xs">
+              <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 text-xs">
+                <span data-testid={`unit-${l.id}`} className="shrink-0 font-medium">
+                  {l.requestorUnit === l.ownerUnit ? l.ownerUnit : `${l.ownerUnit} · diminta ${l.requestorUnit}`}
+                </span>
                 {discussion ? <DiscussionLink id={l.id} count={l.commentCount} about={`${l.coaCode} · ${l.item || l.coaName}`} /> : null}
                 {l.flags?.length ? (
                   <span title={l.flags.join("; ")} className="bg-warning/15 text-foreground rounded px-1 font-medium">
@@ -115,17 +118,17 @@ export function BudgetGrid({
             <TableCell className="bg-accent/50 text-right font-medium" data-testid={`total-${l.id}`}>
               <FigureCell value={lineTotal(l)} unit={unit} />
             </TableCell>
-            {l.months.map((m, i) => (
-              <TableCell key={i} className="text-right">
-                <FigureCell value={m} unit={unit} />
-              </TableCell>
-            ))}
             <TableCell className="text-right" data-testid={`actual-${l.id}`}>
               {l.priorActual ? <FigureCell value={l.priorActual} unit={unit} /> : "—"}
             </TableCell>
             <TableCell className="text-right">
               <VarianceCell plan={lineTotal(l)} base={l.priorActual ?? null} unit={unit} />
             </TableCell>
+            {l.months.map((m, i) => (
+              <TableCell key={i} className="text-right">
+                <FigureCell value={m} unit={unit} />
+              </TableCell>
+            ))}
           </TableRow>
         ))}
       </TableBody>
@@ -138,12 +141,12 @@ export function BudgetGrid({
               <TableCell className="text-right" data-testid={`grand-total-${t.kind}`}>
                 <FigureCell value={t.total} unit={unit} />
               </TableCell>
+              <TableCell colSpan={2} />
               {t.months.map((m, i) => (
                 <TableCell key={i} className="text-right">
                   <FigureCell value={m} unit={unit} />
                 </TableCell>
               ))}
-              <TableCell colSpan={2} />
             </TableRow>
           ))}
         </TableFooter>

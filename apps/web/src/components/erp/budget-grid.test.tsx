@@ -39,6 +39,18 @@ describe("BudgetGrid", () => {
     expect(screen.getByRole("link", { name: /^Diskusi/ }).className).toContain("min-h-6");
   });
 
+  it("names the unit that owns each line, and who asked for it when that differs", () => {
+    render(<BudgetGrid priorYear={2026} lines={[{ ...lines[0]!, ownerUnit: "FRM", requestorUnit: "SCM" }, lines[1]!]} />);
+    expect(screen.getByTestId("unit-a").textContent).toBe("FRM · diminta SCM");
+    expect(screen.getByTestId("unit-c").textContent).toBe("FRM");
+  });
+
+  it("puts the total, last year and the change ahead of the months", () => {
+    render(<BudgetGrid priorYear={2026} lines={lines} />);
+    const heads = screen.getAllByRole("columnheader").map((h) => h.textContent);
+    expect(heads.slice(3, 7)).toEqual(["Total RKA", "Actual 2026", "Perubahan", "Jan"]);
+  });
+
   it("computes each line total from the 12 months", () => {
     render(<BudgetGrid priorYear={2026} lines={lines} unit="rp" />);
     expect(screen.getByTestId("total-a").textContent).toBe("237.855.840");

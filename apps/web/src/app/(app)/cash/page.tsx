@@ -9,6 +9,7 @@ import { CashTable, type CashRow } from "@/components/erp/cash-table";
 import { CashBalanceChart, WaterfallChart } from "@/components/erp/charts";
 import { KpiCard, KpiStrip } from "@/components/erp/kpi-card";
 import { PageHeader } from "@/components/erp/page-header";
+import { NoRevenueNotice } from "@/components/erp/summary-notes";
 import { LoanEditor } from "@/components/erp/loan-editor";
 import { MONTHS } from "@/components/erp/budget-grid";
 import { activeView } from "@/lib/view-filter";
@@ -91,6 +92,8 @@ export default async function CashPage() {
   const f = view.forecasts.get(scope);
   const s = view.settings;
   const lowest = f ? f.rows.closing.reduce((a, b) => (b.lt(a) ? b : a)) : ZERO;
+  const noRevenue = !!f && f.pnl.revenue.total.isZero();
+  const withoutRevenue = noRevenue ? "Belum termasuk pendapatan RKA" : undefined;
   const lowestMonth = f ? MONTHS[f.rows.closing.indexOf(lowest)] : "";
   const peakNeed = f ? f.rows.fundingNeed.reduce((a, b) => (b.gt(a) ? b : a)) : ZERO;
   const n = (m: Money) => scaleTo(m, unit).toNumber();
@@ -112,11 +115,12 @@ export default async function CashPage() {
 
       {f ? (
         <>
+          {noRevenue ? <NoRevenueNotice /> : null}
           <KpiStrip>
-            <KpiCard label="Saldo kas akhir Des" value={f.rows.closing[11]!} unit={unit} signal trend={f.rows.closing.map(n)} />
-            <KpiCard label="Saldo terendah" value={lowest} unit={unit} signal note={lowestMonth} />
+            <KpiCard label="Saldo kas akhir Des" note={withoutRevenue} value={f.rows.closing[11]!} unit={unit} signal trend={f.rows.closing.map(n)} />
+            <KpiCard label="Saldo terendah" value={lowest} unit={unit} signal note={noRevenue ? `${lowestMonth} · tanpa pendapatan` : lowestMonth} />
             <KpiCard label="Kebutuhan pendanaan tertinggi" value={peakNeed} unit={unit} note="Di bawah saldo kas minimum" />
-            <KpiCard label="Arus kas operasi setahun" value={total(f.rows.operating)} unit={unit} signal trend={f.rows.operating.map(n)} />
+            <KpiCard label="Arus kas operasi setahun" note={withoutRevenue} value={total(f.rows.operating)} unit={unit} signal trend={f.rows.operating.map(n)} />
           </KpiStrip>
           <div className="grid gap-6 xl:grid-cols-2">
             <Card>

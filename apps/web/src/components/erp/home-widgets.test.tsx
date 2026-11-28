@@ -1,7 +1,7 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { money } from "@estrada/domain";
-import { SpendingCard, WidgetCard } from "./home-widgets";
+import { CashCard, SpendingCard, WidgetCard } from "./home-widgets";
 
 const rows = [
   { unit: "SCM", budget: money("2400"), actual: money("500"), committed: money("50"), remaining: money("1850"), utilisation: money("22.9"), runRate: money("3000"), flagged: true },
@@ -15,6 +15,13 @@ describe("Beranda cards", () => {
     const row = within(screen.getByTestId("spend-SCM"));
     expect(row.getByText("22,9%")).toBeTruthy();
     expect(row.getByText("Varians > 10%")).toBeTruthy();
+  });
+
+  it("warns on the cash card when the projection holds no revenue", () => {
+    const months = Array.from({ length: 12 }, () => money("0"));
+    render(<CashCard description="x" unit="rp" cash={{ in: months, out: months, closing: months, ending: money("-1"), runwayMonths: money("0"), noRevenue: true }} />);
+    expect(screen.getByText(/belum memuat pendapatan/)).toBeTruthy();
+    expect(screen.queryByText(/runway/)).toBeNull();
   });
 
   it("says so when there is nothing to show, and links to the detail only when given", () => {

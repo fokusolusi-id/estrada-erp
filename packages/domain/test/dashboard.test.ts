@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cashWaterfall, cycleProgress, headlinePrior } from "../src/dashboard";
+import { cashWaterfall, cycleProgress, headlinePrior, pendingByStage } from "../src/dashboard";
 import { money, ZERO } from "../src/money";
 
 describe("headlinePrior: the change badges compare like for like", () => {
@@ -72,5 +72,29 @@ describe("cashWaterfall: opening cash to closing cash through each flow of the y
       ["financing", "130", "180"],
       ["closing", "0", "180"],
     ]);
+  });
+});
+
+describe("how long unfinished lines have waited", () => {
+  const now = new Date("2026-11-28T10:00:00Z");
+  const at = (day: string) => [{ at: `2026-11-${day}T09:00:00Z` }];
+
+  it("counts days since each held line last moved and reports the longest", () => {
+    const [stage] = pendingByStage(
+      [
+        { state: "consolidation", ownerUnit: "SCM", history: [...at("20"), ...at("25")] },
+        { state: "consolidation", ownerUnit: "HCM", history: at("18") },
+      ],
+      (u) => u,
+      now,
+    );
+    expect(stage!.idleDays).toBe(10);
+    expect(stage!.divisions.map((d) => [d.division, d.idleDays])).toEqual([["HCM", 10], ["SCM", 3]]);
+  });
+
+  it("says nothing about lines that never moved", () => {
+    const [stage] = pendingByStage([{ state: "draft", ownerUnit: "SCM", history: [] }], (u) => u, now);
+    expect(stage!.idleDays).toBeNull();
+    expect(stage!.divisions[0]!.idleDays).toBeNull();
   });
 });

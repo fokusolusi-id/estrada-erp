@@ -11,7 +11,10 @@ export function PendingStages({ pending, hrefFor }: { pending: readonly PendingS
         const row = (
           <>
             <StatusBadge state={p.state} />
-            <span className="text-muted-foreground min-w-0 flex-1 text-sm">di {ROLE_LABEL[p.role]}</span>
+            <span className="text-muted-foreground min-w-0 flex-1 text-sm">
+              di {ROLE_LABEL[p.role]}
+              {p.idleDays ? ` · terlama diam ${p.idleDays} hari` : ""}
+            </span>
             <span className="tabular text-section whitespace-nowrap">{p.count} baris</span>
           </>
         );
@@ -33,10 +36,12 @@ export function PendingStages({ pending, hrefFor }: { pending: readonly PendingS
                     {hrefFor ? (
                       <Link href={hrefFor(p.state, d.division)} className={`${chip} hover:bg-accent`}>
                         {d.division} {d.count}
+                        {d.idleDays ? ` · ${d.idleDays} hr` : ""}
                       </Link>
                     ) : (
                       <span className={chip}>
                         {d.division} {d.count}
+                        {d.idleDays ? ` · ${d.idleDays} hr` : ""}
                       </span>
                     )}
                   </li>
