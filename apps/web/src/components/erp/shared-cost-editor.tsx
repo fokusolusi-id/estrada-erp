@@ -102,7 +102,7 @@ export function SharedCostEditor({
           </Button>
         </div>
       </div>
-      <Table>
+      <Table scroll>
         <TableHeader>
           <TableRow>
             <TableHead>COA</TableHead>

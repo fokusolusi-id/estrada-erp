@@ -18,7 +18,7 @@ export function WidgetCard({ title, description, href, children }: { title: stri
         <CardTitle className="flex flex-wrap items-baseline justify-between gap-2">
           {title}
           {href ? (
-            <Link href={href} className="text-primary text-sm font-normal underline-offset-2 hover:underline">
+            <Link href={href} aria-label={`Rincian ${title}`} className="text-primary text-sm font-normal underline-offset-2 hover:underline">
               Rincian
             </Link>
           ) : null}

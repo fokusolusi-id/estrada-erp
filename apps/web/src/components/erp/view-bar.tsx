@@ -35,7 +35,7 @@ export function ViewBar({ years, year, openYears, choices, view, unit, onYear, o
     });
   const narrowed = (view.entity ? 1 : 0) + (view.division ? 1 : 0);
   const unitLabel = UNITS.find((u) => u.value === unit)?.label ?? "";
-  const summary = [view.entity, view.division, unitLabel].filter(Boolean).join(" · ");
+  const summary = [view.entity || "Semua entitas", view.division, unitLabel].filter(Boolean).join(" · ");
 
   // The panel closes on a click outside it or Escape; several settings can be changed while it is open.
   useEffect(() => {
@@ -72,7 +72,7 @@ export function ViewBar({ years, year, openYears, choices, view, unit, onYear, o
         onClick={() => setOpen((o) => !o)}
       >
         <SlidersHorizontal aria-hidden className="text-muted-foreground size-4 shrink-0" />
-        {year !== null ? <span className="font-medium">RKA {year}</span> : null}
+        {year !== null ? <span className="whitespace-nowrap font-medium"><span className="max-sm:sr-only">RKA </span>{year}</span> : null}
         <span className="text-muted-foreground hidden truncate md:inline">· {summary}</span>
         {narrowed ? <span className="bg-primary text-primary-foreground rounded-full px-1.5 text-xs md:hidden">{narrowed}</span> : null}
         <ChevronDown aria-hidden className="text-muted-foreground size-3.5 shrink-0" />

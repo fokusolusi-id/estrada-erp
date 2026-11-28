@@ -49,13 +49,15 @@ Menu tambahan menurut unit: orang BCD (Requestor, Default Owner, Division Owner)
 
 - **Masuk**: gunakan email kantor dan kata sandi. Akun dibuat oleh Admin lewat undangan email; tidak ada pendaftaran mandiri. *Lupa kata sandi?* mengirim tautan untuk membuat kata sandi baru.
 - **Beranda**: ringkasan untuk peran Anda. Tiga kartu di atas menunjukkan *Menunggu tindakan Anda* (baris di antrean Anda), *Batas pengajuan* (sisa hari) dan *Sudah final* (porsi baris yang sudah difinalisasi atau dikunci). Di bawahnya ada tombol ke layar kerja Anda, daftar *Belum final* (jumlah baris per tahap, peran yang memegangnya dan divisinya; daftar ini naik ke atas tombol bila tidak ada yang menunggu Anda; Requestor, Default Owner dan Finance dapat mengkliknya untuk membuka baris itu), *Posisi RKA*, serta *Aktivitas terbaru* (baris yang dipindahkan sekaligus diringkas menjadi satu entri). *Posisi RKA* berupa tabel: satu baris per divisi, satu kolom per tahap (Draft sampai Terkunci) berisi jumlah baris, lalu total baris dan porsi yang sudah final.
-- **Menu**: dikelompokkan menjadi Anggaran, Laporan, Data dan Admin. Tombol panah di samping logo melipat menu menjadi ikon; pilihan ini diingat.
-- **Posisi aktif**: pengguna yang memegang lebih dari satu posisi, atau menjadi pjs, berganti posisi di kepala halaman. Menu, cakupan dan antrean mengikuti posisi yang aktif.
+- **Menu**: dikelompokkan menjadi Anggaran, Laporan, Data dan Admin. Tombol panah di samping logo melipat menu menjadi ikon; pilihan ini diingat. Hanya kelompok halaman yang sedang dibuka yang terbuka; klik judul kelompok untuk membuka atau menutup yang lain.
+- **Lokasi**: di layar lebar, kepala halaman menulis kelompok menu dan nama layar; pada halaman rincian, nama layar menjadi tautan kembali.
+- **Tabel panjang** (COA Master, Realisasi, Biaya Bersama, Pipeline) digulir di dalam kotaknya sendiri dengan judul kolom tetap terlihat; gunakan kotak cari di atasnya.
+- **Posisi aktif**: pengguna yang memegang lebih dari satu posisi, atau menjadi pjs, berganti posisi lewat menu akun (pojok kanan atas), bagian *Posisi aktif*. Menu, cakupan dan antrean mengikuti posisi yang aktif.
 - **Tampilan** (tombol di kepala halaman, misalnya *RKA 2027 · MATRIK · Juta*): klik untuk mengatur *Tahun anggaran*, *Entitas*, *Divisi* dan *Satuan*. Pengaturan berlaku untuk semua layar dan diingat per pengguna; tombol diberi warna saat entitas atau divisi dipersempit. Tahun standarnya tahun yang sedang terbuka; tahun yang sudah dikunci bertanda *(terkunci)* dan tetap dapat dibaca. Angka pembanding selalu dari tahun sebelumnya: membuka RKA 2028 menampilkan RKA 2027 dan Actual 2027. Entitas dan Divisi hanya mempersempit baris yang memang boleh Anda lihat; bila cakupan Anda hanya satu entitas atau satu divisi, namanya tampil tanpa pilihan. Divisi mengikuti unit Default Owner baris. Di ponsel tombol hanya menampilkan tahun dan jumlah filter yang aktif.
 - **Filter aktif**: setiap layar yang dipersempit menulis *Filter aktif: …* di bawah judul, dengan tautan *Tampilkan semua* untuk kembali ke Semua entitas dan Semua divisi. Layar yang tidak memakai salah satunya menyebutkannya, misalnya Divisi di Arus Kas dan Pipeline. Kolom yang isinya sama di setiap baris karena filter (Entitas, atau Pemilik bila divisi hanya punya satu unit) disembunyikan.
 - **Baris baru**: di RKA Saya, baris baru memakai entitas dari Tampilan di kepala halaman dan tetap dapat diubah. Draft Anda selalu tampil semua di editor; filter hanya mempersempit daftar *Sudah dikirim*.
-- **Tema**: tombol di kepala halaman berganti antara Terang, Gelap dan Ikuti sistem.
-- **Menu pengguna**: klik nama Anda di pojok kanan atas untuk melihat nama, email, jabatan dan peran Anda, lalu *Keluar* untuk mengakhiri sesi.
+- **Tema**: pilih Terang, Gelap atau Ikuti sistem di menu akun, bagian *Tema*.
+- **Menu akun**: tombol di pojok kanan atas menunjukkan jabatan dan peran yang aktif. Isinya nama dan email Anda, *Posisi aktif* (bila lebih dari satu), *Tema*, dan *Keluar* untuk mengakhiri sesi.
 - **Memuat halaman**: saat pindah halaman, garis tipis di paling atas menunjukkan halaman sedang dimuat.
 - **Ponsel**: di layar kecil menu menjadi tombol *Menu*. Setiap layar muat di ponsel tanpa geser ke samping.
 
@@ -201,7 +203,7 @@ Admin mengelola orang dan data master, tidak pernah isi anggaran; baris anggaran
   - Bagan mengikuti dokumen *Struktur Organisasi* klien: divisi, departemen, dan bagiannya (misalnya Account Mgmt, PreSales, Sales Ops) yang tampil di dalam kartu departemen. Tim teknis memuat dokumen itu dengan \`pnpm db:struktur\`; nama orang di dalamnya tidak disimpan di GitHub.
   - Nama dari dokumen yang belum punya akun tampil dengan ikon orang bertanda plus (arahkan kursor untuk keterangannya) dan tidak dihitung kosong. Setelah orangnya diundang di Pengguna, buka posisinya dan pilih akunnya di *Pemegang*; nama dari dokumen lalu diganti nama akun. Kolom *Nama di struktur* di *Edit posisi* dapat dipakai untuk mengubah nama itu.
 - **RKA tertahan karena posisi kosong**: kursi yang ditunggu baris tetapi tidak ada pemegangnya. Tetapkan pemegang atau pjs untuk melepaskannya. Saat baris diserahkan ke kursi kosong, Admin menerima email.
-- **Bertindak sebagai** (kepala halaman): Admin dapat bertindak sebagai kursi mana pun, dikelompokkan per peran (ketik awal jabatan untuk melompat), untuk melihat aplikasi persis seperti peran itu, misalnya untuk memeriksa laporan masalah. Setiap pergantian tercatat di jejak audit; *Admin (saya sendiri)* kembali.
+- **Bertindak sebagai** (menu akun): Admin dapat bertindak sebagai kursi mana pun, dikelompokkan per peran (ketik awal jabatan untuk melompat). Selama aktif, kepala halaman menulis *Melihat sebagai …* dengan tombol *Kembali*. Admin memakainya untuk melihat aplikasi persis seperti peran itu, misalnya untuk memeriksa laporan masalah. Setiap pergantian tercatat di jejak audit; *Admin (saya sendiri)* kembali.
 
 ## Management Summary
 
@@ -212,7 +214,7 @@ Ringkasan RKA untuk Division Owner, Finance Reviewer, Direktur dan Auditor.
 - **Empat kartu**: Pendapatan, Total Biaya, Laba Sebelum Pajak dan CAPEX, masing-masing dengan garis tren 12 bulan. Lencana perubahan terhadap tahun lalu muncul bila cukup baris punya angka RKA tahun lalu, dan dibandingkan atas baris yang sama. Di bawah kartu, satu kalimat menunjukkan hitungannya: Laba Sebelum Pajak = Pendapatan − (Total Biaya − CAPEX).
 - **Grafik**: pendapatan dan total biaya per bulan (batang) dengan laba sebelum pajak (garis), serta kontribusi per divisi.
 - Di tabel per bulan, kolom *Total* berada di samping uraian, sebelum Januari (juga di Arus Kas).
-- **Ringkasan per bulan**, **Kontribusi Divisi** dan **Per entitas** dalam tabel. Per entitas menampilkan alokasi biaya bersama bila ada.
+- Tabel rinci ada di tab **Per bulan**, **Per divisi** dan **Per entitas** (tombol panah kiri dan kanan memindah tab). Per entitas menampilkan alokasi biaya bersama bila ada.
 - Pipeline tertimbang tampil sebagai satu baris terpisah di bawah kartu, di luar RKA.
 
 ## Persetujuan perubahan master

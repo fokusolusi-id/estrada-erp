@@ -74,5 +74,20 @@ export const NAV: readonly NavItem[] = [
 
 /** `within(unit)` says whether the user's unit sits within `unit`; without it, unit-based items stay hidden. */
 export function navFor(role: Role, within: (unit: string) => boolean = () => false): NavItem[] {
-  return NAV.filter((n) => n.roles === "all" || n.roles.includes(role) || (n.alsoIn?.roles.includes(role) && [n.alsoIn.unit].flat().some(within)));
+  const allowed = NAV.filter((n) => n.roles === "all" || n.roles.includes(role) || (n.alsoIn?.roles.includes(role) && [n.alsoIn.unit].flat().some(within)));
+  // A screen may have two rules for two seats; the menu lists it once.
+  return allowed.filter((n, i) => allowed.findIndex((m) => m.href === n.href) === i);
+}
+
+/** The menu entry a path belongs to: the longest href wins, so /rka does not claim /rka/queue. */
+export function menuEntry(pathname: string, items: readonly NavItem[]): NavItem | undefined {
+  return items
+    .filter((i) => (i.href === "/" ? pathname === "/" : pathname === i.href || pathname.startsWith(i.href + "/")))
+    .sort((a, b) => b.href.length - a.href.length)[0];
+}
+
+/** Where the reader is, for the header: menu group, screen, and whether the page sits below that screen. */
+export function whereAmI(pathname: string, items: readonly NavItem[]) {
+  const item = menuEntry(pathname, items);
+  return item ? { group: item.group ?? null, label: item.label, href: item.href, deeper: pathname !== item.href } : null;
 }

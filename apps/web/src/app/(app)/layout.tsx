@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { cookies } from "next/headers";
-import { Bell, Building2 } from "lucide-react";
+import { Bell } from "lucide-react";
 import { ROLE_LABEL } from "@estrada/domain";
 import { requireUser } from "@/lib/session";
 import { navFor } from "@/lib/nav";
@@ -15,12 +15,11 @@ import { markNotificationsRead } from "./notification-actions";
 import { setDisplayUnit } from "./unit-actions";
 import { setView } from "./view-actions";
 import { setFiscalYear } from "./year-actions";
+import { Breadcrumb } from "./breadcrumb";
 import { MobileNav } from "./mobile-nav";
-import { PositionSwitcher } from "./position-switcher";
-import { RoleSwitcher } from "./role-switcher";
 import { Sidebar, SIDEBAR_COOKIE } from "./sidebar";
-import { ThemeSwitcher } from "./theme-switcher";
 import { UserMenu } from "@/components/erp/user-menu";
+import { ViewAsChip } from "@/components/erp/view-as-chip";
 import { Button } from "@/components/ui/button";
 
 /** Streams in after the page shell: the bell is the one header part nothing else waits on. */
@@ -39,6 +38,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     displayUnit(),
   ]);
   const nav = navFor(user.actor.role, (unit) => org.isWithin(user.actor.orgUnit, unit));
+  const acting = user.viewAs?.options.find((o) => o.id === user.viewAs?.activeId);
   const collapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "1";
 
   return (
@@ -48,29 +48,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <header className="bg-background sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-2 border-b px-2 md:px-6">
           <div className="flex min-w-0 items-center gap-1 text-sm">
             <MobileNav items={nav} />
-            {/* An Admin has no position text here, so the room goes to the controls on a narrow phone. */}
-            <div className={user.viewAs || user.positions.length > 1 ? "min-w-0" : "min-w-0 truncate max-sm:hidden"}>
-            {user.viewAs ? null : user.positions.length > 1 ? (
-              <PositionSwitcher
-                activeId={user.activePositionId}
-                positions={user.positions.map((p) => ({ id: p.id, title: p.title, roleLabel: ROLE_LABEL[p.role], orgUnit: p.orgUnit, acting: p.acting }))}
-              />
-            ) : (
-              <>
-                <Building2 aria-hidden className="text-muted-foreground mr-1.5 inline size-4 align-text-bottom" />
-                <span className="font-medium">{user.positionTitle}</span>
-                <span className="text-muted-foreground"> · {ROLE_LABEL[user.actor.role]}</span>
-              </>
-            )}
-            </div>
+            <Breadcrumb items={nav} />
           </div>
-          <div className={`flex items-center gap-2 text-sm xl:gap-3 ${user.viewAs ? "min-w-0" : "shrink-0"}`}>
-            {user.viewAs ? (
-              <RoleSwitcher
-                activeId={user.viewAs.activeId}
-                options={user.viewAs.options.map((o) => ({ id: o.id, group: ROLE_LABEL[o.role], label: `${o.title} · ${o.orgUnit}` }))}
-              />
-            ) : null}
+          <div className="flex min-w-0 items-center gap-2 text-sm xl:gap-3">
+            {acting ? <ViewAsChip label={acting.title + " · " + acting.orgUnit} /> : null}
             {user.actor.role !== "admin" ? (
               <ViewBar
                 years={years}
@@ -93,8 +74,26 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             >
               <Notifications userId={user.id} />
             </Suspense>
-            <ThemeSwitcher />
-            <UserMenu name={user.name} email={user.email} detail={user.viewAs ? ROLE_LABEL[user.realRole] : `${user.positionTitle} · ${ROLE_LABEL[user.realRole]}`} />
+            <UserMenu
+              name={user.name}
+              email={user.email}
+              // Admin acting as nobody has no seat to name, so the button names the person.
+              title={user.viewAs && !acting ? user.name : user.positionTitle}
+              subtitle={ROLE_LABEL[user.actor.role]}
+              positions={
+                !user.viewAs && user.positions.length > 1
+                  ? {
+                      activeId: user.activePositionId,
+                      options: user.positions.map((p) => ({ id: p.id, label: `${p.title} · ${ROLE_LABEL[p.role]} · ${p.orgUnit}${p.acting ? " (pjs)" : ""}` })),
+                    }
+                  : undefined
+              }
+              viewAs={
+                user.viewAs
+                  ? { activeId: user.viewAs.activeId, options: user.viewAs.options.map((o) => ({ id: o.id, group: ROLE_LABEL[o.role], label: `${o.title} · ${o.orgUnit}` })) }
+                  : undefined
+              }
+            />
           </div>
         </header>
         <main className="flex-1 p-4 md:p-6">

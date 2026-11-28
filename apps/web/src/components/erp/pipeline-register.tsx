@@ -172,7 +172,7 @@ export function PipelineRegister({
         />
       ) : null}
 
-      <Table>
+      <Table scroll>
         <TableHeader>
           <TableRow>
             <TableHead>Project</TableHead>

@@ -403,7 +403,7 @@ export function BudgetEditor({
                   ) : null}
                   {locked ? <span className="text-muted-foreground text-xs">Dihitung dari Rencana headcount</span> : null}
                   <div className="flex items-center gap-3">
-                    {r.id ? <DiscussionLink id={r.id} count={r.commentCount} /> : null}
+                    {r.id ? <DiscussionLink id={r.id} count={r.commentCount} about={[r.coaCode, r.item].filter(Boolean).join(" · ")} /> : null}
                     {hasNotes ? (
                       <button
                         type="button"

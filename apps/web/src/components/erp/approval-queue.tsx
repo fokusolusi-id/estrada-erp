@@ -267,7 +267,7 @@ export function ApprovalQueue({
                     <TableCell>
                       <div className="font-medium">{l.coaCode}</div>
                       <div className="text-muted-foreground text-xs">{l.item || l.coaName}</div>
-                      <DiscussionLink id={l.id} count={l.commentCount} />
+                      <DiscussionLink id={l.id} count={l.commentCount} about={`${l.coaCode} · ${l.item || l.coaName}`} />
                     </TableCell>
                     {hide.entity ? null : <TableCell>{l.entity}</TableCell>}
                     <TableCell>
