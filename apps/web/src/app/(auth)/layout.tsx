@@ -13,9 +13,11 @@ const MODULES = [
 function ModuleList() {
   return (
     <ul aria-label="Modul ERP" className="grid gap-4">
-      {MODULES.map((m) => (
-        <li key={m.name} className="flex items-baseline gap-4 text-sm">
-          <span aria-hidden className="bg-brand size-[11px] shrink-0 rounded-full border-2 border-white/60" />
+      {MODULES.map((m, i) => (
+        <li key={m.name} className="relative flex items-start gap-4 text-sm">
+          {/* From under this dot to the top of the next one, across the list's gap. */}
+          {i < MODULES.length - 1 ? <span aria-hidden data-connector className="absolute top-[15.5px] -bottom-[20.5px] left-[5px] w-px bg-white/30" /> : null}
+          <span aria-hidden className="bg-brand mt-[4.5px] size-[11px] shrink-0 rounded-full border-2 border-white/60" />
           <span className="grid">
             <span className="font-semibold text-white">{m.name}</span>
             <span className="text-white/70">{m.about}</span>

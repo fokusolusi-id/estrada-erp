@@ -18,4 +18,10 @@ describe("sign-in panel", () => {
       "COA Master",
     ]);
   });
+
+  it("joins each module's dot to the next one with a line", () => {
+    render(<AuthLayout>form</AuthLayout>);
+    const items = within(screen.getByRole("list", { name: "Modul ERP" })).getAllByRole("listitem");
+    expect(items.map((li) => li.querySelectorAll("[data-connector]").length)).toEqual([1, 1, 1, 1, 1, 0]);
+  });
 });

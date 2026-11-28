@@ -5,12 +5,12 @@ import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { whereAmI, type NavItem } from "@/lib/nav";
 
-/** The header's answer to "where am I": menu group, then the screen. */
+/** Above the page title, the answer to "where am I": menu group, then the screen. */
 export function Breadcrumb({ items }: { items: readonly NavItem[] }) {
   const here = whereAmI(usePathname(), items);
   if (!here) return null;
   return (
-    <nav aria-label="Lokasi" className="hidden min-w-0 items-center gap-1.5 md:flex">
+    <nav aria-label="Lokasi" className="mb-2 hidden min-w-0 items-center gap-1.5 text-sm md:flex">
       {here.group ? (
         <>
           <span className="text-muted-foreground">{here.group}</span>

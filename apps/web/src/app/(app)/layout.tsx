@@ -45,13 +45,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-screen">
       <Sidebar items={nav} defaultCollapsed={collapsed} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="bg-background sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-2 border-b px-2 md:px-6">
-          <div className="flex min-w-0 items-center gap-1 text-sm">
+        <header className="bg-background sticky top-0 z-40 flex min-h-14 shrink-0 flex-wrap items-center gap-x-2 border-b px-2 md:px-6">
+          <div className="mr-auto flex h-14 min-w-0 items-center gap-1 text-sm">
             <MobileNav items={nav} />
-            <Breadcrumb items={nav} />
           </div>
-          <div className="flex min-w-0 items-center gap-2 text-sm xl:gap-3">
-            {acting ? <ViewAsChip label={acting.title + " · " + acting.orgUnit} /> : null}
+          {/* A phone has no room for it beside the other controls, so there it takes a row of its own. */}
+          {acting ? (
+            <div className="flex min-w-0 max-md:order-last max-md:basis-full max-md:pb-2">
+              <ViewAsChip label={acting.title + " · " + acting.orgUnit} />
+            </div>
+          ) : null}
+          <div className="flex h-14 min-w-0 items-center gap-2 text-sm xl:gap-3">
             {user.actor.role !== "admin" ? (
               <ViewBar
                 years={years}
@@ -98,7 +102,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </header>
         <main className="flex-1 p-4 md:p-6">
           {/* The one column every page sits in: left aligned, same width. Pages set no outer width of their own. */}
-          <div data-page className="max-w-screen-2xl">{children}</div>
+          <div data-page className="max-w-screen-2xl">
+            <Breadcrumb items={nav} />
+            {children}
+          </div>
         </main>
       </div>
     </div>

@@ -7,8 +7,8 @@ import { FigureCell } from "./money-cell";
 import { StatusBadge } from "./status-badge";
 import { VarianceCell } from "./variance-cell";
 
-/** The fixed first column: narrow on a phone so the months stay visible beside it. */
-const FIRST = "sticky left-0 z-10 w-32 min-w-32 max-w-32 bg-card shadow-[inset_-1px_0_0_var(--border)] sm:w-80 sm:min-w-80 sm:max-w-80";
+/** The fixed first column: on a phone it leaves room for one figure beside it. */
+const FIRST = "sticky left-0 z-10 w-44 min-w-44 max-w-44 bg-card whitespace-normal shadow-[inset_-1px_0_0_var(--border)] sm:w-80 sm:min-w-80 sm:max-w-80";
 
 export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"] as const;
 
@@ -26,19 +26,19 @@ export interface GridLine extends BudgetLine {
   commentCount?: number;
 }
 
-/**
- * 12-month budget grid. Totals always come from the domain (never typed by hand).
- * Read-only; drafts are edited in BudgetEditor. Last year's actual and the change sit beside each line, as in the division sheets.
- */
 /** Link to a line's page with its discussion and history. */
 export function DiscussionLink({ id, count = 0, about }: { id: string; count?: number | undefined; about: string }) {
   return (
-    <Link aria-label={`Diskusi ${about}${count ? ` (${count})` : ""}`} href={`/rka/line/${id}`} className="text-primary mr-1 text-xs underline-offset-2 hover:underline">
+    <Link aria-label={`Diskusi ${about}${count ? ` (${count})` : ""}`} href={`/rka/line/${id}`} className="text-primary mr-1 inline-flex min-h-6 shrink-0 items-center text-xs underline-offset-2 hover:underline">
       Diskusi{count ? ` (${count})` : ""}
     </Link>
   );
 }
 
+/**
+ * 12-month budget grid. Totals always come from the domain (never typed by hand).
+ * Read-only; drafts are edited in BudgetEditor. Last year's actual and the change sit beside each line, as in the division sheets.
+ */
 export function BudgetGrid({
   lines,
   priorYear,
@@ -80,8 +80,19 @@ export function BudgetGrid({
         {lines.map((l) => (
           <TableRow key={l.id}>
             <TableCell className={cn(FIRST, "py-1.5")}>
-              <div className="truncate font-medium" title={l.item || l.coaName}>
-                {l.coaCode} · <span>{l.item || l.coaName}</span>
+              {discussion ? (
+                <Link href={`/rka/line/${l.id}`} title={l.item || l.coaName} className="line-clamp-2 font-medium underline-offset-2 hover:underline">
+                  {l.coaCode} · {l.item || l.coaName}
+                </Link>
+              ) : (
+                <div className="line-clamp-2 font-medium" title={l.item || l.coaName}>
+                  {l.coaCode} · {l.item || l.coaName}
+                </div>
+              )}
+              {/* A phone has no room for these columns beside the title, so they are repeated under it. */}
+              <div data-testid={`phone-${l.id}`} className="flex flex-wrap items-center gap-x-2 gap-y-1 py-0.5 sm:hidden">
+                <FigureCell value={lineTotal(l)} unit={unit} className="font-medium" />
+                <StatusBadge state={l.state} />
               </div>
               <div className="text-muted-foreground flex items-center gap-2 text-xs">
                 {discussion ? <DiscussionLink id={l.id} count={l.commentCount} about={`${l.coaCode} · ${l.item || l.coaName}`} /> : null}

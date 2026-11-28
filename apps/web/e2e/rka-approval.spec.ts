@@ -502,7 +502,7 @@ test("Division Owner sees the clarification and approves again", async ({ page }
 
 test("Finance asks about one line in its discussion; the line stays where it is", async ({ page }) => {
   await as("finance", page, "/rka/review");
-  await lineRow(page, "5300").getByRole("link", { name: "Diskusi" }).click();
+  await lineRow(page, "5300").getByRole("link", { name: /^Diskusi / }).click();
   await expect(page).toHaveURL(/\/rka\/line\//);
   await page.getByLabel("Komentar", { exact: true }).fill("Kenaikan bandwidth 5300 mengikuti kontrak mana?");
   await page.getByRole("button", { name: "Kirim komentar" }).click();
@@ -513,7 +513,7 @@ test("Finance asks about one line in its discussion; the line stays where it is"
 
 test("Requestor answers in the thread from RKA Saya; Finance gets one email without the text", async ({ page }) => {
   await as("requestor", page, "/rka");
-  await lineRow(page, "5300").getByRole("link", { name: "Diskusi (1)" }).click();
+  await lineRow(page, "5300").getByRole("link", { name: /^Diskusi .*\(1\)$/ }).click();
   await expect(page.getByText("Kenaikan bandwidth 5300 mengikuti kontrak mana?")).toBeVisible();
   await page.getByLabel("Komentar", { exact: true }).fill("Kontrak Telkom 2027, tarif naik 5%.");
   await page.getByRole("button", { name: "Kirim komentar" }).click();
@@ -533,7 +533,7 @@ test("Requestor answers in the thread from RKA Saya; Finance gets one email with
 
 test("The Default Owner, not emailed, still finds the whole thread on the line", async ({ page }) => {
   await as("default_owner", page, "/rka");
-  await lineRow(page, "5300").getByRole("link", { name: "Diskusi (2)" }).click();
+  await lineRow(page, "5300").getByRole("link", { name: /^Diskusi .*\(2\)$/ }).click();
   await expect(comments(page).filter({ hasText: "Rina (SCM)" })).toContainText("Kontrak Telkom 2027");
   await expect(page.getByLabel("Komentar", { exact: true })).toBeVisible();
 });
