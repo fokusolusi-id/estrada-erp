@@ -471,7 +471,7 @@ Menu **Laporan → Kesehatan KPI** menilai 10 KPI sheet 08_KPI_Thresholds untuk 
 - Angka arus (EBITDA, margin, cash in/out, budget) **tahun berjalan** sampai bulan itu; neraca memakai total terakhir yang diisi di Tutup Buku.
 - Rencana kas memakai proyeksi **Arus Kas**; realisasi kas dari **Kas Mingguan**; budget biaya dari RKA tanpa CAPEX.
 - Capital Efficiency memakai EBIT yang disetahunkan. EBITDA positif di bawah 1% pendapatan dinilai WASPADA.
-- KPI tanpa data ditandai *Belum ada data*.
+- KPI tanpa data ditandai *Belum ada data*: realisasi cash in/out selama belum ada kas masuk atau keluar tercatat, dan Budget Utilization selama belum ada biaya.
 - **Stress test:** kas masuk rencana turun 20% (saldo terendah proyeksi); liabilitas jatuh tempo 3 bulan di atas 40% total liabilitas (pinjaman bank dan tagihan vendor); satu customer di atas 50% pendapatan.
 
 ## Peringatan Dini
