@@ -32,7 +32,7 @@ export function WidgetCard({ title, description, href, children }: { title: stri
 
 function Grid({ heads, children }: { heads: readonly string[]; children: React.ReactNode }) {
   return (
-    <Table>
+    <Table className="[&_td:first-child]:sticky [&_td:first-child]:bg-card [&_td:first-child]:left-0 [&_th:first-child]:bg-card [&_th:first-child]:sticky [&_th:first-child]:left-0">
       <TableHeader>
         <TableRow>
           {heads.map((h, i) => (

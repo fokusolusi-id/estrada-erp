@@ -3,8 +3,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { desc } from "drizzle-orm";
 import { db, schema } from "@estrada/db";
-import { ACK_DAYS, ALERT_STATUS_LABEL, EW_RULES, SEVERITY_LABEL, canActOnAlert, canRunCheck, canViewAlert, ewRule, type AlertStatus, type Severity } from "@estrada/domain";
-import { formatDate } from "@/lib/payment";
+import { ACK_DAYS, ALERT_STATUS_LABEL, EW_RULES, SEVERITY_LABEL, canActOnAlert, canRunCheck, canViewAlert, evaluateRules, ewRule, unjudgedRules, type AlertStatus, type Severity } from "@estrada/domain";
+import { loadEwFigures } from "@/lib/early-warning-figures";
+import { formatDate, todayJakarta } from "@/lib/payment";
 import { requireUser } from "@/lib/session";
 import { loadOrg } from "@/lib/workflow";
 import { AlertActions, CheckWarningsButton } from "@/components/erp/alert-forms";
@@ -22,7 +23,13 @@ export default async function WarningsPage() {
   const user = await requireUser();
   if (user.actor.role === "admin") redirect("/");
   const org = await loadOrg();
-  const [rows, users] = await Promise.all([db.select().from(schema.earlyWarning).orderBy(desc(schema.earlyWarning.firedOn)), db.select({ id: schema.user.id, name: schema.user.name }).from(schema.user)]);
+  const [rows, users, figures] = await Promise.all([
+    db.select().from(schema.earlyWarning).orderBy(desc(schema.earlyWarning.firedOn)),
+    db.select({ id: schema.user.id, name: schema.user.name }).from(schema.user),
+    loadEwFigures(todayJakarta(), org),
+  ]);
+  // Only which rules lack data is shown here, never the figures behind them.
+  const unjudged = unjudgedRules(evaluateRules(figures));
   const mine = rows.filter((r) => ewRule(r.rule) && canViewAlert(user.actor, r, org));
   const open = mine.filter((r) => r.status === "open" || r.status === "acknowledged").sort((a, b) => RANK[ewRule(a.rule)!.severity] - RANK[ewRule(b.rule)!.severity] || a.rule.localeCompare(b.rule));
   const closed = mine.filter((r) => !open.includes(r)).slice(0, 50);
@@ -68,7 +75,9 @@ export default async function WarningsPage() {
               );
             })
           ) : (
-            <p className="text-muted-foreground text-sm">Tidak ada peringatan terbuka.</p>
+            <p className="text-muted-foreground text-sm">
+              Tidak ada peringatan terbuka.{unjudged.length ? ` ${unjudged.length} dari ${EW_RULES.length} aturan belum bisa dinilai karena datanya belum ada.` : ""}
+            </p>
           )}
         </CardContent>
       </Card>
@@ -98,13 +107,15 @@ export default async function WarningsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Daftar aturan</CardTitle>
-          <CardDescription>EW-07 dan EW-10 belum dinilai: margin kontrak dan target konversi belum dicatat.</CardDescription>
+          <CardDescription>
+            EW-01 dinilai dari kas yang sudah dicatat, bukan proyeksi Arus Kas. EW-07 dan EW-10 belum dinilai: margin kontrak dan target konversi belum dicatat.
+          </CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr>
-                {["Kode", "Aturan", "Tingkat", "Rata-rata selesai (hari)"].map((h) => (
+                {["Kode", "Aturan", "Tingkat", "Data", "Rata-rata selesai (hari)"].map((h) => (
                   <th key={h} className="text-muted-foreground py-1 pr-3 text-left text-xs font-medium">{h}</th>
                 ))}
               </tr>
@@ -115,6 +126,7 @@ export default async function WarningsPage() {
                   <td className="py-1.5 pr-3 whitespace-nowrap">{rule.code}</td>
                   <td className="pr-3">{rule.name}</td>
                   <td className="pr-3">{SEVERITY_LABEL[rule.severity]}</td>
+                  <td className={`pr-3 whitespace-nowrap ${unjudged.includes(rule.code) ? "font-medium" : "text-muted-foreground"}`}>{unjudged.includes(rule.code) ? "Belum ada data" : "Dinilai"}</td>
                   <td className="tabular">{resolveDays(rule.code)}</td>
                 </tr>
               ))}

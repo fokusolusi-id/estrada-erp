@@ -75,6 +75,11 @@ const num = (v: Money) => v.toDecimalPlaces(1).toString().replace(".", ",");
 const rp = (v: Money) => formatIdr(v, { unit: "juta", decimals: 1 });
 const BILLION = 1_000_000_000;
 
+/** Rules nothing could be judged for. A per-division rule with no division to judge counts too. */
+export function unjudgedRules(results: readonly EwResult[]): string[] {
+  return EW_RULES.map((r) => r.code).filter((code) => !results.some((r) => r.code === code && r.fired !== null));
+}
+
 export function evaluateRules(f: EwFigures): EwResult[] {
   const out: EwResult[] = [];
   const add = (code: string, verdict: [boolean, string] | null, subject = "") => out.push({ code, subject, fired: verdict ? verdict[0] : null, detail: verdict ? verdict[1] : "Belum ada data" });

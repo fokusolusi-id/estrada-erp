@@ -60,7 +60,7 @@ export function ProgressBoard({
     </div>
   );
   return (
-    <Table>
+    <Table className="[&_td:first-child]:sticky [&_td:first-child]:left-0 [&_td:first-child]:z-10 [&_td:first-child]:bg-card [&_th:first-child]:sticky [&_th:first-child]:left-0 [&_th:first-child]:bg-card [&_tfoot_td:first-child]:bg-muted">
       <TableHeader>
         <TableRow>
           <TableHead>Divisi</TableHead>

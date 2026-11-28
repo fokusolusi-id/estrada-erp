@@ -58,6 +58,8 @@ export default async function SummaryPage({
   const against = (version?.fiscalYear ?? new Date().getFullYear()) - 1;
   const change = (key: "Revenue" | "TotalCost" | "ProfitBeforeTax" | "CAPEX", goodWhenUp: boolean) =>
     enough && vsPrior.change(key) ? { pct: vsPrior.change(key), goodWhenUp, against } : undefined;
+  // Revenue nobody has entered is not revenue of zero.
+  const noRevenue = !reportLines.some((l) => l.category === "Revenue");
   const byDivision = contribution(reportLines, (l) => org.divisionOf(l.requestorUnit));
   const locked = lines.filter((l) => l.state === "locked").length;
   const exportQuery = new URLSearchParams(Object.entries({ ...params, version: version?.id }).filter((e): e is [string, string] => !!e[1])).toString();
@@ -95,9 +97,9 @@ export default async function SummaryPage({
       <DraftNotice pending={notFinal(lines)} total={lines.length} />
 
       <KpiStrip>
-        <KpiCard label="Pendapatan" value={total("Revenue")} unit={unit} note="Rencana invoice" change={change("Revenue", true)} trend={trend("Revenue")} />
+        <KpiCard label="Pendapatan" value={total("Revenue")} unit={unit} note="Rencana invoice" missing={noRevenue ? "Belum ada baris pendapatan di RKA ini." : undefined} change={change("Revenue", true)} trend={trend("Revenue")} />
         <KpiCard label="Total Biaya" value={total("TotalCost")} unit={unit} note="COGS + OPEX + OTHERS + CAPEX" change={change("TotalCost", false)} trend={trend("TotalCost")} />
-        <KpiCard label="Laba Sebelum Pajak" value={total("ProfitBeforeTax")} unit={unit} signal change={change("ProfitBeforeTax", true)} trend={trend("ProfitBeforeTax")} />
+        <KpiCard label="Laba Sebelum Pajak" value={total("ProfitBeforeTax")} unit={unit} signal note={noRevenue ? "Belum termasuk pendapatan: hanya biaya" : undefined} change={change("ProfitBeforeTax", true)} trend={trend("ProfitBeforeTax")} />
         <KpiCard label="CAPEX" value={total("CAPEX")} unit={unit} change={change("CAPEX", false)} trend={trend("CAPEX")} />
       </KpiStrip>
       <div className="-mt-3">
@@ -112,7 +114,7 @@ export default async function SummaryPage({
         </p>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 max-sm:order-last xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader>
             <CardTitle>Pendapatan, biaya dan laba per bulan</CardTitle>

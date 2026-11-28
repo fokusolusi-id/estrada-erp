@@ -29,6 +29,7 @@ export default async function PnlPage({ searchParams }: { searchParams: Promise<
   const range = r.months.length > 1 ? `${MONTH_NAMES[r.months[0]! - 1]}–${MONTH_NAMES[r.months.at(-1)! - 1]} ${r.year}` : `${MONTH_NAMES[r.months[0]! - 1]} ${r.year}`;
   const of = (key: (typeof STATEMENT_ROWS)[number]) => r.rows.find((x) => x.key === key)!;
   const consolidated = r.entities.length > 1;
+  const recorded = r.perEntity.some((e) => e.lines.length > 0);
   const figure = (v: Money, key: string) => (
     <TableCell key={key} className="text-right">
       <FigureCell value={v} unit={unit} />
@@ -77,7 +78,7 @@ export default async function PnlPage({ searchParams }: { searchParams: Promise<
       {r.budgetFound ? null : <p className="text-destructive text-sm">Belum ada RKA {r.year}: kolom RKA kosong.</p>}
       <KpiStrip>
         {(["revenue", "gross", "ebitda", "net"] as const).map((key) => (
-          <KpiCard key={key} label={STATEMENT_LABEL[key]} value={of(key).actual} unit={unit} signal={key !== "revenue"} note={of(key).achieved ? `${of(key).achieved!.toFixed(1)}% dari RKA` : "Tanpa pembanding RKA"} />
+          <KpiCard key={key} missing={recorded ? undefined : "Belum ada realisasi untuk periode ini."} label={STATEMENT_LABEL[key]} value={of(key).actual} unit={unit} signal={key !== "revenue"} note={of(key).achieved ? `${of(key).achieved!.toFixed(1)}% dari RKA` : "Tanpa pembanding RKA"} />
         ))}
       </KpiStrip>
       <Card>

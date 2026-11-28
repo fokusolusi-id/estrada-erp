@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { OrgTree } from "../src/org";
-import { EW_RULES, canActOnAlert, canViewAlert, escalationLevel, evaluateRules, nextAlertStep, ruleRecipients, type EwFigures } from "../src/early-warning";
+import { EW_RULES, canActOnAlert, canViewAlert, escalationLevel, evaluateRules, nextAlertStep, ruleRecipients, unjudgedRules, type EwFigures } from "../src/early-warning";
 import { money } from "../src/money";
 
 const org = new OrgTree([{ code: "FRM", parent: null }, { code: "BCD", parent: null }, { code: "PDMS", parent: null }, { code: "PMO", parent: "PDMS" }, { code: "HCM", parent: null }]);
@@ -68,5 +68,12 @@ describe("acknowledge and escalation (client decision: 1/2/3/7 days)", () => {
     expect(nextAlertStep("acknowledged", "resolve", " ")).toEqual({ ok: false, problem: "note" });
     expect(nextAlertStep("open", "false_positive", "salah data")).toEqual({ ok: true, to: "false_positive" });
     expect(nextAlertStep("resolved", "ack", "")).toEqual({ ok: false, problem: "closed" });
+  });
+});
+
+describe("rules without data", () => {
+  it("names the rules nothing could be judged for, so silence is not read as safety", () => {
+    expect(unjudgedRules(evaluateRules(calm))).toEqual(["EW-07", "EW-10"]);
+    expect(unjudgedRules(evaluateRules({ ...calm, cash: null, divisions: [] }))).toEqual(["EW-01", "EW-07", "EW-08", "EW-10"]);
   });
 });
